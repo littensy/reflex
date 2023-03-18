@@ -35,7 +35,6 @@ return function()
 			expect(combinedProducer.getDispatchers).to.be.a("function")
 			expect(combinedProducer.flush).to.be.a("function")
 			expect(combinedProducer.subscribe).to.be.a("function")
-			expect(combinedProducer.observe).to.be.a("function")
 			expect(combinedProducer.once).to.be.a("function")
 			expect(combinedProducer.wait).to.be.a("function")
 			expect(combinedProducer.select).to.be.a("function")
@@ -152,13 +151,13 @@ return function()
 		end)
 	end)
 
-	describe("CombinedProducer.observe", function()
-		it("should observe a selection of the combined producer", function()
+	describe("CombinedProducer.subscribe(selector)", function()
+		it("should subscribe to a selection of the combined producer", function()
 			local function selectPrivateCounterA(state)
 				return state.producerA.privateCounter
 			end
 
-			local unsubscribe = combinedProducer:observe(selectPrivateCounterA, function(privateCounterA)
+			local unsubscribe = combinedProducer:subscribe(selectPrivateCounterA, function(privateCounterA)
 				expect(privateCounterA).to.equal(3)
 			end)
 
@@ -174,7 +173,7 @@ return function()
 
 			local updated = false
 
-			local unsubscribe = combinedProducer:observe(selectPrivateCounterA, function(privateCounterA)
+			local unsubscribe = combinedProducer:subscribe(selectPrivateCounterA, function(privateCounterA)
 				updated = true
 			end)
 
@@ -192,7 +191,7 @@ return function()
 
 			local previousState = selectPrivateCounterA(combinedProducer:getState())
 
-			local unsubscribe = combinedProducer:observe(
+			local unsubscribe = combinedProducer:subscribe(
 				selectPrivateCounterA,
 				function(receivedCurrentState, receivedPreviousState)
 					expect(receivedPreviousState).to.equal(previousState)
