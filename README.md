@@ -202,7 +202,7 @@ Middleware are higher-order functions called before every dispatcher, and can be
 
 ```ts
 export const loggerMiddleware: Middleware = (producer) => (done) => (action) => {
-	print(`[loggerMiddleware]: Dispatching ${action.type}(${params.join(", ")})`);
+	print(`[loggerMiddleware]: Dispatching ${action.type}`);
 	const newState = done(action);
 	print("[loggerMiddleware]: New state:", producer.getState());
 	return newState;
@@ -213,7 +213,7 @@ const producer = createProducer(initialState, {
 }).enhance(applyMiddleware(loggerMiddleware));
 ```
 
-Enhance can also be called on a combined producer, and will apply the enhancer to every dispatcher exposed by the producer:
+Enhance can also be called on a combined producer:
 
 ```ts
 const combinedProducer = combineProducers({

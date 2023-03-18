@@ -9,7 +9,7 @@ export const loggerMiddleware: Middleware = (producer) => (done) => (action) => 
 	const params: string[] = [];
 
 	for (const [, value] of entries(action.arguments)) {
-		params.push(tostring(value));
+		params.push(stringify(value));
 	}
 
 	print(`[loggerMiddleware]: Dispatching ${action.type}(${params.join(", ")})`);
@@ -20,3 +20,13 @@ export const loggerMiddleware: Middleware = (producer) => (done) => (action) => 
 
 	return newState;
 };
+
+function stringify(value: unknown): string {
+	if (typeIs(value, "string")) {
+		return `"${value}"`;
+	} else if (typeIs(value, "table")) {
+		return `{ ${[...entries(value)].map(([key, value]) => `${key}: ${tostring(value)}`).join(", ")} }`;
+	}
+
+	return tostring(value);
+}

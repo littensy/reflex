@@ -14,13 +14,19 @@ export function applyMiddleware(...middlewares: Middleware[]) {
 		const chain = middlewares.map((middleware) => middleware(producer));
 
 		for (const [name, dispatcher] of entries<string, Callback>(dispatchers)) {
-			const dispatcherWithMiddleware: Callback = compose(chain)((action: MiddlewareAction<any>) => {
+			let dispatch = (action: MiddlewareAction<any>) => {
 				return dispatcher(...action.arguments);
-			});
+			};
 
-			// Make sure that the first parameter is the dispatcher name
+			// Compose the middleware chain.
+			dispatch = chain.reduce((a, b) => {
+				return (done) => a(b(done));
+			})(dispatch);
+
 			dispatchers[name] = (...args: unknown[]) => {
-				return dispatcherWithMiddleware({ type: name, arguments: args } satisfies MiddlewareAction<any>);
+				// Convert the arguments to an action type so middleware can narrow
+				// the argument types and access the dispatcher name.
+				return dispatch({ type: name, arguments: args } satisfies MiddlewareAction<any>);
 			};
 
 			producer[name] = dispatchers[name];
@@ -28,10 +34,4 @@ export function applyMiddleware(...middlewares: Middleware[]) {
 
 		return producer;
 	};
-}
-
-function compose(callbacks: ((...args: any[]) => any)[]) {
-	return callbacks.reduce((a, b) => {
-		return (...args: unknown[]) => a(b(...args));
-	});
 }
