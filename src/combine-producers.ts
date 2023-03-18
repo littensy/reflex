@@ -1,4 +1,5 @@
 import { CombineProducer, CombineStates, Producer, ProducerMap } from "./types";
+import { entries } from "./utils/entries";
 
 /**
  * Combines multiple producers into a single producer.
@@ -30,7 +31,7 @@ export function combineProducers<Producers extends ProducerMap>(producers: Produ
 		const newCombinedState: Record<string, unknown> = {};
 
 		// Call every dispatcher of the same name on each producer
-		for (const [producerName, producer] of pairs(producers as ProducerMap)) {
+		for (const [producerName, producer] of entries<ProducerMap>(producers)) {
 			const dispatchers = producer.getDispatchers();
 			const dispatcher: unknown = dispatchers[key as never];
 
@@ -66,10 +67,10 @@ export function combineProducers<Producers extends ProducerMap>(producers: Produ
 
 	// Add each producer's dispatchers to the combined dispatchers, where calling
 	// one dispatcher will call the dispatcher on each producer.
-	for (const [, producer] of pairs(producers as ProducerMap)) {
-		for (const [key] of pairs(producer.getDispatchers() as Record<string, unknown>)) {
-			combinedDispatchers[key as string] = (...args: unknown[]) => {
-				dispatch(key, ...args);
+	for (const [, producer] of entries<ProducerMap>(producers)) {
+		for (const [dispatcherName] of entries<string, unknown>(producer.getDispatchers())) {
+			combinedDispatchers[dispatcherName] = (...args: unknown[]) => {
+				dispatch(dispatcherName, ...args);
 				return combinedState;
 			};
 		}

@@ -24,8 +24,8 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 	const subscribers = new Map<number, (state: S, prevState: S) => void>();
 	const dispatchers = {} as InferDispatchersFromActions<Actions<S>>;
 
-	for (const [key, action] of pairs(actions as Actions<S>)) {
-		dispatchers[key] = (...args: unknown[]) => {
+	for (const [actionName, action] of pairs(actions as Actions<S>)) {
+		dispatchers[actionName] = (...args: unknown[]) => {
 			const prevState = state;
 			state = action(prevState, ...args);
 

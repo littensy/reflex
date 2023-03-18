@@ -1,4 +1,5 @@
 import { AnySelectors, InferSelectorArguments, InferSelectorResults } from "./types";
+import { entries } from "./utils/entries";
 
 /**
  * Creates a memoized selector function. The selector function is only called
@@ -19,8 +20,8 @@ export function createSelector<Selectors extends AnySelectors, Result>(
 	dependencies: Selectors,
 	selector: (...args: InferSelectorResults<Selectors>) => Result,
 ): (...args: InferSelectorArguments<Selectors>) => Result {
-	const dependencyCache = new Map<number, unknown>();
-	const parameterCache = new Map<number, unknown>();
+	const dependencyCache: Record<number, unknown> = {};
+	const argumentCache: Record<number, unknown> = {};
 
 	let value: Result;
 	let firstCall = true;
@@ -32,20 +33,20 @@ export function createSelector<Selectors extends AnySelectors, Result>(
 		let argumentsChanged = firstCall;
 		let recompute = firstCall;
 
-		for (const [index, argument] of args as unknown as Map<number, unknown>) {
-			if (argument !== parameterCache.get(index)) {
+		for (const [index, argument] of entries<number, unknown>(args)) {
+			if (argument !== argumentCache[index]) {
 				argumentsChanged = true;
-				parameterCache.set(index, argument);
+				argumentCache[index] = argument;
 			}
 		}
 
 		if (argumentsChanged) {
-			for (const [index, dependency] of dependencies as unknown as Map<number, Callback>) {
-				const dependencyResult: unknown = dependency(...args);
+			for (const [index, dependency] of entries<number, Callback>(dependencies)) {
+				const result: unknown = dependency(...args);
 
-				if (dependencyResult !== dependencyCache.get(index)) {
+				if (result !== dependencyCache[index]) {
 					recompute = true;
-					dependencyCache.set(index, dependencyResult);
+					dependencyCache[index] = result;
 				}
 			}
 		}
