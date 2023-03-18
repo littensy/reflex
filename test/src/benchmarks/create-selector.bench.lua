@@ -3,6 +3,23 @@ local Reflex = TS.import(script, game:GetService("ReplicatedStorage"), "reflex")
 local Roselect =
 	TS.import(script, game:GetService("ReplicatedStorage"), "include", "node_modules", "@rbxts", "roselect", "src")
 
+--[[
+	Benchmarker
+
+	Run type: Time
+	Run time: 1 second
+
+	Reflex.createSelector:   40 microseconds
+	- compare deps:          15 microseconds
+	- compare dep params:    6 microseconds
+	Roselect.createSelector: 70 microseconds
+	- compare deps:          35 microseconds
+	- compare dep params:    10 microseconds
+
+	Reflex tends to be 40% faster than Roselect when creating selectors, with
+	improvements coming from dependency comparison.
+]]
+
 return {
 	ParameterGenerator = function()
 		local names = {}
