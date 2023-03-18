@@ -80,6 +80,15 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 */
 	destroy(): void;
 
+	/**
+	 * Enhances the producer with new functionality. The enhancer function
+	 * is passed the producer as an argument and should mutate the producer
+	 * in place.
+	 * @param enhancer A function that enhances the producer.
+	 * @returns The enhanced producer.
+	 */
+	enhance<T extends Producer<any, any>>(enhancer: (producer: Producer<S, A>) => T): T;
+
 	/** @deprecated @hidden */
 	Connect(callback: (newState: S) => void): RBXScriptConnection;
 
@@ -123,6 +132,19 @@ export type InferActions<P> = P extends Producer<any, infer A> ? A : never;
  * Infers the dispatchers type from a Producer.
  */
 export type InferDispatchers<P> = P extends Producer<any, infer A> ? InferDispatchersFromActions<A> : never;
+
+export type Middleware<T extends Producer<any, any> = Producer<unknown, Record<string, Callback>>> = (
+	producer: T,
+) => (done: NextMiddleware<InferActions<T>>) => NextMiddleware<InferActions<T>>;
+
+export type NextMiddleware<A> = (action: MiddlewareAction<A>) => unknown;
+
+export type MiddlewareAction<A = Record<string, unknown>> = {
+	[K in keyof A]: {
+		type: K;
+		arguments: Parameters<A[K]> extends [any, ...infer Rest] ? Rest : unknown[];
+	};
+}[keyof A];
 
 export type ProducerMap = Record<string, Producer<any, any>>;
 

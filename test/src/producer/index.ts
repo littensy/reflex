@@ -1,4 +1,4 @@
-import { InferDispatchers, InferState, combineProducers } from "@rbxts/reflex";
+import { InferDispatchers, InferState, applyMiddleware, combineProducers, loggerMiddleware } from "@rbxts/reflex";
 import { counterProducer } from "./counter.producer";
 import { writerProducer } from "./writer.producer";
 
@@ -9,4 +9,4 @@ export type RootDispatchers = InferDispatchers<RootProducer>;
 export const producer = combineProducers({
 	counter: counterProducer,
 	writer: writerProducer,
-});
+}).enhance(applyMiddleware(loggerMiddleware));
