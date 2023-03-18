@@ -20,6 +20,9 @@
     "type": "git",
     "url": "https://github.com/littensy/reflex.git"
   },
+  "bugs": {
+    "url": "https://github.com/littensy/reflex/issues"
+  },
   "types": "out/index.d.ts",
   "files": [
     "out",
