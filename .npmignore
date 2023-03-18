@@ -1,3 +1,1 @@
-*.test.ts
-*.test.d.ts
-*.test.lua
+*.spec.lua
