@@ -193,14 +193,42 @@ const createSelectWord = (word: string) => {
 const word = useSelectorCreator(createSelectWord, "E");
 ```
 
+### 🛠️ Enhance
+
+Reflex provides a `createEnhancer()` function that allows you to add custom functionality to your producers. The enhancer you will most likely use is `applyMiddleware()`, which allows you to add middleware to your producers.
+
+Middleware functions are called before every dispatcher, and can be used to add logging, or to perform side effects. Middleware functions are passed the next middleware function, and an action object, which holds the dispatcher and the arguments passed to it.
+
+```ts
+export const loggerMiddleware: Middleware = (producer) => (done) => (action) => {
+	print(`[loggerMiddleware]: Dispatching ${action.type}(${params.join(", ")})`);
+	const newState = done(action);
+	print("[loggerMiddleware]: New state:", producer.getState());
+	return newState;
+};
+
+const producer = createProducer(initialState, {
+	// ...
+}).enhance(applyMiddleware(loggerMiddleware));
+```
+
+Enhance can also be called on a combined producer, and will apply the enhancer to every dispatcher exposed by the producer:
+
+```ts
+const combinedProducer = combineProducers({
+	a: producerA,
+	b: producerB,
+}).enhance(applyMiddleware(loggerMiddleware));
+```
+
 &nbsp;
 
 ## 🚧 Roadmap
 
 This project is still in early development, and is missing some features that I plan to add in the future:
 
--   [ ] Middleware
--   [ ] Logging
+-   [x] Middleware
+-   [x] Logging
 -   [ ] Standardized server-to-client syncing
 -   [ ] No `as const` requirement for createSelector
 
