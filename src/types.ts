@@ -41,7 +41,6 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @returns A function that unsubscribes the callback.
 	 */
 	subscribe(callback: (state: S, prevState: S) => void): () => void;
-
 	/**
 	 * Subscribes to changes in a specific part of the state. The callback is
 	 * deferred from the frame that the state is changed.
@@ -49,7 +48,7 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @param callback The callback to call when the state changes.
 	 * @returns A function that unsubscribes the callback.
 	 */
-	observe<Selection>(
+	subscribe<Selection>(
 		selector: (state: S) => Selection,
 		callback: (state: Selection, prevState: Selection) => void,
 	): () => void;

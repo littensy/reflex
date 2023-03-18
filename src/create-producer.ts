@@ -82,31 +82,35 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 			}
 		},
 
-		subscribe(callback) {
+		subscribe(
+			selectorOrCallback: (state: any, prevState?: any) => void,
+			callbackOrUndefined?: (state: any, prevState: any) => void,
+		) {
 			const id = nextSubscriptionId++;
-			subscribers.set(id, callback);
+
+			if (callbackOrUndefined) {
+				let selection = selectorOrCallback(state);
+
+				subscribers.set(id, () => {
+					const newSelection = selectorOrCallback(state);
+
+					if (selection !== newSelection) {
+						const prevSelection = selection;
+						selection = newSelection;
+						callbackOrUndefined(newSelection, prevSelection);
+					}
+				});
+			} else {
+				subscribers.set(id, selectorOrCallback);
+			}
 
 			return () => {
 				subscribers.delete(id);
 			};
 		},
 
-		observe(selector, callback) {
-			let selection = selector(state);
-
-			return this.subscribe(() => {
-				const newSelection = selector(state);
-
-				if (selection !== newSelection) {
-					const prevSelection = selection;
-					selection = newSelection;
-					callback(newSelection, prevSelection);
-				}
-			});
-		},
-
 		once(selector, callback) {
-			const unsubscribe = this.observe(selector, (state, prevState) => {
+			const unsubscribe = this.subscribe(selector, (state, prevState) => {
 				unsubscribe();
 				callback(state, prevState);
 			});
