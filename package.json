@@ -16,6 +16,10 @@
   ],
   "author": "littensy",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/littensy/reflex.git"
+  },
   "types": "out/index.d.ts",
   "files": [
     "out",
