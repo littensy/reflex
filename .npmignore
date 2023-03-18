@@ -1,0 +1,3 @@
+*.test.ts
+*.test.d.ts
+*.test.lua

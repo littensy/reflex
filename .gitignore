@@ -1,0 +1,7 @@
+/node_modules
+/out
+/include
+/.vscode
+/test/include
+/test/out
+*.tsbuildinfo

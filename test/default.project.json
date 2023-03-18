@@ -1,0 +1,31 @@
+{
+	"name": "reflex-place",
+	"globIgnorePaths": [
+		"**/package.json",
+		"**/tsconfig.json"
+	],
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"include": {
+				"$path": "include",
+				"node_modules": {
+					"$className": "Folder",
+					"@rbxts": {
+						"$path": "../node_modules/@rbxts"
+					}
+				}
+			},
+			"reflex": {
+				"$path": "out/src"
+			}
+		},
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"test": {
+				"$path": "out/test"
+			}
+		}
+	}
+}
