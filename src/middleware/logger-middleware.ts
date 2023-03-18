@@ -5,21 +5,23 @@ import { entries } from "../utils/entries";
  * A middleware that logs every action that is dispatched, and the new state
  * after the action has been dispatched.
  */
-export const loggerMiddleware: Middleware = (producer) => (done) => (action) => {
-	const params: string[] = [];
+export const loggerMiddleware: Middleware =
+	(dispatch, resolve, producer) =>
+	(...args) => {
+		const params: string[] = [];
 
-	for (const [, value] of entries(action.arguments)) {
-		params.push(stringify(value));
-	}
+		for (const [, value] of entries(args)) {
+			params.push(stringify(value));
+		}
 
-	print(`[loggerMiddleware]: Dispatching ${action.type}(${params.join(", ")})`);
+		print(`[loggerMiddleware]: Dispatching ${resolve()}(${params.join(", ")})`);
 
-	const newState = done(action);
+		const result = dispatch(...args);
 
-	print("[loggerMiddleware]: New state:", producer.getState());
+		print("[loggerMiddleware]: New state:", producer.getState());
 
-	return newState;
-};
+		return result;
+	};
 
 function stringify(value: unknown): string {
 	if (typeIs(value, "string")) {

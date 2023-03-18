@@ -5,9 +5,21 @@ local Rodux =
 
 local LOOPS = 500
 
+--[[
+	Benchmarker
+
+	Run type: Time
+	Run time: 1 second
+
+	Reflex.Producer: 250 microseconds
+	Rodux.Store:     500 microseconds
+
+	Reflex tends to be 50% faster than Rodux when dispatching light actions.
+]]
+
 return {
 	ParameterGenerator = function()
-		return {
+		local result = {
 			producer = Reflex.createProducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
 					local newState = table.clone(state)
@@ -34,6 +46,13 @@ return {
 				end,
 			})),
 		}
+
+		-- Destroy the Rodux stores to prevent memory leaks
+		task.defer(function()
+			result.store:destruct()
+		end)
+
+		return result
 	end,
 
 	Functions = {

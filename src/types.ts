@@ -133,17 +133,23 @@ export type InferActions<P> = P extends Producer<any, infer A> ? A : never;
  */
 export type InferDispatchers<P> = P extends Producer<any, infer A> ? InferDispatchersFromActions<A> : never;
 
-export type Middleware<T extends Producer<any, any> = Producer<unknown, Record<string, Callback>>> = (
-	producer: T,
-) => (done: NextMiddleware<InferActions<T>>) => NextMiddleware<InferActions<T>>;
+/**
+ * A middleware is a function that wraps dispatchers and can be used to
+ * intercept actions before they are dispatched.
+ * @param dispatch The next middleware in the chain.
+ * @param resolveDispatcher A function that returns the name of the current dispatcher.
+ * @param producer The producer that the middleware is wrapping.
+ * @returns A middleware function.
+ */
+export type Middleware<T extends Producer<any, any> = Producer<unknown, Record<string, (...args: unknown[]) => any>>> =
+	(
+		dispatch: NextMiddleware<InferActions<T>>,
+		resolveDispatcher: () => string,
+		producer: T,
+	) => NextMiddleware<InferActions<T>>;
 
-export type NextMiddleware<A> = (action: MiddlewareAction<A>) => unknown;
-
-export type MiddlewareAction<A = Record<string, unknown>> = {
-	[K in keyof A]: {
-		type: K;
-		arguments: Parameters<A[K]> extends [any, ...infer Rest] ? Rest : unknown[];
-	};
+export type NextMiddleware<A> = {
+	[K in keyof A]: (...args: Parameters<A[K]>) => any;
 }[keyof A];
 
 export type ProducerMap = Record<string, Producer<any, any>>;

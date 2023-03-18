@@ -116,7 +116,7 @@ The `combineProducers()` function takes a table of producers, and returns a new 
 
 > **Warning**
 > Dispatchers called on individual producers will not be tracked by the combined producer!
-> To update the state, you should call it through the combined producer.
+> To update the state, you should get the dispatcher from the combined producer.
 
 ```ts
 const producerA = createProducer({ count: 0 } satisfies StateA, {
@@ -198,15 +198,25 @@ const word = useSelectorCreator(createSelectWord, "E");
 
 Producers have an `enhance()` method that allows you to add custom functionality to your producers. The enhancer you will most likely use is `applyMiddleware()`, which allows you to add middleware to your producers.
 
-Middleware are higher-order functions called before every dispatcher, and can be used to add logging, cancel actions, or to perform side effects. Middleware functions are passed the next function and an action object, which holds the dispatcher and the arguments passed to it.
+Middleware are higher-order functions called before every dispatcher, and can be used to add logging, cancel actions, or to perform side effects.
+
+They're called with the following arguments:
+
+-   `dispatch`: The next middleware in the chain, or the dispatcher if this is the last middleware.
+-   `resolve`: A function that returns the name of the dispatcher that was called.
+-   `producer`: The producer that the dispatcher was called on.
+
+Middleware can be used to log every action:
 
 ```ts
-export const loggerMiddleware: Middleware = (producer) => (done) => (action) => {
-	print(`[loggerMiddleware]: Dispatching ${action.type}`);
-	const newState = done(action);
-	print("[loggerMiddleware]: New state:", producer.getState());
-	return newState;
-};
+export const loggerMiddleware: Middleware =
+	(dispatch, resolve, producer) =>
+	(...args) => {
+		print(`[loggerMiddleware]: Dispatching ${resolve()}`);
+		const result = dispatch(...args);
+		print("[loggerMiddleware]: New state:", producer.getState());
+		return result;
+	};
 
 const producer = createProducer(initialState, {
 	// ...
@@ -232,6 +242,20 @@ This project is still in early development, and is missing some features that I 
 -   [x] Logging
 -   [ ] Standardized server-to-client syncing
 -   [ ] No `as const` requirement for createSelector
+
+&nbsp;
+
+## 📖 Terminology
+
+-   ♻️ **Producer**: A producer is a table that contains state observers and dispatchers.
+
+-   🎂 **State**: An immutable table that represents the current state of the application.
+
+-   🍰 **Selector**: A function that, given the current state, returns a subset of the state.
+
+-   ⚙️ **Action**: A function that, given the current state and some parameters, returns a new state.
+
+-   ⚡️ **Dispatcher**: The callback in the producer that updates the state and is based on an action.
 
 &nbsp;
 

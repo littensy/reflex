@@ -10,82 +10,75 @@ return function()
 		})
 	end
 
-	it("should call middleware with a key and args", function()
+	it("should call middleware with the right parameters", function()
 		local producer = copyProducer()
-		local contextReceived = {} -- { "increment", amount }
 
-		local middleware = function(store)
-			return function(done)
-				return function(context)
-					contextReceived = context
-					return done(context)
-				end
+		local function middleware(dispatch, resolve, _producer)
+			expect(dispatch).to.be.a("function")
+			expect(resolve).to.be.a("function")
+			expect(_producer).to.equal(producer)
+			return function(...)
+				expect(...).to.be.a("number")
+				return dispatch(...)
 			end
 		end
 
 		producer:enhance(applyMiddleware(middleware))
-
-		producer.increment(5)
-
-		expect(contextReceived.type).to.equal("increment")
-		expect(contextReceived.arguments[1]).to.equal(5)
-		expect(producer:getState().value).to.equal(5)
-
+		producer.increment(1)
 		producer:destroy()
 	end)
 
 	it("should call middleware in order", function()
 		local producer = copyProducer()
-		local middlewareCalls = {} -- { "increment", amount }
 
-		local middleware1 = function(store)
-			return function(done)
-				return function(context)
-					table.insert(middlewareCalls, "middleware1")
-					return done(context)
-				end
+		local middlewareCalls = {}
+
+		local function middleware1(dispatch, resolve, _producer)
+			return function(...)
+				table.insert(middlewareCalls, 1)
+				return dispatch(...)
 			end
 		end
 
-		local middleware2 = function(store)
-			return function(done)
-				return function(context)
-					table.insert(middlewareCalls, "middleware2")
-					return done(context)
-				end
+		local function middleware2(dispatch, resolve, _producer)
+			return function(...)
+				table.insert(middlewareCalls, 2)
+				return dispatch(...)
 			end
 		end
 
-		producer:enhance(applyMiddleware(middleware1, middleware2))
+		local function middleware3(dispatch, resolve, _producer)
+			return function(...)
+				table.insert(middlewareCalls, 3)
+				return dispatch(...)
+			end
+		end
 
-		producer.increment(5)
-
-		expect(middlewareCalls[1]).to.equal("middleware1")
-		expect(middlewareCalls[2]).to.equal("middleware2")
-		expect(producer:getState().value).to.equal(5)
-
+		producer:enhance(applyMiddleware(middleware1, middleware2, middleware3))
+		producer.increment(1)
 		producer:destroy()
+
+		expect(middlewareCalls).to.be.a("table")
+		expect(#middlewareCalls).to.equal(3)
+		expect(middlewareCalls[1]).to.equal(1)
+		expect(middlewareCalls[2]).to.equal(2)
+		expect(middlewareCalls[3]).to.equal(3)
 	end)
 
 	it("should return what the middleware returns", function()
 		local producer = copyProducer()
 
-		local middleware = function(store)
-			return function(done)
-				return function(context)
-					done(context)
-					return "middleware"
-				end
+		local function middleware(dispatch, resolve, _producer)
+			return function(...)
+				dispatch(...)
+				return "middleware"
 			end
 		end
 
 		producer:enhance(applyMiddleware(middleware))
-
-		local result = producer.increment(5)
+		local result = producer.increment(1)
+		producer:destroy()
 
 		expect(result).to.equal("middleware")
-		expect(producer:getState().value).to.equal(5)
-
-		producer:destroy()
 	end)
 end

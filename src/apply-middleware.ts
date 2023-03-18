@@ -1,4 +1,4 @@
-import { Middleware, MiddlewareAction, Producer } from "./types";
+import { Middleware, Producer } from "./types";
 import { entries } from "./utils/entries";
 
 /**
@@ -11,25 +11,31 @@ export function applyMiddleware<T extends Producer<any, any>>(...middlewares: Mi
 export function applyMiddleware(...middlewares: Middleware[]) {
 	return (producer: Producer<any, any>) => {
 		const dispatchers = producer.getDispatchers();
-		const chain = middlewares.map((middleware) => middleware(producer));
+
+		let currentDispatcher: string | undefined;
+
+		const resolveDispatcher = () => {
+			assert(currentDispatcher, "Cannot resolve dispatcher outside of middleware");
+			return currentDispatcher;
+		};
 
 		for (const [name, dispatcher] of entries<string, Callback>(dispatchers)) {
-			let dispatch = (action: MiddlewareAction<any>) => {
-				return dispatcher(...action.arguments);
+			let dispatch = dispatcher;
+
+			for (const i of $range(middlewares.size() - 1, 0, -1)) {
+				const middleware = middlewares[i];
+				dispatch = middleware(dispatch, resolveDispatcher, producer);
+			}
+
+			const startDispatch = dispatch;
+
+			dispatch = (...args: unknown[]) => {
+				currentDispatcher = name;
+				return startDispatch(...args);
 			};
 
-			// Compose the middleware chain.
-			dispatch = chain.reduce((a, b) => {
-				return (done) => a(b(done));
-			})(dispatch);
-
-			dispatchers[name] = (...args: unknown[]) => {
-				// Convert the arguments to an action type so middleware can narrow
-				// the argument types and access the dispatcher name.
-				return dispatch({ type: name, arguments: args } satisfies MiddlewareAction<any>);
-			};
-
-			producer[name] = dispatchers[name];
+			dispatchers[name] = dispatch;
+			producer[name] = dispatch;
 		}
 
 		return producer;
