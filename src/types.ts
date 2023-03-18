@@ -133,6 +133,19 @@ export type InferActions<P> = P extends Producer<any, infer A> ? A : never;
  */
 export type InferDispatchers<P> = P extends Producer<any, infer A> ? InferDispatchersFromActions<A> : never;
 
+export type Middleware<T extends Producer<any, any> = Producer<unknown, Record<string, Callback>>> = (
+	producer: T,
+) => (done: NextMiddleware<InferActions<T>>) => NextMiddleware<InferActions<T>>;
+
+export type NextMiddleware<A> = (action: MiddlewareAction<A>) => unknown;
+
+export type MiddlewareAction<A = Record<string, unknown>> = {
+	[K in keyof A]: {
+		type: K;
+		arguments: Parameters<A[K]> extends [any, ...infer Rest] ? Rest : unknown[];
+	};
+}[keyof A];
+
 export type ProducerMap = Record<string, Producer<any, any>>;
 
 export type CombineStates<Producers extends ProducerMap> = {

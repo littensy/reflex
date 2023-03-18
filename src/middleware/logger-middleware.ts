@@ -1,4 +1,4 @@
-import { Middleware } from "../apply-middleware";
+import { Middleware } from "../types";
 import { entries } from "../utils/entries";
 
 /**
