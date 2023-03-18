@@ -43,9 +43,9 @@ pnpm add @rbxts/reflex
 
 ### 🎂 Producers
 
-**Producers** are state containers that combine methods to observe your state, and callbacks that change your state.
+**Producers** are the state containers that manage state updates and observe changes.
 
-**`createProducer()`** takes an initial state and a table of action callbacks, and returns a producer. Similar to Rodux, state is immutable, and must be modified by returning a new state object.
+**`createProducer()`** takes an initial state and a table of action callbacks. Like Rodux, all state is immutable, so action callbacks should return a new state table if a change is needed.
 
 ```ts
 const myProducer = createProducer({ count: 0 } satisfies State, {
@@ -60,22 +60,23 @@ myProducer.increment(); // { count: 1 }
 
 ### 🍰 Selectors
 
-**Selectors** are functions that take a state and return a value. They can be used to observe a subset of your state, or to derive a value from your state. Producers provide a `select` method that simplifies getting a piece of state.
+**Selectors** are functions that take state as an input and return a select portion of it. You can use them to observe a subset of your state, or you can derive new values from it. They're also used in producers to observe state changes.
 
-Note that when deriving state, or performing an expensive calculation, it's best to memoize your selectors to prevent excessive recalculations. Reflex provides a `createSelector` function that memoizes selectors for you.
+Selectors are called often during state changes, so it's best to memoize your selectors when deriving unique values or performing an expensive calculation. For that reason, Reflex provides a `createSelector` function that memoizes selectors for you.
 
 ```ts
 const selectCount = (state: State) => state.count;
 
 const selectWord = createSelector([selectCount] as const, (count) => {
-	return "E".rep(count);
+	return ["E".rep(count)];
 });
 
 myProducer.set(10);
-myProducer.select(selectWord); // "EEEEEEEEEE"
+myProducer.select(selectWord); // ["EEEEEEEEEE"]
+myProducer.select(selectWord) === myProducer.select(selectWord); // true
 ```
 
-You might also have a selector that depends on parameters from outside of your state. In that case, you can use this pattern:
+You might also have a selector that depends on outside parameters. In that case, I recommend this pattern:
 
 ```ts
 const createSelectWord = (word: string) => {
@@ -87,9 +88,9 @@ const createSelectWord = (word: string) => {
 
 ### 🔮 Observing state
 
-You can observe changes to subsets of your state with selectors using the `observe`, `once`, and `wait` methods. Additionally, the `subscribe` method allows you to observe changes to the entire state.
+You can observe changes to subsets of your state using the `observe`, `once`, and `wait` methods. Additionally, the `subscribe` method allows you to observe changes to the entire state.
 
-When a dispatcher is called, the observers are scheduled to run on the next frame with the new state, so you can safely call multiple dispatchers in a single frame.
+Although dispatchers update state synchronously, observers are deferred until the next frame. This allows you to observe multiple state changes in a single frame.
 
 ```ts
 const unsubscribe = myProducer.observe(selectCount, (count, prevCount) => {
@@ -109,13 +110,13 @@ unsubscribe();
 
 ### 🖥️ Managing multiple producers
 
-Similar to Rodux, Reflex allows you to organize your state into multiple producers, and then combining them into a single producer to be used in your game.
+Reflex allows you to organize your state into multiple producers, and then combine them into a single root producer.
 
 The `combineProducers()` function takes a table of producers, and returns a new producer that combines the states and dispatchers. Any dispatchers called in the combined producer will be forwarded to every producer in the table.
 
 > **Warning**
 > Dispatchers called on individual producers will not be tracked by the combined producer!
-> To dispatch an action on a combined producer, you must call it through the combined producer.
+> To update the state, you should call it through the combined producer.
 
 ```ts
 const producerA = createProducer({ count: 0 } satisfies StateA, {
@@ -140,9 +141,9 @@ combinedProducer.privateB(); // { ..., b: { count: 2 } }
 
 ### ⚛️ Roact
 
-Reflex offers native support for [`@rbxts/roact-hooked`](https://npmjs.com/package/@rbxts/roact-hooked) with the `useSelector()` and `useProducer<Producer>()` hooks. Using them requires setting up a `ReflexProvider` at the root of your Roact tree.
+Reflex offers native support for [`@rbxts/roact-hooked`](https://npmjs.com/package/@rbxts/roact-hooked) with the `useSelector()` and `useProducer()` hooks. Using them requires setting up a `ReflexProvider` at the root of your Roact tree.
 
-If you don't want to use the generic type, Reflex exports the `UseSelectorHook` and `UseProducerHook` types to make narrowing the type easier.
+If you don't want to use generics to get the Producer type you want, Reflex exports the `UseSelectorHook` and `UseProducerHook` types to make it easier:
 
 ```tsx
 // use-app-producer.ts
@@ -179,7 +180,7 @@ Roact.mount(
 );
 ```
 
-For memoizing selectors that depend on parameters, you can use the `useSelectorCreator()` hook to memoize the returned selector and prevent unnecessary re-renders.
+You should avoid passing a newly created selector directly to useSelector, though (i.e. `useSelector(createSelectWord("E"))`). If it uses `createSelector`, it will create a new selector every time the component renders, and reset the cache. Instead, you can use the `useSelectorCreator()` hook to memoize the selector:
 
 ```tsx
 const createSelectWord = (word: string) => {
@@ -193,11 +194,11 @@ const createSelectWord = (word: string) => {
 const word = useSelectorCreator(createSelectWord, "E");
 ```
 
-### 🛠️ Enhance
+### 🛠️ Middleware
 
-Reflex provides a `createEnhancer()` function that allows you to add custom functionality to your producers. The enhancer you will most likely use is `applyMiddleware()`, which allows you to add middleware to your producers.
+Producers have an `enhance()` method that allows you to add custom functionality to your producers. The enhancer you will most likely use is `applyMiddleware()`, which allows you to add middleware to your producers.
 
-Middleware functions are called before every dispatcher, and can be used to add logging, or to perform side effects. Middleware functions are passed the next middleware function, and an action object, which holds the dispatcher and the arguments passed to it.
+Middleware are higher-order functions called before every dispatcher, and can be used to add logging, cancel actions, or to perform side effects. Middleware functions are passed the next function and an action object, which holds the dispatcher and the arguments passed to it.
 
 ```ts
 export const loggerMiddleware: Middleware = (producer) => (done) => (action) => {
