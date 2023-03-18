@@ -130,6 +130,10 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 			subscribers.clear();
 		},
 
+		enhance(enhancer) {
+			return enhancer(this);
+		},
+
 		Connect(callback) {
 			const unsubscribe = this.subscribe(callback);
 			return {

@@ -80,6 +80,15 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 */
 	destroy(): void;
 
+	/**
+	 * Enhances the producer with new functionality. The enhancer function
+	 * is passed the producer as an argument and should return a new
+	 * object that inherits from the producer.
+	 * @param enhancer A function that enhances the producer.
+	 * @returns The enhanced producer.
+	 */
+	enhance<T extends Producer<any, any>>(enhancer: (producer: Producer<S, A>) => T): T;
+
 	/** @deprecated @hidden */
 	Connect(callback: (newState: S) => void): RBXScriptConnection;
 

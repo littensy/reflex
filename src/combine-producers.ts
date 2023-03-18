@@ -165,6 +165,10 @@ export function combineProducers<Producers extends ProducerMap>(producers: Produ
 			subscribers.clear();
 		},
 
+		enhance(enhancer) {
+			return enhancer(this);
+		},
+
 		Connect(callback) {
 			const unsubscribe = this.subscribe(callback);
 			return {
