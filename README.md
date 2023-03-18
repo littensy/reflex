@@ -43,7 +43,7 @@ pnpm add @rbxts/reflex
 
 ### 🎂 Producers
 
-**Producers** are the state containers that manage state updates and observe changes.
+**Producers** are the state containers that manage state updates and subscribe to changes.
 
 **`createProducer()`** takes an initial state and a table of action callbacks. Like Rodux, all state is immutable, so action callbacks should return a new state table if a change is needed.
 
@@ -88,12 +88,12 @@ const createSelectWord = (word: string) => {
 
 ### 🔮 Observing state
 
-You can observe changes to subsets of your state using the `observe`, `once`, and `wait` methods. Additionally, the `subscribe` method allows you to observe changes to the entire state.
+You can observe changes to subsets of your state using the `subscribe`, `once`, and `wait` methods. These methods take a selector and a callback, and call the callback whenever the selected state changes.
 
-Although dispatchers update state synchronously, observers are deferred until the next frame. This allows you to observe multiple state changes in a single frame.
+Although dispatchers update state synchronously, the events are deferred until the next frame. This allows you to observe multiple state changes in a single frame.
 
 ```ts
-const unsubscribe = myProducer.observe(selectCount, (count, prevCount) => {
+const unsubscribe = myProducer.subscribe(selectCount, (count, prevCount) => {
 	print(`Count changed from ${prevCount} to ${count}`);
 });
 
@@ -247,7 +247,7 @@ This project is still in early development, and is missing some features that I 
 
 ## 📖 Terminology
 
--   ♻️ **Producer**: A producer is a table that contains state observers and dispatchers.
+-   ♻️ **Producer**: A producer is a table that contains state events and dispatchers.
 
 -   🎂 **State**: An immutable table that represents the current state of the application.
 

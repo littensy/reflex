@@ -6,11 +6,11 @@ producer.subscribe((state) => {
 	print(`[example]: State changed to ${game.GetService("HttpService").JSONEncode(state)}`);
 });
 
-producer.observe(selectCount, (count, prevCount) => {
+producer.subscribe(selectCount, (count, prevCount) => {
 	print(`[example]: Count changed from ${prevCount} to ${count}`);
 });
 
-producer.observe(selectText, (text, prevText) => {
+producer.subscribe(selectText, (text, prevText) => {
 	print(`[example]: Text changed from "${prevText}" to "${text}"`);
 });
 

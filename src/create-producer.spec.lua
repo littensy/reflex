@@ -25,7 +25,6 @@ return function()
 			expect(producer.getDispatchers).to.be.a("function")
 			expect(producer.flush).to.be.a("function")
 			expect(producer.subscribe).to.be.a("function")
-			expect(producer.observe).to.be.a("function")
 			expect(producer.once).to.be.a("function")
 			expect(producer.wait).to.be.a("function")
 			expect(producer.select).to.be.a("function")
@@ -159,20 +158,20 @@ return function()
 		end)
 	end)
 
-	describe("Producer.observe", function()
+	describe("Producer.subscribe(selector)", function()
 		local selector = function(state)
 			return state.counter
 		end
 
 		it("should return an unsubscribe function", function()
-			local unsubscribe = producer:observe(selector, function() end)
+			local unsubscribe = producer:subscribe(selector, function() end)
 			expect(unsubscribe).to.be.a("function")
 			unsubscribe()
 		end)
 
 		it("should call the listener when the state changes", function()
 			local called = false
-			local unsubscribe = producer:observe(selector, function()
+			local unsubscribe = producer:subscribe(selector, function()
 				called = true
 			end)
 			producer.increment(1)
@@ -183,7 +182,7 @@ return function()
 
 		it("should not call the listener when a different part of the state changes", function()
 			local called = false
-			local unsubscribe = producer:observe(selector, function()
+			local unsubscribe = producer:subscribe(selector, function()
 				called = true
 			end)
 			producer.setSetter(1)
@@ -194,7 +193,7 @@ return function()
 
 		it("should pass the current and previous state", function()
 			local previousState = selector(producer:getState())
-			local unsubscribe = producer:observe(selector, function(receivedState, receivedPreviousState)
+			local unsubscribe = producer:subscribe(selector, function(receivedState, receivedPreviousState)
 				expect(receivedState).to.be.a("number")
 				expect(receivedPreviousState).to.be.a("number")
 				expect(receivedState).to.never.equal(receivedPreviousState)
