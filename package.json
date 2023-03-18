@@ -1,6 +1,6 @@
 {
   "name": "@rbxts/reflex",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A state container for side effects",
   "main": "out/init.lua",
   "scripts": {
