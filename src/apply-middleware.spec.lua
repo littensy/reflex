@@ -66,4 +66,26 @@ return function()
 
 		producer:destroy()
 	end)
+
+	it("should return what the middleware returns", function()
+		local producer = copyProducer()
+
+		local middleware = function(store)
+			return function(done)
+				return function(context)
+					done(context)
+					return "middleware"
+				end
+			end
+		end
+
+		producer:enhance(applyMiddleware(middleware))
+
+		local result = producer.increment(5)
+
+		expect(result).to.equal("middleware")
+		expect(producer:getState().value).to.equal(5)
+
+		producer:destroy()
+	end)
 end
