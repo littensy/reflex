@@ -7,18 +7,13 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	/**
 	 * Returns the current state of the producer.
 	 */
-	getState: {
-		/**
-		 * Returns the current state of the producer.
-		 */
-		(): S;
-		/**
-		 * Calls the selector with the current state and returns the result.
-		 * @param selector A function that selects a part of the state.
-		 * @returns The result of the selector.
-		 */
-		<Selection>(selector: (state: S) => Selection): Selection;
-	};
+	getState(): S;
+	/**
+	 * Calls the selector with the current state and returns the result.
+	 * @param selector A function that selects a part of the state.
+	 * @returns The result of the selector.
+	 */
+	getState<Selection>(selector: (state: S) => Selection): Selection;
 
 	/**
 	 * Sets the state of the producer. Creates a shallow copy of the state
@@ -26,17 +21,17 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @param newState The new state of the producer.
 	 * @returns The new state.
 	 */
-	setState: (newState: S) => S;
+	setState(newState: S): S;
 
 	/**
 	 * Returns the dispatchers for the actions.
 	 */
-	getDispatchers: () => InferDispatchersFromActions<A>;
+	getDispatchers(): InferDispatchersFromActions<A>;
 
 	/**
 	 * Fires the change event if the state has changed.
 	 */
-	flush: () => void;
+	flush(): void;
 
 	/**
 	 * Subscribes to changes in a specific part of the state. The callback is
@@ -45,27 +40,18 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @param callback The callback to call when the state changes.
 	 * @returns A function that unsubscribes the callback.
 	 */
-	subscribe: {
-		/**
-		 * Subscribes to changes in a specific part of the state. The callback is
-		 * deferred from the frame that the state is changed.
-		 * @param selector A function that selects a part of the state.
-		 * @param callback The callback to call when the state changes.
-		 * @returns A function that unsubscribes the callback.
-		 */
-		(listener: (state: S, prevState: S) => void): () => void;
-		/**
-		 * Subscribes to changes in a specific part of the state. The callback is
-		 * deferred from the frame that the state is changed.
-		 * @param selector A function that selects a part of the state.
-		 * @param listener The callback to call when the state changes.
-		 * @returns A function that unsubscribes the callback.
-		 */
-		<Selection>(
-			selector: (state: S) => Selection,
-			listener: (state: Selection, prevState: Selection) => void,
-		): () => void;
-	};
+	subscribe(listener: (state: S, prevState: S) => void): () => void;
+	/**
+	 * Subscribes to changes in a specific part of the state. The callback is
+	 * deferred from the frame that the state is changed.
+	 * @param selector A function that selects a part of the state.
+	 * @param listener The callback to call when the state changes.
+	 * @returns A function that unsubscribes the callback.
+	 */
+	subscribe<Selection>(
+		selector: (state: S) => Selection,
+		listener: (state: Selection, prevState: Selection) => void,
+	): () => void;
 
 	/**
 	 * Calls the callback once a specific part of the state changes, then
@@ -74,10 +60,10 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @param listener The callback to call when the state changes.
 	 * @returns A function that unsubscribes the callback.
 	 */
-	once: <Selection>(
+	once<Selection>(
 		selector: (state: S) => Selection,
 		listener: (state: Selection, prevState: Selection) => void,
-	) => () => void;
+	): () => void;
 
 	/**
 	 * Returns a Promise that resolves once a specific part of the state
@@ -86,12 +72,12 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @param selector A function that selects a part of the state.
 	 * @returns A Promise that resolves when the state changes.
 	 */
-	wait: <Selection>(selector: (state: S) => Selection) => Promise<Selection>;
+	wait<Selection>(selector: (state: S) => Selection): Promise<Selection>;
 
 	/**
 	 * Disconnects all subscribers and cancel any pending flushes.
 	 */
-	destroy: () => void;
+	destroy(): void;
 
 	/**
 	 * Enhances the producer with new functionality. The enhancer function
@@ -100,13 +86,13 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @param enhancer A function that enhances the producer.
 	 * @returns The enhanced producer.
 	 */
-	enhance: <T extends Producer<any, any>>(enhancer: (producer: Producer<S, A>) => T) => T;
+	enhance<T extends Producer<any, any>>(enhancer: (producer: Producer<S, A>) => T): T;
 
 	/**
 	 * Returns the actions for the producer.
 	 * @ignore
 	 */
-	getActions: () => A;
+	getActions(): A;
 
 	/** @deprecated @hidden */
 	Connect(callback: (newState: S) => void): RBXScriptConnection;

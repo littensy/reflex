@@ -42,7 +42,7 @@ return function()
 			})
 
 			expect(function()
-				combineProducers(producerMap).enhance(applyMiddleware(broadcaster.middleware))
+				combineProducers(producerMap):enhance(applyMiddleware(broadcaster.middleware))
 			end).never.to.throw()
 		end)
 
@@ -60,7 +60,7 @@ return function()
 				end,
 			})
 
-			local producer = combineProducers(producerMap).enhance(applyMiddleware(broadcaster.middleware))
+			local producer = combineProducers(producerMap):enhance(applyMiddleware(broadcaster.middleware))
 
 			producer.incrementA(1)
 

@@ -23,9 +23,9 @@ return function()
 			end
 		end
 
-		producer.enhance(applyMiddleware(middleware))
+		producer:enhance(applyMiddleware(middleware))
 		producer.increment(1)
-		producer.destroy()
+		producer:destroy()
 	end)
 
 	it("should call middleware in order", function()
@@ -54,9 +54,9 @@ return function()
 			end
 		end
 
-		producer.enhance(applyMiddleware(middleware1, middleware2, middleware3))
+		producer:enhance(applyMiddleware(middleware1, middleware2, middleware3))
 		producer.increment(1)
-		producer.destroy()
+		producer:destroy()
 
 		expect(middlewareCalls).to.be.a("table")
 		expect(#middlewareCalls).to.equal(3)
@@ -75,9 +75,9 @@ return function()
 			end
 		end
 
-		producer.enhance(applyMiddleware(middleware))
+		producer:enhance(applyMiddleware(middleware))
 		local result = producer.increment(1)
-		producer.destroy()
+		producer:destroy()
 
 		expect(result).to.equal("middleware")
 	end)

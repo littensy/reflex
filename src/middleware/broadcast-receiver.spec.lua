@@ -44,7 +44,7 @@ return function()
 			})
 
 			expect(function()
-				combineProducers(producerMap).enhance(broadcastReceiver.enhancer)
+				combineProducers(producerMap):enhance(broadcastReceiver.enhancer)
 			end).never.to.throw()
 		end)
 
@@ -57,8 +57,8 @@ return function()
 				end,
 			})
 
-			local producer = combineProducers(producerMap).enhance(broadcastReceiver.enhancer)
-			local state = producer.getState()
+			local producer = combineProducers(producerMap):enhance(broadcastReceiver.enhancer)
+			local state = producer:getState()
 
 			expect(state.a.count).to.equal(10)
 			expect(state.b.count).to.equal(0)
@@ -78,14 +78,14 @@ return function()
 				end,
 			})
 
-			local producer = combineProducers(producerMap).enhance(broadcastReceiver.enhancer)
+			local producer = combineProducers(producerMap):enhance(broadcastReceiver.enhancer)
 
 			broadcastReceiver.dispatch({
 				{ type = "incrementA", arguments = { 10 } },
 				{ type = "incrementB", arguments = { 20 } },
 			})
 
-			local state = producer.getState()
+			local state = producer:getState()
 
 			expect(state.a.count).to.equal(10)
 			expect(state.b.count).to.equal(20)
