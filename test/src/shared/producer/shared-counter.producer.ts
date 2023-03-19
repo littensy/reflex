@@ -1,10 +1,10 @@
 import { createProducer } from "@rbxts/reflex";
 
-export interface SharedCounterProducer {
+export interface SharedCounterState {
 	count: number;
 }
 
-const initialState: SharedCounterProducer = {
+const initialState: SharedCounterState = {
 	count: 0,
 };
 
@@ -15,4 +15,4 @@ export const sharedCounterProducer = createProducer(initialState, {
 	resetShared: () => ({ ...initialState }),
 });
 
-export const selectSharedCount = (state: { sharedCounter: SharedCounterProducer }) => state.sharedCounter.count;
+export const selectSharedCount = (state: { sharedCounter: SharedCounterState }) => state.sharedCounter.count;
