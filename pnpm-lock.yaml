@@ -2,6 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@rbxts/compiler-types': 2.1.0-types.1
+  '@rbxts/net': ^3.0.3
   '@rbxts/roact': 1.4.4-ts.0
   '@rbxts/roact-hooked': ^2.3.3
   '@rbxts/rodux': 3.0.0-ts.3
@@ -20,6 +21,7 @@ specifiers:
 
 devDependencies:
   '@rbxts/compiler-types': 2.1.0-types.1
+  '@rbxts/net': 3.0.3
   '@rbxts/roact': 1.4.4-ts.0
   '@rbxts/roact-hooked': 2.3.3_@rbxts+roact@1.4.4-ts.0
   '@rbxts/rodux': 3.0.0-ts.3
@@ -118,6 +120,10 @@ packages:
 
   /@rbxts/compiler-types/2.1.0-types.1:
     resolution: {integrity: sha512-+ztwutzuNivWsgsERiC7n5il4C5gfJUuGJUmXYRq8FwY4ye3aupRi9RocmyAHq6255sO7z+RM61AVbqx3llsLQ==}
+    dev: true
+
+  /@rbxts/net/3.0.3:
+    resolution: {integrity: sha512-sceVEOU+XcFZm7STWTUWzk9IZmdTC7WljSzzJAdMxbbCOxa0f39cfk29RwadI6UxTYb39qLPY36sDEPNWZ1pMw==}
     dev: true
 
   /@rbxts/roact-hooked/2.3.3_@rbxts+roact@1.4.4-ts.0:

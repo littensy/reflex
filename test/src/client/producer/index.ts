@@ -1,12 +1,12 @@
 import { InferDispatchers, InferState, applyMiddleware, combineProducers, loggerMiddleware } from "@rbxts/reflex";
-import { counterProducer } from "./counter.producer";
-import { writerProducer } from "./writer.producer";
+import { sharedProducers } from "shared/producer";
+import { clientCounterProducer } from "./client-counter.producer";
 
 export type RootProducer = typeof producer;
 export type RootState = InferState<RootProducer>;
 export type RootDispatchers = InferDispatchers<RootProducer>;
 
 export const producer = combineProducers({
-	counter: counterProducer,
-	writer: writerProducer,
+	clientCounter: clientCounterProducer,
+	...sharedProducers,
 }).enhance(applyMiddleware(loggerMiddleware));

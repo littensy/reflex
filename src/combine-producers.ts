@@ -1,5 +1,5 @@
 import { CombineProducer, CombineStates, Producer, ProducerMap } from "./types";
-import { entries } from "./utils/entries";
+import { entries } from "./utils/object";
 
 /**
  * Combines multiple producers into a single producer.
@@ -87,6 +87,10 @@ export function combineProducers<Producers extends ProducerMap>(producers: Produ
 
 		setState(newState) {
 			combinedState = table.clone(newState);
+
+			for (const [key, producer] of entries<ProducerMap>(producers)) {
+				producer.setState(newState[key]);
+			}
 
 			if (!nextFlush) {
 				nextFlush = task.defer(() => {

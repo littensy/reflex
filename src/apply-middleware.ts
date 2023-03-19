@@ -1,5 +1,5 @@
 import { Middleware, Producer } from "./types";
-import { entries } from "./utils/entries";
+import { entries } from "./utils/object";
 
 /**
  * Creates a producer enhancer that applies middleware to every dispatcher

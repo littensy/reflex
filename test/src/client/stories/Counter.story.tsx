@@ -3,17 +3,17 @@ import Roact from "@rbxts/roact";
 import { withHookDetection } from "@rbxts/roact-hooked";
 import { useAppProducer } from "../hooks/use-app-producer";
 import { producer } from "../producer";
-import { selectCount } from "../producer/counter.producer";
+import { selectClientCount } from "../producer/client-counter.producer";
 
 function Counter() {
-	const { increment } = useAppProducer();
+	const { incrementClient } = useAppProducer();
 
-	const count = useSelector(selectCount);
+	const count = useSelector(selectClientCount);
 
 	return (
 		<textbutton
 			Text={`Count: ${count}`}
-			Event={{ Activated: increment }}
+			Event={{ Activated: incrementClient }}
 			AnchorPoint={new Vector2(0.5, 0.5)}
 			Position={new UDim2(0.5, 0, 0.5, 0)}
 			Size={new UDim2(0, 100, 0, 50)}

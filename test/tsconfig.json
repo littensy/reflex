@@ -19,20 +19,20 @@
 
 		// configurable
 		"paths": {
-			"@rbxts/reflex": ["../src"]
+			"@rbxts/reflex": ["../../src"],
 		},
 		"rootDirs": [
 			"./src",
 			"../src",
 		],
-		"baseUrl": ".",
+		"baseUrl": "./src",
 		"outDir": "./out",
 		"incremental": true,
 		"tsBuildInfoFile": "./out/tsconfig.tsbuildinfo",
 		"declaration": true
 	},
 	"include": [
-		"**/*",
+		"./src/**/*",
 		"../src/**/*"
 	]
 }
