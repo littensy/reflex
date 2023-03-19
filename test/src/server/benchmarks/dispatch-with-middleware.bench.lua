@@ -34,41 +34,29 @@ return {
 		local result = {
 			producer = Reflex.createProducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
-					local newState = table.clone(state)
-					newState.countA = newState.countA + 1
-					return newState
+					return { countA = state.countA + 1, countB = state.countB }
 				end,
 				incrementB = function(state)
-					local newState = table.clone(state)
-					newState.countB = newState.countB + 1
-					return newState
+					return { countA = state.countA, countB = state.countB + 1 }
 				end,
-			}):enhance(Reflex.applyMiddleware(reflexMiddleware)),
+			}).enhance(Reflex.applyMiddleware(reflexMiddleware)),
 
 			producerNoMiddleware = Reflex.createProducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
-					local newState = table.clone(state)
-					newState.countA = newState.countA + 1
-					return newState
+					return { countA = state.countA + 1, countB = state.countB }
 				end,
 				incrementB = function(state)
-					local newState = table.clone(state)
-					newState.countB = newState.countB + 1
-					return newState
+					return { countA = state.countA, countB = state.countB + 1 }
 				end,
 			}),
 
 			store = Rodux.Store.new(
 				Rodux.createReducer({ countA = 0, countB = 0 }, {
 					incrementA = function(state)
-						local newState = table.clone(state)
-						newState.countA = newState.countA + 1
-						return newState
+						return { countA = state.countA + 1, countB = state.countB }
 					end,
 					incrementB = function(state)
-						local newState = table.clone(state)
-						newState.countB = newState.countB + 1
-						return newState
+						return { countA = state.countA, countB = state.countB + 1 }
 					end,
 				}),
 				nil,
@@ -77,14 +65,10 @@ return {
 
 			storeNoMiddleware = Rodux.Store.new(Rodux.createReducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
-					local newState = table.clone(state)
-					newState.countA = newState.countA + 1
-					return newState
+					return { countA = state.countA + 1, countB = state.countB }
 				end,
 				incrementB = function(state)
-					local newState = table.clone(state)
-					newState.countB = newState.countB + 1
-					return newState
+					return { countA = state.countA, countB = state.countB + 1 }
 				end,
 			})),
 		}

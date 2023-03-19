@@ -18,6 +18,6 @@ producer.enhance(applyMiddleware(broadcaster.middleware, loggerMiddleware));
 
 // Playing around with syncing shared dispatchers with the client
 task.delay(3, () => {
-	producer.incrementShared();
-	producer.multiplyShared(5);
+	// producer.incrementShared();
+	// producer.multiplyShared(5);
 });

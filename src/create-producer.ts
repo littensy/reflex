@@ -1,4 +1,4 @@
-import { Actions, InferDispatchersFromActions, Producer } from "./types";
+import { Actions, InferDispatchersFromActions, Producer, Selector } from "./types";
 
 /**
  * Creates a producer that can be used to manage state.
@@ -14,158 +14,172 @@ import { Actions, InferDispatchersFromActions, Producer } from "./types";
  * @param actions A set of actions that can be used to modify the state.
  * @returns A producer that can be used to manage state.
  */
-export function createProducer<S, A extends Actions<S>>(initialState: S, actions: A): Producer<S, A> {
+export function createProducer<S, A extends Actions<S>>(initialState: S, actions: A): Producer<S, A>;
+export function createProducer(initialState: unknown, actions: Actions<unknown>): Producer<unknown, Actions<unknown>> {
+	const dispatchers = {} as InferDispatchersFromActions<Actions<unknown>>;
+
+	const listeners = new Map<number, (state: unknown, prevState: unknown) => void>();
+	let listenerIdCounter = 0;
+
 	let state = initialState;
 	let stateSinceFlush = initialState;
-
 	let nextFlush: thread | undefined;
-	let nextSubscriptionId = 0;
 
-	const subscribers = new Map<number, (state: S, prevState: S) => void>();
-	const dispatchers = {} as InferDispatchersFromActions<Actions<S>>;
+	const scheduleFlush = () => {
+		if (nextFlush) {
+			return;
+		}
 
-	for (const [actionName, action] of pairs(actions as Actions<S>)) {
-		dispatchers[actionName] = (...args: unknown[]) => {
-			const prevState = state;
-			state = action(prevState, ...args);
-
-			if (prevState !== state && !nextFlush) {
-				nextFlush = task.defer(() => {
-					nextFlush = undefined;
-					producer.flush();
-				});
-			}
-
-			return state;
-		};
-	}
-
-	const producer: Producer<S, {}> = {
-		getState() {
-			return state;
-		},
-
-		select(selector) {
-			return selector(state);
-		},
-
-		setState(newState) {
-			state = typeIs(newState, "table") ? table.clone(newState) : newState;
-
-			if (!nextFlush) {
-				nextFlush = task.defer(() => {
-					nextFlush = undefined;
-					this.flush();
-				});
-			}
-
-			return state;
-		},
-
-		getDispatchers() {
-			return dispatchers;
-		},
-
-		flush() {
-			if (nextFlush) {
-				task.cancel(nextFlush);
-				nextFlush = undefined;
-			}
-
-			if (stateSinceFlush !== state) {
-				const prevState = stateSinceFlush;
-				stateSinceFlush = state;
-
-				for (const [, subscriber] of subscribers) {
-					subscriber(state, prevState);
-				}
-			}
-		},
-
-		subscribe(
-			selectorOrCallback: (state: any, prevState?: any) => void,
-			callbackOrUndefined?: (state: any, prevState: any) => void,
-		) {
-			const id = nextSubscriptionId++;
-
-			if (callbackOrUndefined) {
-				let selection = selectorOrCallback(state);
-
-				subscribers.set(id, () => {
-					const newSelection = selectorOrCallback(state);
-
-					if (selection !== newSelection) {
-						const prevSelection = selection;
-						selection = newSelection;
-						callbackOrUndefined(newSelection, prevSelection);
-					}
-				});
-			} else {
-				subscribers.set(id, selectorOrCallback);
-			}
-
-			return () => {
-				subscribers.delete(id);
-			};
-		},
-
-		once(selector, callback) {
-			const unsubscribe = this.subscribe(selector, (state, prevState) => {
-				unsubscribe();
-				callback(state, prevState);
-			});
-
-			return unsubscribe;
-		},
-
-		wait(selector) {
-			return new Promise((resolve, _, onCancel) => {
-				const unsubscribe = this.once(selector, resolve);
-				onCancel(unsubscribe);
-			});
-		},
-
-		destroy() {
-			if (nextFlush) {
-				task.cancel(nextFlush);
-				nextFlush = undefined;
-			}
-
-			subscribers.clear();
-		},
-
-		enhance(enhancer) {
-			return enhancer(this);
-		},
-
-		Connect(callback) {
-			const unsubscribe = this.subscribe(callback);
-			return {
-				Connected: true,
-				Disconnect() {
-					this.Connected = false;
-					unsubscribe();
-				},
-			};
-		},
-
-		Once(callback) {
-			const unsubscribe = this.once((state) => state, callback);
-			return {
-				Connected: true,
-				Disconnect() {
-					this.Connected = false;
-					unsubscribe();
-				},
-			};
-		},
-
-		Wait() {
-			return $tuple(this.wait((state) => state).expect());
-		},
-
-		...dispatchers,
+		nextFlush = task.defer(() => {
+			nextFlush = undefined;
+			flush();
+		});
 	};
 
-	return producer as Producer<S, A>;
+	const getState = (selector?: Selector) => {
+		return selector ? selector(state) : state;
+	};
+
+	const setState = (newState: unknown) => {
+		state = newState;
+		scheduleFlush();
+	};
+
+	const getActions = () => {
+		return actions;
+	};
+
+	const getDispatchers = () => {
+		return dispatchers;
+	};
+
+	const flush = () => {
+		if (nextFlush) {
+			task.cancel(nextFlush);
+			nextFlush = undefined;
+		}
+
+		if (state === stateSinceFlush) {
+			return;
+		}
+
+		const prevState = stateSinceFlush;
+		stateSinceFlush = state;
+
+		for (const [, subscriber] of pairs(listeners)) {
+			subscriber(state, prevState);
+		}
+	};
+
+	const subscribe = (selectorOrListener: Selector | Callback, listenerOrUndefined?: Callback) => {
+		let selector = selectorOrListener;
+		let listener = listenerOrUndefined!;
+
+		if (!listenerOrUndefined) {
+			selector = (state: unknown) => state;
+			listener = selectorOrListener;
+		}
+
+		const id = listenerIdCounter++;
+
+		let selection = selector(state);
+
+		listeners.set(id, (newState) => {
+			const newSelection: unknown = selector(newState);
+			const prevSelection: unknown = selection;
+
+			if (newSelection !== prevSelection) {
+				selection = newSelection;
+				listener(newSelection, prevSelection);
+			}
+		});
+
+		return () => {
+			listeners.delete(id);
+		};
+	};
+
+	const once = (selector: Selector, listener: Callback) => {
+		const unsubscribe = subscribe(selector, (newState, prevState) => {
+			unsubscribe();
+			listener(newState, prevState);
+		});
+
+		return unsubscribe;
+	};
+
+	const wait = (selector: Selector) => {
+		return new Promise<any>((resolve, _, onCancel) => {
+			onCancel(once(selector, resolve));
+		});
+	};
+
+	const destroy = () => {
+		if (nextFlush) {
+			task.cancel(nextFlush);
+			nextFlush = undefined;
+		}
+
+		listeners.clear();
+	};
+
+	const enhance = (enhancer: Callback) => {
+		return enhancer(producer);
+	};
+
+	const connectRoblox = function (this: object, listener: Callback) {
+		const unsubscribe = subscribe(listener);
+		return {
+			Connected: true,
+			Disconnect() {
+				this.Connected = false;
+				unsubscribe();
+			},
+		};
+	};
+
+	const onceRoblox = function (this: object, listener: Callback) {
+		const unsubscribe = once((state) => state, listener);
+		return {
+			Connected: true,
+			Disconnect() {
+				this.Connected = false;
+				unsubscribe();
+			},
+		};
+	};
+
+	const waitRoblox = function (this: object) {
+		return $tuple(wait((state) => state).expect());
+	};
+
+	const producer: Producer<unknown, Actions<unknown>> = {
+		getState,
+		setState,
+		getActions,
+		getDispatchers,
+		flush,
+		subscribe,
+		once,
+		wait,
+		destroy,
+		enhance,
+		Connect: connectRoblox,
+		Once: onceRoblox,
+		Wait: waitRoblox,
+	};
+
+	// Populate the dispatchers and producers objects
+	for (const [actionName, action] of pairs(actions)) {
+		const dispatcher = (...args: unknown[]) => {
+			const newState = action(state, ...args);
+			setState(newState);
+			return newState;
+		};
+
+		dispatchers[actionName] = dispatcher;
+		producer[actionName] = dispatcher;
+	}
+
+	return producer;
 }

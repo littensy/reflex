@@ -72,8 +72,8 @@ const selectWord = createSelector([selectCount] as const, (count) => {
 });
 
 myProducer.set(10);
-myProducer.select(selectWord); // ["EEEEEEEEEE"]
-myProducer.select(selectWord) === myProducer.select(selectWord); // true
+myProducer.getState(selectWord); // ["EEEEEEEEEE"]
+myProducer.getState(selectWord) === myProducer.getState(selectWord); // true
 ```
 
 You might also have a selector that depends on outside parameters. In that case, I recommend this pattern:
