@@ -27,7 +27,6 @@ return function()
 			expect(producer.subscribe).to.be.a("function")
 			expect(producer.once).to.be.a("function")
 			expect(producer.wait).to.be.a("function")
-			expect(producer.select).to.be.a("function")
 		end)
 	end)
 
@@ -37,6 +36,13 @@ return function()
 			expect(state).to.be.a("table")
 			expect(state.counter).to.equal(0)
 			expect(state.setter).to.equal(0)
+		end)
+
+		it("should return a selection of the state", function()
+			local selection = producer:getState(function(state)
+				return state.counter
+			end)
+			expect(selection).to.be.a("number")
 		end)
 	end)
 
@@ -216,15 +222,6 @@ return function()
 			local state = producer:getState()
 			expect(state.counter).to.equal(1)
 			expect(state.setter).to.equal(1)
-		end)
-	end)
-
-	describe("Producer.select", function()
-		it("should return a selection of the state", function()
-			local selection = producer:select(function(state)
-				return state.counter
-			end)
-			expect(selection).to.be.a("number")
 		end)
 	end)
 

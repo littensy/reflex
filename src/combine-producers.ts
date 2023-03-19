@@ -1,4 +1,5 @@
-import { CombineProducer, CombineStates, Producer, ProducerMap } from "./types";
+import { createProducer } from "./create-producer";
+import { Actions, CombineActions, CombineProducer, CombineStates, ProducerMap } from "./types";
 import { entries } from "./utils/object";
 
 /**
@@ -14,213 +15,55 @@ import { entries } from "./utils/object";
  * @param producers A map of producers to combine.
  * @returns A producer that combines the state of all the given producers.
  */
-export function combineProducers<Producers extends ProducerMap>(producers: Producers): CombineProducer<Producers> {
-	let combinedState = combineState(producers);
-	let combinedStateSinceFlush = combinedState;
+export function combineProducers<T extends ProducerMap>(producers: T): CombineProducer<T> {
+	const initialState = combineState(producers);
+	const actions = combineActions(producers);
 
-	let nextFlush: thread | undefined;
-	let nextSubscriptionId = 0;
-
-	const subscribers = new Map<number, (state: any, prevState: any) => void>();
-	const combinedDispatchers: Record<string, unknown> = {};
-
-	// Calls the dispatcher of the same name on each producer.
-	const dispatch = (key: string, ...args: unknown[]) => {
-		let stateChanged = false;
-
-		const newCombinedState: Record<string, unknown> = {};
-
-		// Call every dispatcher of the same name on each producer
-		for (const [producerName, producer] of entries<ProducerMap>(producers)) {
-			const dispatchers = producer.getDispatchers();
-			const dispatcher: unknown = dispatchers[key as never];
-
-			if (!typeIs(dispatcher, "function")) {
-				newCombinedState[producerName] = producer.getState();
-				continue;
-			}
-
-			const currentState: unknown = producer.getState();
-			const newState: unknown = dispatcher(...args);
-
-			newCombinedState[producerName] = newState;
-
-			if (currentState !== newState) {
-				stateChanged = true;
-			}
-		}
-
-		// If the state has changed, update the combined state and flush
-		if (!stateChanged) {
-			return;
-		}
-
-		combinedState = newCombinedState;
-
-		if (!nextFlush) {
-			nextFlush = task.defer(() => {
-				nextFlush = undefined;
-				combinedProducer.flush();
-			});
-		}
-	};
-
-	// Add each producer's dispatchers to the combined dispatchers, where calling
-	// one dispatcher will call the dispatcher on each producer.
-	for (const [, producer] of entries<ProducerMap>(producers)) {
-		for (const [dispatcherName] of entries<string, unknown>(producer.getDispatchers())) {
-			combinedDispatchers[dispatcherName] = (...args: unknown[]) => {
-				dispatch(dispatcherName, ...args);
-				return combinedState;
-			};
-		}
-	}
-
-	const combinedProducer: Producer<typeof combinedState, {}> = {
-		getState() {
-			return combinedState;
-		},
-
-		select(selector) {
-			return selector(combinedState);
-		},
-
-		setState(newState) {
-			combinedState = table.clone(newState);
-
-			for (const [key, producer] of entries<ProducerMap>(producers)) {
-				producer.setState(newState[key]);
-			}
-
-			if (!nextFlush) {
-				nextFlush = task.defer(() => {
-					nextFlush = undefined;
-					this.flush();
-				});
-			}
-
-			return combinedState;
-		},
-
-		getDispatchers() {
-			return combinedDispatchers;
-		},
-
-		flush() {
-			if (nextFlush) {
-				task.cancel(nextFlush);
-				nextFlush = undefined;
-			}
-
-			if (combinedStateSinceFlush !== combinedState) {
-				const prevState = combinedStateSinceFlush;
-				combinedStateSinceFlush = combinedState;
-
-				for (const [, subscriber] of subscribers) {
-					subscriber(combinedState, prevState);
-				}
-			}
-		},
-
-		subscribe(
-			selectorOrCallback: (state: any, prevState?: any) => void,
-			callbackOrUndefined?: (state: any, prevState: any) => void,
-		) {
-			const id = nextSubscriptionId++;
-
-			if (callbackOrUndefined) {
-				let selection = selectorOrCallback(combinedState);
-
-				subscribers.set(id, () => {
-					const newSelection = selectorOrCallback(combinedState);
-
-					if (selection !== newSelection) {
-						const prevSelection = selection;
-						selection = newSelection;
-						callbackOrUndefined(newSelection, prevSelection);
-					}
-				});
-			} else {
-				subscribers.set(id, selectorOrCallback);
-			}
-
-			return () => {
-				subscribers.delete(id);
-			};
-		},
-
-		once(selector, callback) {
-			const unsubscribe = this.subscribe(selector, (state, prevState) => {
-				unsubscribe();
-				callback(state, prevState);
-			});
-
-			return unsubscribe;
-		},
-
-		wait(selector) {
-			return new Promise((resolve, _, onCancel) => {
-				const unsubscribe = this.once(selector, resolve);
-				onCancel(unsubscribe);
-			});
-		},
-
-		destroy() {
-			if (nextFlush) {
-				task.cancel(nextFlush);
-				nextFlush = undefined;
-			}
-
-			subscribers.clear();
-		},
-
-		enhance(enhancer) {
-			return enhancer(this);
-		},
-
-		Connect(callback) {
-			const unsubscribe = this.subscribe(callback);
-			return {
-				Connected: true,
-				Disconnect() {
-					this.Connected = false;
-					unsubscribe();
-				},
-			};
-		},
-
-		Once(callback) {
-			const unsubscribe = this.once((state) => state, callback);
-			return {
-				Connected: true,
-				Disconnect() {
-					this.Connected = false;
-					unsubscribe();
-				},
-			};
-		},
-
-		Wait() {
-			return $tuple(this.wait((state) => state).expect());
-		},
-
-		...combinedDispatchers,
-	};
-
-	return combinedProducer as CombineProducer<Producers>;
+	return createProducer(initialState, actions) as unknown as CombineProducer<T>;
 }
 
-/**
- * Combines the state of multiple producers into a single object.
- * @param producers A map of producers to combine.
- * @returns An object containing the state of each producer.
- */
-function combineState(producers: ProducerMap) {
-	const combinedState = {} as CombineStates<ProducerMap>;
+function combineState<T extends ProducerMap>(producers: T) {
+	const combinedState = {} as CombineStates<T>;
 
-	for (const [key, producer] of pairs(producers)) {
-		combinedState[key] = producer.getState();
+	for (const [key, producer] of entries(producers)) {
+		combinedState[key] = producer.getState() as never;
 	}
 
 	return combinedState;
+}
+
+function combineActions<T extends ProducerMap>(producers: T) {
+	const combinedActions = {} as CombineActions<ProducerMap>;
+
+	const actionsByName = new Map<string, Callback[]>();
+	const producerKeysByAction = new Map<Callback, keyof T>();
+
+	for (const [producerKey, producer] of entries(producers)) {
+		for (const [actionKey, action] of pairs(producer.getActions())) {
+			if (actionsByName.has(actionKey)) {
+				actionsByName.get(actionKey)!.push(action);
+			} else {
+				actionsByName.set(actionKey, [action]);
+			}
+
+			producerKeysByAction.set(action, producerKey);
+		}
+	}
+
+	for (const [actionKey, actions] of actionsByName) {
+		combinedActions[actionKey] = (combinedState: CombineStates<T>, ...args: unknown[]) => {
+			const newState = table.clone(combinedState);
+
+			for (const action of actions) {
+				const producerKey = producerKeysByAction.get(action)!;
+				const producerState = combinedState[producerKey];
+
+				newState[producerKey] = action(producerState, ...args);
+			}
+
+			return newState;
+		};
+	}
+
+	return combinedActions as Actions<CombineStates<T>>;
 }

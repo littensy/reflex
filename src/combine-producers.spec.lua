@@ -37,7 +37,6 @@ return function()
 			expect(combinedProducer.subscribe).to.be.a("function")
 			expect(combinedProducer.once).to.be.a("function")
 			expect(combinedProducer.wait).to.be.a("function")
-			expect(combinedProducer.select).to.be.a("function")
 		end)
 
 		it("should merge the action functions", function()
@@ -57,6 +56,15 @@ return function()
 			expect(state.producerA.privateCounter).to.equal(0)
 			expect(state.producerB.sharedCounter).to.equal(0)
 			expect(state.producerB.privateCounter).to.equal(0)
+		end)
+
+		it("should select a part of the state", function()
+			local function selectPrivateCounterA(state)
+				return state.producerA.privateCounter
+			end
+			local actualState = selectPrivateCounterA(combinedProducer:getState())
+			local selectedState = combinedProducer:getState(selectPrivateCounterA)
+			expect(selectedState).to.equal(actualState)
 		end)
 	end)
 
@@ -225,17 +233,6 @@ return function()
 			for key, value in pairs(newState) do
 				expect(state[key]).to.equal(value)
 			end
-		end)
-	end)
-
-	describe("CombinedProducer.select", function()
-		it("should select a part of the state", function()
-			local function selectPrivateCounterA(state)
-				return state.producerA.privateCounter
-			end
-			local actualState = selectPrivateCounterA(combinedProducer:getState())
-			local selectedState = combinedProducer:select(selectPrivateCounterA)
-			expect(selectedState).to.equal(actualState)
 		end)
 	end)
 

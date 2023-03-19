@@ -8,13 +8,12 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * Returns the current state of the producer.
 	 */
 	getState(): S;
-
 	/**
 	 * Calls the selector with the current state and returns the result.
 	 * @param selector A function that selects a part of the state.
 	 * @returns The result of the selector.
 	 */
-	select<Selection>(selector: (state: S) => Selection): Selection;
+	getState<Selection>(selector: (state: S) => Selection): Selection;
 
 	/**
 	 * Sets the state of the producer. Creates a shallow copy of the state
@@ -35,34 +34,35 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	flush(): void;
 
 	/**
-	 * Subscribes to changes in the entire state. The callback is deferred
-	 * from the frame that the state is changed.
-	 * @param callback The callback to call when the state changes.
-	 * @returns A function that unsubscribes the callback.
-	 */
-	subscribe(callback: (state: S, prevState: S) => void): () => void;
-	/**
 	 * Subscribes to changes in a specific part of the state. The callback is
 	 * deferred from the frame that the state is changed.
 	 * @param selector A function that selects a part of the state.
 	 * @param callback The callback to call when the state changes.
 	 * @returns A function that unsubscribes the callback.
 	 */
+	subscribe(listener: (state: S, prevState: S) => void): () => void;
+	/**
+	 * Subscribes to changes in a specific part of the state. The callback is
+	 * deferred from the frame that the state is changed.
+	 * @param selector A function that selects a part of the state.
+	 * @param listener The callback to call when the state changes.
+	 * @returns A function that unsubscribes the callback.
+	 */
 	subscribe<Selection>(
 		selector: (state: S) => Selection,
-		callback: (state: Selection, prevState: Selection) => void,
+		listener: (state: Selection, prevState: Selection) => void,
 	): () => void;
 
 	/**
 	 * Calls the callback once a specific part of the state changes, then
 	 * unsubscribes from the state change event.
 	 * @param selector A function that selects a part of the state.
-	 * @param callback The callback to call when the state changes.
+	 * @param listener The callback to call when the state changes.
 	 * @returns A function that unsubscribes the callback.
 	 */
 	once<Selection>(
 		selector: (state: S) => Selection,
-		callback: (state: Selection, prevState: Selection) => void,
+		listener: (state: Selection, prevState: Selection) => void,
 	): () => void;
 
 	/**
@@ -87,6 +87,12 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * @returns The enhanced producer.
 	 */
 	enhance<T extends Producer<any, any>>(enhancer: (producer: Producer<S, A>) => T): T;
+
+	/**
+	 * Returns the actions for the producer.
+	 * @ignore
+	 */
+	getActions(): A;
 
 	/** @deprecated @hidden */
 	Connect(callback: (newState: S) => void): RBXScriptConnection;
@@ -140,18 +146,19 @@ export type InferDispatchers<P> = P extends Producer<any, infer A> ? InferDispat
  * @param producer The producer that the middleware is wrapping.
  * @returns A middleware function.
  */
-export type Middleware<T extends Producer<any, any> = Producer<unknown, Record<string, (...args: unknown[]) => any>>> =
-	(
-		dispatch: NextMiddleware<InferActions<T>>,
-		resolveDispatcher: () => string,
-		producer: T,
-	) => NextMiddleware<InferActions<T>>;
+export type Middleware<
+	T extends Producer<any, any> = Producer<unknown, Record<string, (...args: unknown[]) => unknown>>,
+> = (
+	dispatch: NextMiddleware<InferDispatchers<T>>,
+	resolveDispatcher: () => string,
+	producer: T,
+) => NextMiddleware<InferDispatchers<T>>;
 
 export type NextMiddleware<A> = {
 	[K in keyof A]: (...args: Parameters<A[K]>) => any;
 }[keyof A];
 
-export type ProducerMap = Record<string, Producer<any, any>>;
+export type ProducerMap = Record<string, Producer<any, Actions<any>>>;
 
 export type CombineStates<Producers extends ProducerMap> = {
 	[Key in keyof Producers]: Producers[Key] extends Producer<infer S, any> ? S : never;
@@ -168,7 +175,7 @@ export type CombineProducer<Producers extends ProducerMap> = Producer<
 	CombineActions<Producers>
 >;
 
-export type Selector<S extends any[] = any[], R = any> = (...args: S) => R;
+export type Selector<S extends any[] = unknown[], R = any> = (...args: S) => R;
 
 export type AnySelectors = readonly Selector[];
 

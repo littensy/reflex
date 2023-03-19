@@ -1,4 +1,4 @@
-import { Actions, InferDispatchersFromActions, Producer } from "./types";
+import { Actions, InferDispatchersFromActions, Producer, Selector } from "./types";
 
 /**
  * Creates a producer that can be used to manage state.
@@ -14,52 +14,40 @@ import { Actions, InferDispatchersFromActions, Producer } from "./types";
  * @param actions A set of actions that can be used to modify the state.
  * @returns A producer that can be used to manage state.
  */
-export function createProducer<S, A extends Actions<S>>(initialState: S, actions: A): Producer<S, A> {
+export function createProducer<S, A extends Actions<S>>(initialState: S, actions: A): Producer<S, A>;
+export function createProducer(initialState: unknown, actions: Actions<unknown>): Producer<unknown, Actions<unknown>> {
+	const dispatchers = {} as InferDispatchersFromActions<Actions<unknown>>;
+
+	const listeners = new Map<number, (state: unknown, prevState: unknown) => void>();
+	let listenerIdCounter = 0;
+
 	let state = initialState;
 	let stateSinceFlush = initialState;
-
 	let nextFlush: thread | undefined;
-	let nextSubscriptionId = 0;
 
-	const subscribers = new Map<number, (state: S, prevState: S) => void>();
-	const dispatchers = {} as InferDispatchersFromActions<Actions<S>>;
+	const scheduleFlush = () => {
+		if (nextFlush) {
+			return;
+		}
 
-	for (const [actionName, action] of pairs(actions as Actions<S>)) {
-		dispatchers[actionName] = (...args: unknown[]) => {
-			const prevState = state;
-			state = action(prevState, ...args);
+		nextFlush = task.defer(() => {
+			nextFlush = undefined;
+			producer.flush();
+		});
+	};
 
-			if (prevState !== state && !nextFlush) {
-				nextFlush = task.defer(() => {
-					nextFlush = undefined;
-					producer.flush();
-				});
-			}
-
-			return state;
-		};
-	}
-
-	const producer: Producer<S, {}> = {
-		getState() {
-			return state;
+	const producer: Producer<unknown, Actions<unknown>> = {
+		getState(selector?: Selector) {
+			return selector ? selector(state) : state;
 		},
 
-		select(selector) {
-			return selector(state);
+		setState(newState: unknown) {
+			state = newState;
+			scheduleFlush();
 		},
 
-		setState(newState) {
-			state = typeIs(newState, "table") ? table.clone(newState) : newState;
-
-			if (!nextFlush) {
-				nextFlush = task.defer(() => {
-					nextFlush = undefined;
-					this.flush();
-				});
-			}
-
-			return state;
+		getActions() {
+			return actions;
 		},
 
 		getDispatchers() {
@@ -72,56 +60,58 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 				nextFlush = undefined;
 			}
 
-			if (stateSinceFlush !== state) {
-				const prevState = stateSinceFlush;
-				stateSinceFlush = state;
+			if (state === stateSinceFlush) {
+				return;
+			}
 
-				for (const [, subscriber] of subscribers) {
-					subscriber(state, prevState);
-				}
+			const prevState = stateSinceFlush;
+			stateSinceFlush = state;
+
+			for (const [, subscriber] of pairs(listeners)) {
+				subscriber(state, prevState);
 			}
 		},
 
-		subscribe(
-			selectorOrCallback: (state: any, prevState?: any) => void,
-			callbackOrUndefined?: (state: any, prevState: any) => void,
-		) {
-			const id = nextSubscriptionId++;
+		subscribe(selectorOrListener: Selector | Callback, listenerOrUndefined?: Callback) {
+			let selector = selectorOrListener;
+			let listener = listenerOrUndefined!;
 
-			if (callbackOrUndefined) {
-				let selection = selectorOrCallback(state);
-
-				subscribers.set(id, () => {
-					const newSelection = selectorOrCallback(state);
-
-					if (selection !== newSelection) {
-						const prevSelection = selection;
-						selection = newSelection;
-						callbackOrUndefined(newSelection, prevSelection);
-					}
-				});
-			} else {
-				subscribers.set(id, selectorOrCallback);
+			if (!listenerOrUndefined) {
+				selector = (state: unknown) => state;
+				listener = selectorOrListener;
 			}
 
+			const id = listenerIdCounter++;
+
+			let selection = selector(state);
+
+			listeners.set(id, (newState) => {
+				const newSelection: unknown = selector(newState);
+				const prevSelection: unknown = selection;
+
+				if (newSelection !== prevSelection) {
+					selection = newSelection;
+					listener(newSelection, prevSelection);
+				}
+			});
+
 			return () => {
-				subscribers.delete(id);
+				listeners.delete(id);
 			};
 		},
 
-		once(selector, callback) {
-			const unsubscribe = this.subscribe(selector, (state, prevState) => {
+		once(selector: Selector, listener: Callback) {
+			const unsubscribe = this.subscribe(selector, (newState, prevState) => {
 				unsubscribe();
-				callback(state, prevState);
+				listener(newState, prevState);
 			});
 
 			return unsubscribe;
 		},
 
-		wait(selector) {
-			return new Promise((resolve, _, onCancel) => {
-				const unsubscribe = this.once(selector, resolve);
-				onCancel(unsubscribe);
+		wait(selector: Selector) {
+			return new Promise<any>((resolve, _, onCancel) => {
+				onCancel(this.once(selector, resolve));
 			});
 		},
 
@@ -131,15 +121,15 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 				nextFlush = undefined;
 			}
 
-			subscribers.clear();
+			listeners.clear();
 		},
 
-		enhance(enhancer) {
+		enhance(enhancer: Callback) {
 			return enhancer(this);
 		},
 
-		Connect(callback) {
-			const unsubscribe = this.subscribe(callback);
+		Connect(listener: Callback) {
+			const unsubscribe = this.subscribe(listener);
 			return {
 				Connected: true,
 				Disconnect() {
@@ -149,8 +139,8 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 			};
 		},
 
-		Once(callback) {
-			const unsubscribe = this.once((state) => state, callback);
+		Once(listener: Callback) {
+			const unsubscribe = this.once((state) => state, listener);
 			return {
 				Connected: true,
 				Disconnect() {
@@ -163,9 +153,19 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 		Wait() {
 			return $tuple(this.wait((state) => state).expect());
 		},
-
-		...dispatchers,
 	};
 
-	return producer as Producer<S, A>;
+	// Populate the dispatchers and producers objects
+	for (const [actionName, action] of pairs(actions)) {
+		const dispatcher = (...args: unknown[]) => {
+			state = action(state, ...args);
+			scheduleFlush();
+			return state;
+		};
+
+		dispatchers[actionName] = dispatcher;
+		producer[actionName] = dispatcher;
+	}
+
+	return producer;
 }

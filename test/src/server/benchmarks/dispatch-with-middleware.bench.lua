@@ -34,41 +34,38 @@ return {
 		local result = {
 			producer = Reflex.createProducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
-					local newState = table.clone(state)
-					newState.countA = newState.countA + 1
-					return newState
+					return { countA = state.countA + 1, countB = state.countB }
 				end,
 				incrementB = function(state)
-					local newState = table.clone(state)
-					newState.countB = newState.countB + 1
-					return newState
+					return { countA = state.countA, countB = state.countB + 1 }
+				end,
+				incrementC = function(state)
+					return { countA = state.countA + 1, countB = state.countB + 1 }
 				end,
 			}):enhance(Reflex.applyMiddleware(reflexMiddleware)),
 
 			producerNoMiddleware = Reflex.createProducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
-					local newState = table.clone(state)
-					newState.countA = newState.countA + 1
-					return newState
+					return { countA = state.countA + 1, countB = state.countB }
 				end,
 				incrementB = function(state)
-					local newState = table.clone(state)
-					newState.countB = newState.countB + 1
-					return newState
+					return { countA = state.countA, countB = state.countB + 1 }
+				end,
+				incrementC = function(state)
+					return { countA = state.countA + 1, countB = state.countB + 1 }
 				end,
 			}),
 
 			store = Rodux.Store.new(
 				Rodux.createReducer({ countA = 0, countB = 0 }, {
 					incrementA = function(state)
-						local newState = table.clone(state)
-						newState.countA = newState.countA + 1
-						return newState
+						return { countA = state.countA + 1, countB = state.countB }
 					end,
 					incrementB = function(state)
-						local newState = table.clone(state)
-						newState.countB = newState.countB + 1
-						return newState
+						return { countA = state.countA, countB = state.countB + 1 }
+					end,
+					incrementC = function(state)
+						return { countA = state.countA + 1, countB = state.countB + 1 }
 					end,
 				}),
 				nil,
@@ -77,14 +74,13 @@ return {
 
 			storeNoMiddleware = Rodux.Store.new(Rodux.createReducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
-					local newState = table.clone(state)
-					newState.countA = newState.countA + 1
-					return newState
+					return { countA = state.countA + 1, countB = state.countB }
 				end,
 				incrementB = function(state)
-					local newState = table.clone(state)
-					newState.countB = newState.countB + 1
-					return newState
+					return { countA = state.countA, countB = state.countB + 1 }
+				end,
+				incrementC = function(state)
+					return { countA = state.countA + 1, countB = state.countB + 1 }
 				end,
 			})),
 		}
@@ -103,6 +99,7 @@ return {
 			for _ = 1, 200 do
 				parameter.producer.incrementA()
 				parameter.producer.incrementB()
+				parameter.producer.incrementC()
 			end
 		end,
 
@@ -110,6 +107,7 @@ return {
 			for _ = 1, 200 do
 				parameter.producerNoMiddleware.incrementA()
 				parameter.producerNoMiddleware.incrementB()
+				parameter.producerNoMiddleware.incrementC()
 			end
 		end,
 
@@ -117,6 +115,7 @@ return {
 			for _ = 1, 200 do
 				parameter.store:dispatch({ type = "incrementA" })
 				parameter.store:dispatch({ type = "incrementB" })
+				parameter.store:dispatch({ type = "incrementC" })
 			end
 		end,
 
@@ -124,6 +123,7 @@ return {
 			for _ = 1, 200 do
 				parameter.storeNoMiddleware:dispatch({ type = "incrementA" })
 				parameter.storeNoMiddleware:dispatch({ type = "incrementB" })
+				parameter.storeNoMiddleware:dispatch({ type = "incrementC" })
 			end
 		end,
 	},

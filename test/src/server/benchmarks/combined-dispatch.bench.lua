@@ -3,9 +3,24 @@ local Reflex = TS.import(script, game:GetService("ReplicatedStorage"), "reflex")
 local Rodux =
 	TS.import(script, game:GetService("ReplicatedStorage"), "include", "node_modules", "@rbxts", "rodux", "src")
 
+--[[
+	Benchmarker
+
+	Run type: Time
+	Run time: 1 second
+
+	Reflex.createProducer:   80 microseconds
+	Reflex.combineProducers: 120 microseconds
+	Rodux.createReducer:     130 microseconds
+	Rodux.combineReducers:   170 microseconds
+
+	Reflex's combineProducers is 30% faster than Rodux's combineReducers in this
+	benchmark, but there is still a 40% overhead from Reflex's createProducer.
+]]
+
 return {
 	ParameterGenerator = function()
-		return {
+		local result = {
 			producer = Reflex.combineProducers({
 				a = Reflex.createProducer({ count = 0 }, {
 					incrementA = function(state, amount)
@@ -50,6 +65,13 @@ return {
 				end,
 			})),
 		}
+
+		task.defer(function()
+			result.store:destruct()
+			result.storeUncombined:destruct()
+		end)
+
+		return result
 	end,
 
 	Functions = {

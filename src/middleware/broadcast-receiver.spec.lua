@@ -57,13 +57,13 @@ return function()
 				end,
 			})
 
-			local store = combineProducers(producerMap):enhance(broadcastReceiver.enhancer)
-			local state = store:getState()
+			local producer = combineProducers(producerMap):enhance(broadcastReceiver.enhancer)
+			local state = producer:getState()
 
 			expect(state.a.count).to.equal(10)
 			expect(state.b.count).to.equal(0)
 
-			local newState = store.incrementA(1)
+			local newState = producer.incrementA(1)
 
 			expect(newState.a.count).to.equal(11)
 			expect(newState.b.count).to.equal(0)
@@ -78,14 +78,14 @@ return function()
 				end,
 			})
 
-			local store = combineProducers(producerMap):enhance(broadcastReceiver.enhancer)
+			local producer = combineProducers(producerMap):enhance(broadcastReceiver.enhancer)
 
 			broadcastReceiver.dispatch({
 				{ type = "incrementA", arguments = { 10 } },
 				{ type = "incrementB", arguments = { 20 } },
 			})
 
-			local state = store:getState()
+			local state = producer:getState()
 
 			expect(state.a.count).to.equal(10)
 			expect(state.b.count).to.equal(20)
