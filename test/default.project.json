@@ -19,12 +19,24 @@
 			},
 			"reflex": {
 				"$path": "out/src"
+			},
+			"shared": {
+				"$path": "out/test/src/shared"
 			}
 		},
 		"ServerScriptService": {
 			"$className": "ServerScriptService",
-			"test": {
-				"$path": "out/test"
+			"server": {
+				"$path": "out/test/src/server"
+			}
+		},
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"client": {
+					"$path": "out/test/src/client"
+				}
 			}
 		}
 	}

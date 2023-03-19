@@ -88,6 +88,10 @@ export function combineProducers<Producers extends ProducerMap>(producers: Produ
 		setState(newState) {
 			combinedState = table.clone(newState);
 
+			for (const [key, producer] of entries<ProducerMap>(producers)) {
+				producer.setState(newState[key]);
+			}
+
 			if (!nextFlush) {
 				nextFlush = task.defer(() => {
 					nextFlush = undefined;

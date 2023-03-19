@@ -38,16 +38,11 @@ export interface Broadcaster<T extends ProducerMap> {
 	/**
 	 * Gets the combined states of the producers in the provided map. This should
 	 * only be called once per player and initiated by the receiver.
-	 * @param playerRequestingState The player requesting the state. If a player
-	 * requested the state more than once, an error will be thrown.
+	 * @param player The player requesting the state. If a player requested the
+	 * state more than once, an error will be thrown.
 	 * @returns The combined states of the shared producers.
 	 */
-	combineState: (playerRequestingState: Player) => CombineStates<T>;
-
-	/**
-	 * Cleans up the broadcaster.
-	 */
-	destroy: () => void;
+	playerRequestedState: (player: Player) => CombineStates<T>;
 }
 
 /**
@@ -60,8 +55,8 @@ export interface Broadcaster<T extends ProducerMap> {
 export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOptions<T>): Broadcaster<T> {
 	const { producers, broadcast } = options;
 
+	const playerList: Player[] = [];
 	const actionFilter = new Set<string>();
-	const playersRequestedState = new Set<Player>();
 
 	for (const [, producer] of entries(producers)) {
 		for (const [key] of entries<string, any>(producer.getDispatchers())) {
@@ -69,15 +64,14 @@ export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOpt
 		}
 	}
 
-	// Remove players from the set when they disconnect.
-	const playerRemoving = game.GetService("Players").PlayerRemoving.Connect((player) => {
-		playersRequestedState.delete(player);
-	});
+	const playerRequestedState = (player: Player) => {
+		assert(!playerList.includes(player), `Player ${player} cannot get state more than once!`);
 
-	const combineState = (player: Player) => {
-		assert(!playersRequestedState.has(player), `Player ${player} cannot get state more than once!`);
+		playerList.push(player);
 
-		playersRequestedState.add(player);
+		Promise.fromEvent(game.GetService("Players").PlayerRemoving, (left) => left === player).then(() => {
+			playerList.unorderedRemove(playerList.indexOf(player));
+		});
 
 		const state: Partial<CombineStates<T>> = {};
 
@@ -102,7 +96,7 @@ export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOpt
 				nextBroadcast = undefined;
 				const currentActionPool = table.clone(actionPool);
 				actionPool.clear();
-				broadcast(producer.getPlayers(), currentActionPool);
+				broadcast(playerList, currentActionPool);
 			});
 		};
 
@@ -126,14 +120,8 @@ export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOpt
 		};
 	};
 
-	const destroy = () => {
-		playerRemoving.Disconnect();
-		playersRequestedState.clear();
-	};
-
 	return {
 		middleware,
-		combineState,
-		destroy,
+		playerRequestedState,
 	};
 }

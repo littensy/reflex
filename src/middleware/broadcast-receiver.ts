@@ -1,4 +1,4 @@
-import { Producer } from "../types";
+import { CombineStates, Producer, ProducerMap } from "../types";
 import { BroadcastActionContainer } from "./broadcaster";
 
 /**
@@ -23,13 +23,13 @@ interface BroadcastReceiver {
 /**
  * Options for the broadcast receiver.
  */
-interface BroadcastReceiverOptions {
+interface BroadcastReceiverOptions<T extends ProducerMap> {
 	/**
 	 * A function that invokes an event on the server to get the state of the
 	 * producers being broadcasted.
 	 * @returns A Promise that resolves with the state of the producers.
 	 */
-	getServerState: () => Promise<object>;
+	getServerState: () => Promise<CombineStates<T>>;
 }
 
 /**
@@ -38,7 +38,9 @@ interface BroadcastReceiverOptions {
  * @param options The options for the receiver.
  * @returns The receiver.
  */
-export function createBroadcastReceiver(options: BroadcastReceiverOptions): BroadcastReceiver {
+export function createBroadcastReceiver<T extends ProducerMap>(
+	options: BroadcastReceiverOptions<T>,
+): BroadcastReceiver {
 	const { getServerState } = options;
 
 	let currentProducer: Producer<any, any> | undefined;
