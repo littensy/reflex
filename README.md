@@ -1,5 +1,7 @@
 <h1 align="center">
-	<img src="public/logo.png" alt="Reflex" width="200" />
+	<a href="https://www.npmjs.com/package/@rbxts/reflex">
+		<img src="public/logo.png" alt="Reflex" width="200" />
+	</a>
 	<br />
 	<b>Reflex</b>
 </h1>
