@@ -29,12 +29,12 @@ You can use Reflex with Roact on the client, or to manage your game's state on t
 
 This package is only available for Roblox TypeScript on NPM:
 
-```bash
-npm install @rbxts/reflex
+```console
+$ npm install @rbxts/reflex
 ```
 
-```bash
-pnpm add @rbxts/reflex
+```console
+$ pnpm add @rbxts/reflex
 ```
 
 &nbsp;
@@ -180,7 +180,7 @@ Roact.mount(
 );
 ```
 
-You should avoid passing a newly created selector directly to useSelector, though (i.e. `useSelector(createSelectWord("E"))`). If it uses `createSelector`, it will create a new selector every time the component renders, and reset the cache. Instead, you can use the `useSelectorCreator()` hook to memoize the selector:
+When using selector creators, you should avoid calling them in your render method (i.e. `useSelector(createSelectWord("E"))`), since it creates a new selector every time the component renders and risks excessive re-renders. Instead, you can use the `useSelectorCreator()` hook to memoize the selector:
 
 ```tsx
 const createSelectWord = (word: string) => {
