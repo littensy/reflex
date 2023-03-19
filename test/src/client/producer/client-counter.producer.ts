@@ -1,10 +1,10 @@
 import { createProducer } from "@rbxts/reflex";
 
-export interface ClientCounterProducer {
+export interface ClientCounterState {
 	count: number;
 }
 
-const initialState: ClientCounterProducer = {
+const initialState: ClientCounterState = {
 	count: 0,
 };
 
@@ -14,4 +14,4 @@ export const clientCounterProducer = createProducer(initialState, {
 	resetClient: () => ({ ...initialState }),
 });
 
-export const selectClientCount = (state: { clientCounter: ClientCounterProducer }) => state.clientCounter.count;
+export const selectClientCount = (state: { clientCounter: ClientCounterState }) => state.clientCounter.count;
