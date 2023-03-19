@@ -112,13 +112,13 @@ unsubscribe();
 
 ### 🖥️ Managing multiple producers
 
-Reflex allows you to organize your state into multiple producers, and then combine them into a single root producer.
+Reflex allows you to organize your state into multiple producers, and then combine them into a single root producer. The `combineProducers()` function takes a table of producers, and returns a new producer that re-uses the state and actions from the original producers.
 
-The `combineProducers()` function takes a table of producers, and returns a new producer that combines the states and dispatchers. Any dispatchers called in the combined producer will be forwarded to every producer in the table.
+Actions from different producers that have the same name are combined, so calling their dispatchers will call both actions, as seen below in the `shared` action.
 
 > **Warning**
-> Dispatchers called on individual producers will not be tracked by the combined producer!
-> To update the state, you should get the dispatcher from the combined producer.
+> Updating the state of the combined producer will not update the state of the original producers, and vice versa.
+> You should only use the combined producer to dispatch actions.
 
 ```ts
 const producerA = createProducer(initialStateA, {
