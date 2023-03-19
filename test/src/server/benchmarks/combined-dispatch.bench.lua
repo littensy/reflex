@@ -3,6 +3,21 @@ local Reflex = TS.import(script, game:GetService("ReplicatedStorage"), "reflex")
 local Rodux =
 	TS.import(script, game:GetService("ReplicatedStorage"), "include", "node_modules", "@rbxts", "rodux", "src")
 
+--[[
+	Benchmarker
+
+	Run type: Time
+	Run time: 1 second
+
+	Reflex.createProducer:   80 microseconds
+	Reflex.combineProducers: 120 microseconds
+	Rodux.createReducer:     130 microseconds
+	Rodux.combineReducers:   170 microseconds
+
+	Reflex's combineProducers is 30% faster than Rodux's combineReducers in this
+	benchmark, but there is still a 40% overhead from Reflex's createProducer.
+]]
+
 return {
 	ParameterGenerator = function()
 		local result = {
