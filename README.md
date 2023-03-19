@@ -112,13 +112,13 @@ unsubscribe();
 
 ### 🖥️ Managing multiple producers
 
-Reflex allows you to organize your state into multiple producers, and then combine them into a single root producer.
+Reflex allows you to organize your state into multiple producers, and then combine them into a single root producer. The `combineProducers()` function takes a table of producers, and returns a new producer that re-uses the state and actions from the original producers.
 
-The `combineProducers()` function takes a table of producers, and returns a new producer that combines the states and dispatchers. Any dispatchers called in the combined producer will be forwarded to every producer in the table.
+Actions from different producers that have the same name are combined, so calling their dispatchers will call both actions, as seen below in the `shared` action.
 
 > **Warning**
-> Dispatchers called on individual producers will not be tracked by the combined producer!
-> To update the state, you should get the dispatcher from the combined producer.
+> Updating the state of the combined producer will not update the state of the original producers, and vice versa.
+> You should only use the combined producer to dispatch actions.
 
 ```ts
 const producerA = createProducer(initialStateA, {
@@ -257,7 +257,9 @@ export const producer = combineProducers({ ...sharedProducers, d: producerD });
 
 #### 📡 Broadcasting to the client
 
-To automate sending actions to the client, you can use the `createBroadcaster()` function on the server. It returns a broadcaster that can retrieve the current state for a player, and intercept actions with a middleware.
+To automate sending actions to the client, you can use the `createBroadcaster()` function on the server. It takes a map of the producers you want to sync, and `broadcast`, a callback that sends the actions to the players who can receive state. Note that you should only send actions to the players specified in the `players` argument to avoid sending data to unloaded players.
+
+The broadcaster is an object that contains a middleware function that you can apply to your producer, and a `playerRequestedState()` function that you can call when a player fires a remote event to request the initial state.
 
 This example uses the `@rbxts/net` library:
 
@@ -267,14 +269,13 @@ const broadcaster = createBroadcaster({
 	// The producer map that contains all of the producers you want to sync
 	producers: sharedProducers,
 
-	// The function that sends the action to the clients
+	// The function that sends the action to players that are listening
 	broadcast: (players, actions) => {
 		remote.Server.Get("broadcastDispatcher").SendToPlayers(players, actions);
 	},
 });
 
-// Players don't receive dispatches until they initialize their producer with
-// the initial state from the server
+// The remote that the client fires when joining to request the initial state
 remote.Server.OnFunction("getServerState", (player, actions) => {
 	return broadcaster.playerRequestedState(player);
 });
@@ -285,18 +286,14 @@ producer.enhance(applyMiddleware(broadcaster.middleware));
 
 #### 📡 Receiving actions from the server
 
-You're not done yet! You also need to set up the client to receive actions from the server. This is done with the `createBroadcastReceiver()` function, which returns a `dispatch()` callback and an enhancer.
+You're not done yet! You also need to set up the client to receive actions from the server. This is done with the `createBroadcastReceiver()` function, which returns a `dispatch()` callback and an enhancer. The dispatch function takes the actions that were sent from the server through your remote, and calls their dispatchers on the enhanced producer.
 
-> **Warning**
-> Be careful not to load remotes in your producer files!
-> If you test UI with a plugin, your networking library might try to connect RemoteEvents as a side effect of importing a producer.
+The `getServerState()` function is called when the client first joins, and should retrieve the initial state from `playerRequestedState()` on the server. The result gets merged with the current state, so you can use your producer even before the server state gets added.
 
 ```ts
 // client/main.client.ts
 const broadcastReceiver = createBroadcastReceiver({
-	// The function that retrieves the initial state from the server. The result
-	// gets merged with the current state, so you can use your producer before
-	// the server state gets added!
+	// The function that retrieves the initial state from the server
 	getServerState: async () => {
 		return remote.Client.Get("getServerState").CallServerAsync();
 	},

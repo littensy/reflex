@@ -3,6 +3,7 @@ return function()
 	local combineProducers = require(script.Parent.Parent["combine-producers"]).combineProducers
 	local applyMiddleware = require(script.Parent.Parent["apply-middleware"]).applyMiddleware
 	local createBroadcaster = require(script.Parent["broadcaster"]).createBroadcaster
+	local createBroadcastReceiver = require(script.Parent["broadcast-receiver"]).createBroadcastReceiver
 
 	local function copyProducerMap()
 		return {
@@ -71,6 +72,35 @@ return function()
 				expect(actionsToBroadcast[1].type).to.equal("incrementA")
 				expect(actionsToBroadcast[1].arguments).to.be.a("table")
 				expect(actionsToBroadcast[1].arguments[1]).to.equal(1)
+			end)
+		end)
+
+		it("should return only the combined state when playerRequestedState is called", function()
+			local producerMap = copyProducerMap()
+
+			local broadcaster = createBroadcaster({
+				producers = producerMap,
+				broadcast = function() end,
+			})
+
+			local producer = combineProducers({
+				a = producerMap.a,
+				b = producerMap.b,
+				shouldNotBeInState = createProducer({ count = 0 }, {}),
+			}):enhance(applyMiddleware(broadcaster.middleware))
+
+			producer.incrementA(1)
+			producer.incrementB(1)
+
+			task.defer(function()
+				local state = broadcaster.playerRequestedState({})
+
+				expect(state).to.be.a("table")
+				expect(state.a).to.be.a("table")
+				expect(state.a.count).to.equal(1)
+				expect(state.b).to.be.a("table")
+				expect(state.b.count).to.equal(1)
+				expect(state.shouldNotBeInState).to.equal(nil)
 			end)
 		end)
 	end)
