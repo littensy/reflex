@@ -45,12 +45,12 @@ $ pnpm add @rbxts/reflex
 
 ### 🎂 Producers
 
-**Producers** are the state containers that manage state updates and subscribe to changes.
+**Producers** are state containers that manage state updates and listeners.
 
 **`createProducer()`** takes an initial state and a table of action callbacks. Like Rodux, all state is immutable, so action callbacks should return a new state table if a change is needed.
 
 ```ts
-const myProducer = createProducer({ count: 0 } satisfies State, {
+const myProducer = createProducer(initialState, {
 	increment: (state) => ({ ...state, count: state.count + 1 }),
 	decrement: (state) => ({ ...state, count: state.count - 1 }),
 	set: (state, count: number) => ({ ...state, count }),
@@ -121,12 +121,12 @@ The `combineProducers()` function takes a table of producers, and returns a new 
 > To update the state, you should get the dispatcher from the combined producer.
 
 ```ts
-const producerA = createProducer({ count: 0 } satisfies StateA, {
+const producerA = createProducer(initialStateA, {
 	shared: (state) => ({ ...state, count: state.count + 1 }),
 	privateA: (state) => ({ ...state, count: state.count + 1 }),
 });
 
-const producerB = createProducer({ count: 0 } satisfies StateB, {
+const producerB = createProducer(initialStateB, {
 	shared: (state) => ({ ...state, count: state.count + 1 }),
 	privateB: (state) => ({ ...state, count: state.count + 1 }),
 });
