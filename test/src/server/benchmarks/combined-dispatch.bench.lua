@@ -5,7 +5,7 @@ local Rodux =
 
 return {
 	ParameterGenerator = function()
-		return {
+		local result = {
 			producer = Reflex.combineProducers({
 				a = Reflex.createProducer({ count = 0 }, {
 					incrementA = function(state, amount)
@@ -50,6 +50,13 @@ return {
 				end,
 			})),
 		}
+
+		task.defer(function()
+			result.store:destruct()
+			result.storeUncombined:destruct()
+		end)
+
+		return result
 	end,
 
 	Functions = {
