@@ -147,7 +147,7 @@ If you don't want to use generics to get the Producer type you want, Reflex expo
 
 ```tsx
 // use-app-producer.ts
-export const useAppProducer: UseSelectorHook<AppProducer> = useProducer;
+export const useAppProducer: UseProducerHook<AppProducer> = useProducer;
 ```
 
 ```tsx
