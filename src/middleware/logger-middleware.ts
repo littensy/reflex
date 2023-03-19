@@ -1,5 +1,5 @@
 import { Middleware } from "../types";
-import { entries } from "../utils/entries";
+import { entries } from "../utils/object";
 
 /**
  * A middleware that logs every action that is dispatched, and the new state

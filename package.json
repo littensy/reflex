@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@rbxts/compiler-types": "2.1.0-types.1",
+    "@rbxts/net": "^3.0.3",
     "@rbxts/roact": "1.4.4-ts.0",
     "@rbxts/roact-hooked": "^2.3.3",
     "@rbxts/rodux": "3.0.0-ts.3",

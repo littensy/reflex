@@ -1,5 +1,5 @@
 import { AnySelectors, InferSelectorArguments, InferSelectorResults } from "./types";
-import { entries } from "./utils/entries";
+import { entries } from "./utils/object";
 
 /**
  * Creates a memoized selector function. The selector function is only called

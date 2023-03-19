@@ -1,5 +1,5 @@
 import { CombineProducer, CombineStates, Producer, ProducerMap } from "./types";
-import { entries } from "./utils/entries";
+import { entries } from "./utils/object";
 
 /**
  * Combines multiple producers into a single producer.
