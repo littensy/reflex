@@ -232,6 +232,83 @@ const combinedProducer = combineProducers({
 }).enhance(applyMiddleware(loggerMiddleware));
 ```
 
+### 🤝 Syncing server and client
+
+With enhancers and middleware, you can easily sync the state between the server and client. The `createBroadcaster()` and `createBroadcastReceiver()` functions allow you to share dispatcher calls with the client while filtering out actions that are only meant for the server.
+
+#### ⚙️ Setting up
+
+Before you can use them, you should set up a shared producer table that contains all of the producers that you want to sync:
+
+```ts
+// shared/producers.ts
+export type SharedState = CombineStates<typeof sharedProducers>;
+
+export const sharedProducers = { a: producerA, b: producerB };
+
+// client/producers.ts
+export const producer = combineProducers({ ...sharedProducers, c: producerC });
+
+// server/producers.ts
+export const producer = combineProducers({ ...sharedProducers, d: producerD });
+```
+
+#### 📡 Broadcasting to the client
+
+To automate sending actions to the client, you can use the `createBroadcaster()` function on the server. It returns a broadcaster that can retrieve the current state for a player, and intercept actions with a middleware.
+
+This example uses the `@rbxts/net` library:
+
+```ts
+// server/main.server.ts
+const broadcaster = createBroadcaster({
+	// The producer map that contains all of the producers you want to sync
+	producers: sharedProducers,
+
+	// The function that sends the action to the clients
+	broadcast: (players, actions) => {
+		server.Get("broadcastDispatcher").SendToPlayers(players, actions);
+	},
+});
+
+// Players can't receive actions until they receive this state snapshot, and
+// cannot call this more than once.
+server.OnFunction("getServerState", (player, actions) => {
+	return broadcaster.playerRequestedState(player);
+});
+
+// Apply the middleware to the server producer
+producer.enhance(applyMiddleware(broadcaster.middleware));
+```
+
+#### 📡 Receiving actions from the server
+
+You're not done yet! You also need to set up the client to receive actions from the server. This is done with the `createBroadcastReceiver()` function, which returns a `dispatch()` callback and an enhancer.
+
+> **Warning**
+> Be careful not to load remotes in your producer files!
+> If you test UI with a plugin, your networking library might try to connect RemoteEvents as a side effect of importing a producer.
+
+```ts
+// client/main.client.ts
+const broadcastReceiver = createBroadcastReceiver({
+	// The function that retrieves the initial state from the server. The result
+	// gets merged with the current state, so you can use your producer before
+	// the server state gets added!
+	getServerState: async () => {
+		return client.Get("getServerState").CallServerAsync();
+	},
+});
+
+// Run the dispatchers that were sent from the server
+client.On("broadcastDispatcher", (actions) => {
+	broadcastReceiver.dispatch(actions);
+});
+
+// Apply the enhancer to the client producer
+producer.enhance(broadcastReceiver.enhancer);
+```
+
 &nbsp;
 
 ## 🚧 Roadmap
@@ -240,7 +317,8 @@ This project is still in early development, and is missing some features that I 
 
 -   [x] Middleware
 -   [x] Logging
--   [ ] Standardized server-to-client syncing
+-   [x] Standardized server-to-client syncing
+-   [ ] Aim for good performance and efficiency
 -   [ ] No `as const` requirement for createSelector
 
 &nbsp;
@@ -251,11 +329,13 @@ This project is still in early development, and is missing some features that I 
 
 -   🎂 **State**: An immutable table that represents the current state of the application.
 
--   🍰 **Selector**: A function that, given the current state, returns a subset of the state.
+-   🍰 **Selector**: A function that returns a subset of the state.
 
 -   ⚙️ **Action**: A function that, given the current state and some parameters, returns a new state.
 
 -   ⚡️ **Dispatcher**: The callback in the producer that updates the state and is based on an action.
+
+-   📡 **Broadcast**: The interfaces that allow you to sync server and client state.
 
 &nbsp;
 
