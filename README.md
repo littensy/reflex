@@ -267,17 +267,17 @@ const broadcaster = createBroadcaster({
 
 	// The function that sends the action to the clients
 	broadcast: (players, actions) => {
-		server.Get("broadcastDispatcher").SendToPlayers(players, actions);
+		remote.Server.Get("broadcastDispatcher").SendToPlayers(players, actions);
 	},
 });
 
-// Players can't receive actions until they receive this state snapshot, and
-// cannot call this more than once.
-server.OnFunction("getServerState", (player, actions) => {
+// Players don't receive dispatches until they initialize their producer with
+// the initial state from the server
+remote.Server.OnFunction("getServerState", (player, actions) => {
 	return broadcaster.playerRequestedState(player);
 });
 
-// Apply the middleware to the server producer
+// Apply the middleware to intercept actions and send them to the client
 producer.enhance(applyMiddleware(broadcaster.middleware));
 ```
 
@@ -296,16 +296,16 @@ const broadcastReceiver = createBroadcastReceiver({
 	// gets merged with the current state, so you can use your producer before
 	// the server state gets added!
 	getServerState: async () => {
-		return client.Get("getServerState").CallServerAsync();
+		return remote.Client.Get("getServerState").CallServerAsync();
 	},
 });
 
 // Run the dispatchers that were sent from the server
-client.On("broadcastDispatcher", (actions) => {
+remote.Client.On("broadcastDispatcher", (actions) => {
 	broadcastReceiver.dispatch(actions);
 });
 
-// Apply the enhancer to the client producer
+// Apply the enhancer so the receiver can hydrate the state
 producer.enhance(broadcastReceiver.enhancer);
 ```
 
@@ -313,13 +313,12 @@ producer.enhance(broadcastReceiver.enhancer);
 
 ## 🚧 Roadmap
 
-This project is still in early development, and is missing some features that I plan to add in the future:
+This project is still in early development! Here are some of the things that are planned:
 
 -   [x] Middleware
 -   [x] Logging
 -   [x] Standardized server-to-client syncing
--   [ ] Aim for good performance and efficiency
--   [ ] No `as const` requirement for createSelector
+-   [ ] Example project (for now, see the [test](test/src) folder)
 
 &nbsp;
 
