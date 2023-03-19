@@ -1,4 +1,4 @@
-import { CombineStates, Middleware, ProducerMap } from "../types";
+import { CombineStates, Middleware, Producer, ProducerMap } from "../types";
 import { entries } from "../utils/object";
 
 /**
@@ -56,36 +56,30 @@ export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOpt
 	const { producers, broadcast } = options;
 
 	const playerList: Player[] = [];
+	const actionPool: BroadcastActionContainer[] = [];
 	const actionFilter = new Set<string>();
 
-	for (const [, producer] of entries(producers)) {
-		for (const [key] of entries<string, any>(producer.getDispatchers())) {
-			actionFilter.add(key);
-		}
-	}
+	let currentProducer: Producer<any, any> | undefined;
+	let nextBroadcast: thread | undefined;
 
 	const playerRequestedState = (player: Player) => {
 		assert(!playerList.includes(player), `Player ${player} cannot get state more than once!`);
+		assert(currentProducer, "Cannot get state before middleware is initialized!");
 
 		playerList.push(player);
 
-		Promise.fromEvent(game.GetService("Players").PlayerRemoving, (left) => left === player).then(() => {
-			playerList.unorderedRemove(playerList.indexOf(player));
-		});
-
 		const state: Partial<CombineStates<T>> = {};
+		const rootState: CombineStates<T> = currentProducer.getState();
 
-		for (const [key, producer] of entries(producers)) {
-			state[key] = producer.getState();
+		for (const [key] of entries(producers)) {
+			state[key] = rootState[key];
 		}
 
 		return state as CombineStates<T>;
 	};
 
 	const middleware: Middleware = (dispatch, resolve, producer) => {
-		const actionPool: BroadcastActionContainer[] = [];
-
-		let nextBroadcast: thread | undefined;
+		currentProducer = producer;
 
 		const scheduleBroadcast = () => {
 			if (nextBroadcast) {
@@ -119,6 +113,16 @@ export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOpt
 			return result;
 		};
 	};
+
+	for (const [, producer] of entries(producers)) {
+		for (const [key] of entries<string, any>(producer.getDispatchers())) {
+			actionFilter.add(key);
+		}
+	}
+
+	game.GetService("Players").PlayerRemoving.Connect((player) => {
+		playerList.unorderedRemove(playerList.indexOf(player));
+	});
 
 	return {
 		middleware,
