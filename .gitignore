@@ -5,3 +5,4 @@
 /test/include
 /test/out
 *.tsbuildinfo
+.DS_Store
