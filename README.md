@@ -23,7 +23,7 @@
 
 **Reflex** is a simple state container inspired by [Rodux](https://github.com/roblox/rodux) and [Silo](https://github.com/sleitnick/rbxts-silo), designed to be an all-in-one solution for managing and reacting to state in Roblox games.
 
-You can use Reflex with Roact on the client, or to manage your game's state on the server.
+You can use Reflex with Roact on the client with [`@rbxts/roact-reflex`](https://npmjs.com/package/@rbxts/roact-reflex), or use it to manage your game's state on the server.
 
 &nbsp;
 
@@ -143,7 +143,7 @@ combinedProducer.privateB(); // { ..., b: { count: 2 } }
 
 ### ⚛️ Roact
 
-Reflex offers native support for [`@rbxts/roact-hooked`](https://npmjs.com/package/@rbxts/roact-hooked) with the `useSelector()` and `useProducer()` hooks. Using them requires setting up a `ReflexProvider` at the root of your Roact tree.
+Reflex offers support for [`@rbxts/roact-hooked`](https://npmjs.com/package/@rbxts/roact-hooked) with [`@rbxts/roact-reflex`](https://npmjs.com/package/@rbxts/roact-reflex). Using roact-reflex hooks requires setting up a `ReflexProvider` at the root of your Roact tree.
 
 If you don't want to use generics to get the Producer type you want, Reflex exports the `UseSelectorHook` and `UseProducerHook` types to make it easier:
 
@@ -276,9 +276,7 @@ const broadcaster = createBroadcaster({
 });
 
 // The remote that the client fires when joining to request the initial state
-remote.Server.OnFunction("getServerState", (player, actions) => {
-	return broadcaster.playerRequestedState(player);
-});
+remote.Server.OnFunction("getServerState", broadcaster.playerRequestedState);
 
 // Apply the middleware to intercept actions and send them to the client
 producer.enhance(applyMiddleware(broadcaster.middleware));
@@ -300,9 +298,7 @@ const broadcastReceiver = createBroadcastReceiver({
 });
 
 // Run the dispatchers that were sent from the server
-remote.Client.On("broadcastDispatcher", (actions) => {
-	broadcastReceiver.dispatch(actions);
-});
+remote.Client.On("broadcastDispatcher", broadcastReceiver.dispatch);
 
 // Apply the enhancer so the receiver can hydrate the state
 producer.enhance(broadcastReceiver.enhancer);

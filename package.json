@@ -34,8 +34,6 @@
   "devDependencies": {
     "@rbxts/compiler-types": "2.1.0-types.1",
     "@rbxts/net": "^3.0.3",
-    "@rbxts/roact": "1.4.4-ts.0",
-    "@rbxts/roact-hooked": "^2.3.3",
     "@rbxts/rodux": "3.0.0-ts.3",
     "@rbxts/roselect": "^0.1.2",
     "@rbxts/testez": "0.4.2-ts.0",
@@ -49,9 +47,5 @@
     "prettier": "^2.8.4",
     "roblox-ts": "^2.1.0",
     "typescript": "^5.0.2"
-  },
-  "peerDependencies": {
-    "@rbxts/roact": "^1.4.4-ts.0",
-    "@rbxts/roact-hooked": "^2.3.3"
   }
 }
