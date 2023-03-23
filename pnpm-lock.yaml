@@ -3,8 +3,6 @@ lockfileVersion: 5.4
 specifiers:
   '@rbxts/compiler-types': 2.1.0-types.1
   '@rbxts/net': ^3.0.3
-  '@rbxts/roact': 1.4.4-ts.0
-  '@rbxts/roact-hooked': ^2.3.3
   '@rbxts/rodux': 3.0.0-ts.3
   '@rbxts/roselect': ^0.1.2
   '@rbxts/testez': 0.4.2-ts.0
@@ -22,8 +20,6 @@ specifiers:
 devDependencies:
   '@rbxts/compiler-types': 2.1.0-types.1
   '@rbxts/net': 3.0.3
-  '@rbxts/roact': 1.4.4-ts.0
-  '@rbxts/roact-hooked': 2.3.3_@rbxts+roact@1.4.4-ts.0
   '@rbxts/rodux': 3.0.0-ts.3
   '@rbxts/roselect': 0.1.2
   '@rbxts/testez': 0.4.2-ts.0
@@ -124,18 +120,6 @@ packages:
 
   /@rbxts/net/3.0.3:
     resolution: {integrity: sha512-sceVEOU+XcFZm7STWTUWzk9IZmdTC7WljSzzJAdMxbbCOxa0f39cfk29RwadI6UxTYb39qLPY36sDEPNWZ1pMw==}
-    dev: true
-
-  /@rbxts/roact-hooked/2.3.3_@rbxts+roact@1.4.4-ts.0:
-    resolution: {integrity: sha512-qj/Fx2Q1hOae9giRqxdDWXPi2k92aIADck7Lj1ou5KGNp/oUT8x3FD8yt6lpLq44MveWV3cY/W/f0X4NLltMEA==}
-    peerDependencies:
-      '@rbxts/roact': '*'
-    dependencies:
-      '@rbxts/roact': 1.4.4-ts.0
-    dev: true
-
-  /@rbxts/roact/1.4.4-ts.0:
-    resolution: {integrity: sha512-gn9mBoGG/Clzgv2kyOvLNVd9dh5t6z+jukC3ITv2HnfPqvf/sMbz/VMaBoiB7t5umuiIe0LjW0ctZrkrS+uTOA==}
     dev: true
 
   /@rbxts/rodux/3.0.0-ts.3:
