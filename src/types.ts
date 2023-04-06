@@ -175,14 +175,24 @@ export type CombineProducer<Producers extends ProducerMap> = Producer<
 	CombineActions<Producers>
 >;
 
-export type Selector<S extends any[] = unknown[], R = any> = (...args: S) => R;
+export type Selector<State = any, Result = unknown, Params extends never | any[] = any[]> = [Params] extends [never]
+	? (state: State) => Result
+	: (state: State, ...params: Params) => Result;
 
-export type AnySelectors = readonly Selector[];
+export type SelectorArray = readonly Selector[];
 
-export type InferSelectorArguments<Selectors extends AnySelectors> = {
-	[Key in keyof Selectors]: Selectors[Key] extends Selector<infer S, any> ? S : never;
+export type InferSelectorArrayResults<Selectors extends SelectorArray> = {
+	[K in keyof Selectors]: Selectors[K] extends Selector<any, infer Result, any> ? Result : never;
 };
 
-export type InferSelectorResults<Selectors extends AnySelectors> = {
-	[Key in keyof Selectors]: Selectors[Key] extends Selector<any, infer R> ? R : never;
-};
+export type MergeSelectors<Selectors extends SelectorArray, Result> = Selector<
+	Selectors[0] extends Selector<infer S> ? S : never,
+	Result,
+	{
+		[K in keyof Selectors]: Selectors[K] extends Selector<any, any, infer Params>
+			? Params extends []
+				? never
+				: Params
+			: never;
+	}[number]
+>;

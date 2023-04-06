@@ -1,4 +1,4 @@
-import { AnySelectors, InferSelectorArguments, InferSelectorResults } from "./types";
+import { InferSelectorArrayResults, MergeSelectors, SelectorArray } from "./types";
 import { entries } from "./utils/object";
 
 /**
@@ -16,10 +16,10 @@ import { entries } from "./utils/object";
  * @param selector The selector function.
  * @returns The memoized selector function.
  */
-export function createSelector<Selectors extends AnySelectors, Result>(
+export function createSelector<Selectors extends SelectorArray, Result>(
 	dependencies: Selectors,
-	selector: (...args: InferSelectorResults<Selectors>) => Result,
-): (...args: InferSelectorArguments<Selectors>) => Result {
+	combiner: (...args: InferSelectorArrayResults<Selectors>) => Result,
+): MergeSelectors<Selectors, Result> {
 	const dependencyCache: Record<number, unknown> = {};
 	const argumentCache: Record<number, unknown> = {};
 
@@ -29,7 +29,7 @@ export function createSelector<Selectors extends AnySelectors, Result>(
 	// When this memoized selector is called, call the dependencies first. If
 	// their outputs are not shallowly equal to the last time the dependencies
 	// were called, then call the selector function and return its output.
-	return (...args: InferSelectorArguments<Selectors>): Result => {
+	return (...args: unknown[]): Result => {
 		let argumentsChanged = firstCall;
 		let recompute = firstCall;
 
@@ -53,7 +53,7 @@ export function createSelector<Selectors extends AnySelectors, Result>(
 
 		if (recompute) {
 			firstCall = false;
-			value = selector(...(dependencyCache as InferSelectorResults<Selectors>));
+			value = combiner(...(dependencyCache as InferSelectorArrayResults<Selectors>));
 		}
 
 		return value;
