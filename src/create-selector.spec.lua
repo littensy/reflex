@@ -9,12 +9,10 @@ return function()
 		return state.B
 	end
 
-	local selector, result
-
 	describe("createSelector", function()
 		it("should return a function", function()
-			selector = createSelector({ selectorA, selectorB }, function(a, b)
-				return { a + b }
+			local selector = createSelector({ selectorA, selectorB }, function(a, b)
+				return a + b
 			end)
 
 			expect(selector).to.be.a("function")
@@ -23,23 +21,30 @@ return function()
 
 	describe("selector", function()
 		it("should return the correct value", function()
-			result = selector({ A = 1, B = 2 })
+			local selector = createSelector({ selectorA, selectorB }, function(a, b)
+				return a + b
+			end)
 
-			expect(result).to.be.a("table")
-			expect(result[1]).to.equal(3)
+			expect(selector({ A = 1, B = 1 })).to.equal(2)
+			expect(selector({ A = 2, B = 2 })).to.equal(4)
 		end)
 
 		it("should return the same value if the state hasn't changed", function()
-			local newResult = selector({ A = 1, B = 2 })
+			local selector = createSelector({ selectorA, selectorB }, function(a, b)
+				return {}
+			end)
 
-			expect(newResult).to.equal(result)
+			local result = selector({ A = 1, B = 1 })
+			expect(selector({ A = 1, B = 1 })).to.equal(result)
 		end)
 
 		it("should return a new value if the state has changed", function()
-			local newResult = selector({ A = 1, B = 3 })
+			local selector = createSelector({ selectorA, selectorB }, function(a, b)
+				return {}
+			end)
 
-			expect(newResult).never.to.equal(result)
-			expect(newResult[1]).to.equal(4)
+			local result = selector({ A = 1, B = 1 })
+			expect(selector({ A = 2, B = 2 })).never.to.equal(result)
 		end)
 
 		it("should not call the selector if the state hasn't changed", function()
@@ -47,7 +52,7 @@ return function()
 
 			local selector = createSelector({ selectorA, selectorB }, function(a, b)
 				called = true
-				return { a + b }
+				return a + b
 			end)
 
 			selector({ A = 1, B = 123 })
@@ -56,6 +61,44 @@ return function()
 			called = false
 			selector({ A = 1, B = 123 })
 			expect(called).to.equal(false)
+		end)
+
+		it("should update if a dependency changes to nil", function()
+			local selector = createSelector({ selectorA, selectorB }, function(a, b)
+				return (a or 0) + (b or 0)
+			end)
+
+			expect(selector({ A = 1, B = 1 })).to.equal(2)
+			expect(selector({ A = 1 })).to.equal(1)
+			expect(selector({ B = 1 })).to.equal(1)
+			expect(selector({ A = 2, B = 2 })).to.equal(4)
+		end)
+
+		it("should set a dependency to nil if it is removed from the state", function()
+			local callCount = 0
+
+			local selector = createSelector({ selectorA, selectorB }, function(a, b)
+				callCount += 1
+
+				if callCount == 1 then
+					expect(a).to.equal(1)
+					expect(b).to.equal(1)
+				elseif callCount == 2 then
+					expect(a).to.equal(1)
+					expect(b).to.equal(nil)
+				elseif callCount == 3 then
+					expect(a).to.equal(1)
+					expect(b).to.equal(2)
+				else
+					error("Called too many times")
+				end
+
+				return {}
+			end)
+
+			selector({ A = 1, B = 1 })
+			selector({ A = 1 })
+			selector({ A = 1, B = 2 })
 		end)
 	end)
 end
