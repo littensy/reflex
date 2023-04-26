@@ -68,7 +68,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			stateSinceFlush = state;
 
 			for (const [, subscriber] of pairs(listeners)) {
-				subscriber(state, prevState);
+				task.spawn(subscriber, state, prevState);
 			}
 		},
 
