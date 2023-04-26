@@ -69,10 +69,18 @@ export type Producer<S, A> = InferDispatchersFromActions<A> & {
 	 * Returns a Promise that resolves once a specific part of the state
 	 * changes. Unsubscribes from the state change event when the Promise
 	 * is cancelled or resolved.
+	 *
+	 * Takes an optional `predicate` function that can be used to determine
+	 * if the Promise should resolve for a given state change.
+	 *
 	 * @param selector A function that selects a part of the state.
+	 * @param predicate A function that returns true when the Promise should resolve.
 	 * @returns A Promise that resolves when the state changes.
 	 */
-	wait<Selection>(selector: (state: S) => Selection): Promise<Selection>;
+	wait<Selection>(
+		selector: (state: S) => Selection,
+		predicate?: (selection: Selection, prevSelection?: Selection) => boolean,
+	): Promise<Selection>;
 
 	/**
 	 * Disconnects all subscribers and cancel any pending flushes.

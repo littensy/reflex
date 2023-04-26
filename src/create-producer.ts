@@ -41,7 +41,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			return selector ? selector(state) : state;
 		},
 
-		setState(newState: unknown) {
+		setState(newState) {
 			state = newState;
 			scheduleFlush();
 		},
@@ -100,7 +100,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			};
 		},
 
-		once(selector: Selector, listener: Callback) {
+		once(selector, listener) {
 			const unsubscribe = this.subscribe(selector, (newState, prevState) => {
 				unsubscribe();
 				listener(newState, prevState);
@@ -109,9 +109,16 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			return unsubscribe;
 		},
 
-		wait(selector: Selector) {
+		wait(selector, predicate = () => true) {
 			return new Promise<any>((resolve, _, onCancel) => {
-				onCancel(this.once(selector, resolve));
+				const unsubscribe = this.subscribe(selector, (newState, prevState) => {
+					if (predicate(newState, prevState)) {
+						unsubscribe();
+						resolve(newState);
+					}
+				});
+
+				onCancel(unsubscribe);
 			});
 		},
 
@@ -124,11 +131,11 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			listeners.clear();
 		},
 
-		enhance(enhancer: Callback) {
+		enhance(enhancer) {
 			return enhancer(this);
 		},
 
-		Connect(listener: Callback) {
+		Connect(listener) {
 			const unsubscribe = this.subscribe(listener);
 			return {
 				Connected: true,
@@ -139,7 +146,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			};
 		},
 
-		Once(listener: Callback) {
+		Once(listener) {
 			const unsubscribe = this.once((state) => state, listener);
 			return {
 				Connected: true,

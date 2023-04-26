@@ -275,6 +275,39 @@ return function()
 			producer.increment(1)
 			producer:flush()
 		end)
+
+		it("should receive a predicate argument to filter events", function()
+			local function predicate1(value)
+				return value == 4
+			end
+			local function predicate2(value)
+				return value == 6
+			end
+			local promise1 = producer:wait(function(state)
+				return state.setter
+			end, predicate1)
+			local promise2 = producer:wait(function(state)
+				return state.setter
+			end, predicate2)
+			producer.setSetter(4)
+			producer:flush()
+			expect(function()
+				promise1
+					:now()
+					:andThen(function(...)
+						print(...)
+					end)
+					:expect()
+			end).never.to.throw()
+			expect(function()
+				promise2
+					:now()
+					:andThen(function(...)
+						print(...)
+					end)
+					:expect()
+			end).to.throw()
+		end)
 	end)
 
 	describe("Producer", function()
