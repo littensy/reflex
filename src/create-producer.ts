@@ -1,3 +1,4 @@
+import { RunService } from "@rbxts/services";
 import { Actions, InferDispatchersFromActions, Producer, Selector } from "./types";
 
 /**
@@ -23,14 +24,14 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 
 	let state = initialState;
 	let stateSinceFlush = initialState;
-	let nextFlush: thread | undefined;
+	let nextFlush: RBXScriptConnection | undefined;
 
 	const scheduleFlush = () => {
 		if (nextFlush) {
 			return;
 		}
 
-		nextFlush = task.defer(() => {
+		nextFlush = RunService.Heartbeat.Once(() => {
 			nextFlush = undefined;
 			producer.flush();
 		});
@@ -56,7 +57,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 
 		flush() {
 			if (nextFlush) {
-				task.cancel(nextFlush);
+				nextFlush?.Disconnect()
 				nextFlush = undefined;
 			}
 
@@ -124,7 +125,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 
 		destroy() {
 			if (nextFlush) {
-				task.cancel(nextFlush);
+				nextFlush?.Disconnect()
 				nextFlush = undefined;
 			}
 

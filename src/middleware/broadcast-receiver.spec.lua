@@ -116,28 +116,26 @@ return function()
 
 			producerServer.incrementA(10)
 			producerServer.incrementB(20)
+			task.wait(0.1)
 
-			-- dispatches are deferred until the next frame
-			task.defer(function()
-				local oldClientState = producerClient:getState()
+			local oldClientState = producerClient:getState()
 
-				expect(incomingActions).to.be.a("table")
-				expect(#incomingActions).to.equal(2)
+			expect(incomingActions).to.be.a("table")
+			expect(#incomingActions).to.equal(2)
 
-				local actionA, actionB = unpack(incomingActions)
+			local actionA, actionB = unpack(incomingActions)
 
-				expect(actionA.type).to.equal("incrementA")
-				expect(actionA.arguments[1]).to.equal(10)
-				expect(actionB.type).to.equal("incrementB")
-				expect(actionB.arguments[1]).to.equal(20)
+			expect(actionA.type).to.equal("incrementA")
+			expect(actionA.arguments[1]).to.equal(10)
+			expect(actionB.type).to.equal("incrementB")
+			expect(actionB.arguments[1]).to.equal(20)
 
-				broadcastReceiver.dispatch(incomingActions)
+			broadcastReceiver.dispatch(incomingActions)
 
-				local newClientState = producerClient:getState()
+			local newClientState = producerClient:getState()
 
-				expect(newClientState.a.count).to.equal(oldClientState.a.count + 10)
-				expect(newClientState.b.count).to.equal(oldClientState.b.count + 20)
-			end)
+			expect(newClientState.a.count).to.equal(oldClientState.a.count + 10)
+			expect(newClientState.b.count).to.equal(oldClientState.b.count + 20)
 		end)
 	end)
 end

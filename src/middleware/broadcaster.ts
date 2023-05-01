@@ -1,3 +1,4 @@
+import { RunService } from "@rbxts/services";
 import { CombineStates, Middleware, Producer, ProducerMap } from "../types";
 import { entries } from "../utils/object";
 
@@ -60,7 +61,7 @@ export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOpt
 	const actionFilter = new Set<string>();
 
 	let currentProducer: Producer<any, any> | undefined;
-	let nextBroadcast: thread | undefined;
+	let nextBroadcast: RBXScriptConnection | undefined;
 
 	const playerRequestedState = (player: Player) => {
 		assert(!playerList.includes(player), `Player ${player} cannot get state more than once!`);
@@ -86,7 +87,7 @@ export function createBroadcaster<T extends ProducerMap>(options: BroadcasterOpt
 				return;
 			}
 
-			nextBroadcast = task.defer(() => {
+			nextBroadcast = RunService.Heartbeat.Once(() => {
 				nextBroadcast = undefined;
 				const currentActionPool = table.clone(actionPool);
 				actionPool.clear();
