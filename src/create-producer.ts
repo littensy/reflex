@@ -57,7 +57,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 
 		flush() {
 			if (nextFlush) {
-				nextFlush?.Disconnect()
+				nextFlush?.Disconnect();
 				nextFlush = undefined;
 			}
 
@@ -125,7 +125,7 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 
 		destroy() {
 			if (nextFlush) {
-				nextFlush?.Disconnect()
+				nextFlush?.Disconnect();
 				nextFlush = undefined;
 			}
 
