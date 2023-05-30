@@ -26,7 +26,8 @@
   "types": "out/index.d.ts",
   "files": [
     "out",
-    "!**/*.tsbuildinfo"
+    "!**/*.tsbuildinfo",
+    "!**/*.spec.lua"
   ],
   "publishConfig": {
     "access": "public"
