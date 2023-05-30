@@ -19,20 +19,27 @@ import { entries } from "./utils/object";
 export function createSelector<Selectors extends SelectorArray, Result>(
 	dependencies: Selectors,
 	combiner: (...args: InferSelectorArrayResults<Selectors>) => Result,
-): MergeSelectors<Selectors, Result> {
-	const dependencyCache: Record<number, unknown> = {};
-	const argumentCache: Record<number, unknown> = {};
+): MergeSelectors<Selectors, Result>;
 
-	let value: Result;
+export function createSelector(dependencies: Callback[], combiner: (...args: unknown[]) => unknown) {
+	const dependencyCount = dependencies.size();
+	const dependencyCache: unknown[] = [];
+	const argumentCache: unknown[] = [];
+
+	let value: unknown;
 	let firstCall = true;
 
 	// When this memoized selector is called, call the dependencies first. If
 	// their outputs are not shallowly equal to the last time the dependencies
 	// were called, then call the selector function and return its output.
-	return (...args: unknown[]): Result => {
+	return (...args: unknown[]) => {
 		let argumentsChanged = firstCall;
 		let recompute = firstCall;
 
+		firstCall = false;
+
+		// Iterate through arguments in any order. If any argument is not equal to
+		// the cached argument, then the arguments have changed.
 		for (const [index, argument] of entries<number, unknown>(args)) {
 			if (argument !== argumentCache[index]) {
 				argumentsChanged = true;
@@ -40,20 +47,33 @@ export function createSelector<Selectors extends SelectorArray, Result>(
 			}
 		}
 
-		if (argumentsChanged) {
-			for (const [index, dependency] of entries<number, Callback>(dependencies)) {
-				const result: unknown = dependency(...args);
-
-				if (result !== dependencyCache[index]) {
-					recompute = true;
-					dependencyCache[index] = result;
+		// The above loop skips any argument that is 'nil'. This loop will double
+		// check for any arguments that changed to 'nil'.
+		if (!argumentsChanged) {
+			for (const [index] of entries<number, unknown>(argumentCache)) {
+				if (args[index] === undefined) {
+					argumentsChanged = true;
+					argumentCache[index] = undefined;
 				}
 			}
 		}
 
+		if (argumentsChanged) {
+			// Iterate through dependencies in reverse order, so that if a dependency
+			// returns 'nil', the results that follow do not get cut off when unpacking.
+			for (const index of $range(dependencyCount - 1, 0, -1)) {
+				const result: unknown = dependencies[index](...args);
+
+				if (result !== dependencyCache[index]) {
+					recompute = true;
+				}
+
+				dependencyCache[index] = result;
+			}
+		}
+
 		if (recompute) {
-			firstCall = false;
-			value = combiner(...(dependencyCache as InferSelectorArrayResults<Selectors>));
+			value = combiner(...dependencyCache);
 		}
 
 		return value;

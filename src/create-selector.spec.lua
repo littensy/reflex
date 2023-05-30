@@ -100,5 +100,65 @@ return function()
 			selector({ A = 1 })
 			selector({ A = 1, B = 2 })
 		end)
+
+		it("should support dependencies that return nil", function()
+			local resultA, resultB
+			local selector = createSelector({ selectorA, selectorB }, function(a, b)
+				resultA = a
+				resultB = b
+			end)
+
+			selector({ B = 2 })
+			expect(resultA).to.equal(nil)
+			expect(resultB).to.equal(2)
+
+			selector({ A = 1, B = 2 })
+			expect(resultA).to.equal(1)
+			expect(resultB).to.equal(2)
+		end)
+
+		it("should support nil arguments", function()
+			local argumentA, argumentB, argumentC
+			local callCount = 0
+			local function selector(a, b, c)
+				argumentA = a
+				argumentB = b
+				argumentC = c
+				return (a or 0) + (b or 0)
+			end
+
+			local memoizedSelector = createSelector({ selector }, function()
+				callCount += 1
+			end)
+
+			-- being called with nil arguments twice shouldn't trigger a call
+			memoizedSelector()
+			expect(argumentA).to.equal(nil)
+			expect(argumentB).to.equal(nil)
+			expect(callCount).to.equal(1)
+
+			memoizedSelector()
+			expect(callCount).to.equal(1)
+
+			-- an argument changing from nil to a value should trigger a call
+			memoizedSelector(nil, 1)
+			expect(argumentA).to.equal(nil)
+			expect(argumentB).to.equal(1)
+			expect(callCount).to.equal(2)
+
+			-- an argument changing from a value to nil should trigger a call
+			memoizedSelector()
+			expect(argumentA).to.equal(nil)
+			expect(argumentB).to.equal(nil)
+			expect(callCount).to.equal(3)
+
+			-- the location of the nil argument shouldn't matter
+			memoizedSelector(1, nil, 1)
+			memoizedSelector(1, 1, nil)
+			expect(argumentA).to.equal(1)
+			expect(argumentB).to.equal(1)
+			expect(argumentC).to.equal(nil)
+			expect(callCount).to.equal(5)
+		end)
 	end)
 end
