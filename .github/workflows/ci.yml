@@ -20,7 +20,7 @@ jobs:
       - name: Setup PNPM
         uses: pnpm/action-setup@v2.2.4
         with:
-          version: 7.25.1
+          version: 8.6.0
           run_install: true
 
       - name: Run ESLint
