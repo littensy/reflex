@@ -19,12 +19,23 @@ export function createProducer<S, A extends Actions<S>>(initialState: S, actions
 export function createProducer(initialState: unknown, actions: Actions<unknown>): Producer<unknown, Actions<unknown>> {
 	const dispatchers = {} as InferDispatchersFromActions<Actions<unknown>>;
 
-	const listeners = new Map<number, (state: unknown, prevState: unknown) => void>();
+	let currentListeners: Map<number, (state: unknown) => void> | undefined = new Map();
+	let nextListeners = currentListeners;
 	let listenerIdCounter = 0;
-
 	let state = initialState;
 	let stateSinceFlush = initialState;
 	let nextFlush: RBXScriptConnection | undefined;
+
+	/**
+	 * Creates a copy of the current listeners so that `subscribe` can use it as
+	 * a temporary list. The `flush` method will update the current listeners and
+	 * clear the temporary list as needed.
+	 */
+	const prepareNextListeners = () => {
+		if (nextListeners === currentListeners) {
+			nextListeners = table.clone(currentListeners);
+		}
+	};
 
 	const scheduleFlush = () => {
 		if (nextFlush) {
@@ -35,6 +46,27 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			nextFlush = undefined;
 			producer.flush();
 		});
+	};
+
+	const subscribe = (id: number, listener: (state: unknown) => void) => {
+		let connected = true;
+
+		prepareNextListeners();
+		nextListeners.set(id, listener);
+
+		return () => {
+			if (!connected) {
+				return;
+			}
+
+			connected = false;
+
+			prepareNextListeners();
+			nextListeners.delete(id);
+
+			// Clear the reference to this listener immediately
+			currentListeners = undefined;
+		};
 	};
 
 	const producer: Producer<unknown, Actions<unknown>> = {
@@ -65,12 +97,12 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 				return;
 			}
 
-			const prevState = stateSinceFlush;
-			const prevListeners = table.clone(listeners);
+			const currentState = state;
 			stateSinceFlush = state;
+			currentListeners = nextListeners;
 
-			for (const [, subscriber] of prevListeners) {
-				task.spawn(subscriber, state, prevState);
+			for (const [, listener] of currentListeners) {
+				task.spawn(listener, currentState);
 			}
 		},
 
@@ -83,11 +115,9 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 				listener = selectorOrListener;
 			}
 
-			const id = listenerIdCounter++;
-
 			let selection = selector(state);
 
-			listeners.set(id, (newState) => {
+			return subscribe(listenerIdCounter++, (newState) => {
 				const newSelection: unknown = selector(newState);
 				const prevSelection: unknown = selection;
 
@@ -96,10 +126,6 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 					listener(newSelection, prevSelection);
 				}
 			});
-
-			return () => {
-				listeners.delete(id);
-			};
 		},
 
 		once(selector, listener) {
@@ -130,7 +156,8 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 				nextFlush = undefined;
 			}
 
-			listeners.clear();
+			currentListeners?.clear();
+			nextListeners.clear();
 		},
 
 		enhance(enhancer) {
