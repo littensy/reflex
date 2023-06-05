@@ -211,6 +211,57 @@ return function()
 			producer:flush()
 			unsubscribe()
 		end)
+
+		it("should not pass new state if a previous listener updated state", function()
+			local oldStateExpected = producer:getState(selector)
+			local newStateExpected
+			local newStateDuringFlush
+
+			local unsubscribeFirst = producer:subscribe(selector, function()
+				producer.increment(1)
+				newStateExpected = producer:getState(selector)
+			end)
+
+			local unsubscribeSecond = producer:subscribe(selector, function(newState, oldState)
+				expect(newState).to.equal(newStateExpected)
+				expect(newState).never.to.equal(newStateDuringFlush)
+				expect(oldState).to.equal(oldStateExpected)
+			end)
+
+			producer.increment(1)
+			newStateExpected = producer:getState(selector)
+			producer:flush()
+			unsubscribeFirst()
+			unsubscribeSecond()
+		end)
+
+		it("should allow subscription within a subscribe event", function()
+			local unsubscribeSecond
+			local calls = 0
+
+			local unsubscribeFirst = producer:subscribe(selector, function()
+				calls += 1
+
+				if unsubscribeSecond then
+					return
+				end
+
+				unsubscribeSecond = producer:subscribe(selector, function()
+					calls += 1
+				end)
+			end)
+
+			producer.increment(1)
+			producer:flush()
+			expect(calls).to.equal(1)
+
+			producer.increment(1)
+			producer:flush()
+			expect(calls).to.equal(3)
+
+			unsubscribeFirst()
+			unsubscribeSecond()
+		end)
 	end)
 
 	describe("Producer.setState", function()
