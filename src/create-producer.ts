@@ -66,9 +66,10 @@ export function createProducer(initialState: unknown, actions: Actions<unknown>)
 			}
 
 			const prevState = stateSinceFlush;
+			const prevListeners = table.clone(listeners);
 			stateSinceFlush = state;
 
-			for (const [, subscriber] of pairs(listeners)) {
+			for (const [, subscriber] of prevListeners) {
 				task.spawn(subscriber, state, prevState);
 			}
 		},
