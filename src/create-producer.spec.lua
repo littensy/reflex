@@ -219,7 +219,7 @@ return function()
 
 			local unsubscribeFirst = producer:subscribe(selector, function()
 				producer.increment(1)
-				newStateExpected = producer:getState(selector)
+				newStateDuringFlush = producer:getState(selector)
 			end)
 
 			local unsubscribeSecond = producer:subscribe(selector, function(newState, oldState)
