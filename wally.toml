@@ -1,0 +1,8 @@
+[package]
+name = "richerd/reflex"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+promise = "evaera/promise@4.0.0"

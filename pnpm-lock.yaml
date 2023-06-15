@@ -1,13 +1,8 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
-
-dependencies:
-  '@rbxts/services':
-    specifier: ^1.5.1
-    version: 1.5.1
 
 devDependencies:
   '@rbxts/compiler-types':
@@ -151,10 +146,6 @@ packages:
   /@rbxts/roselect@0.1.2:
     resolution: {integrity: sha512-YhJ1xkAb5Prr8zwyz+Pd5KEIOmfhpB93q+4bPDmIaI0dCFkrEfbnHd0oT3KeFYlLMKsUTPfbsAJeI2wNTlEFKA==}
     dev: true
-
-  /@rbxts/services@1.5.1:
-    resolution: {integrity: sha512-SRtfIjga0K4YYSXRpK+eH3kcTq7ZXo9OHOt0jszaOOoEOIJloMGlyuRPqesPHyhveh2AMXAZr3TYbRMSD+u+kQ==}
-    dev: false
 
   /@rbxts/testez@0.4.2-ts.0:
     resolution: {integrity: sha512-8Q+OG9ddTD2P3aARCuRKpPqUBvuifgSnHvQMZ6jBMqUzxhIysnb0l4c3vnnaQnvdyZ1OW9tKxcdEHMGTb67uOw==}

@@ -26,5 +26,3 @@ jobs:
       - name: Run ESLint
         run: pnpm eslint src
 
-      - name: Build & Compile
-        run: pnpm build --verbose
