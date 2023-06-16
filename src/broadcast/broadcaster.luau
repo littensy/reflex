@@ -13,16 +13,16 @@ export type BroadcastAction = {
 }
 
 --- Options for the broadcast middleware.
-export type BroadcasterOptions<T = ProducerMap> = {
+export type BroadcasterOptions = {
 	--- The producers that will be tracked.
-	producers: { [unknown]: T },
+	producers: ProducerMap,
 
 	--- The function that will send the broadcasted actions to the given players.
 	broadcast: (players: { Player }, actions: { BroadcastAction }) -> (),
 }
 
 --- A broadcaster that can be used to share actions with the client.
-export type Broadcaster<T = ProducerMap> = {
+export type Broadcaster = {
 	--- The middleware that will broadcast actions to the client.
 	middleware: applyMiddleware.Middleware,
 
@@ -39,7 +39,7 @@ export type Broadcaster<T = ProducerMap> = {
 --- will broadcast them to the client.
 --- @param options The options for the broadcaster.
 --- @return The broadcaster.
-local function createBroadcaster<T>(options: BroadcasterOptions<T>): Broadcaster<T>
+local function createBroadcaster(options: BroadcasterOptions): Broadcaster
 	local producers = options.producers
 	local broadcast = options.broadcast
 
@@ -56,6 +56,18 @@ local function createBroadcaster<T>(options: BroadcasterOptions<T>): Broadcaster
 		end
 	end
 
+	local function scheduleBroadcast()
+		if pendingBroadcast then
+			return
+		end
+
+		pendingBroadcast = RunService.Heartbeat:Once(function()
+			pendingBroadcast = nil
+			broadcast(players, pendingActions)
+			pendingActions = {}
+		end)
+	end
+
 	local function playerRequestedState(player: Player)
 		assert(not table.find(players, player), `Player {player} has already requested state.`)
 		assert(rootProducer, "Cannot call playerRequestedState before middleware is applied.")
@@ -70,18 +82,6 @@ local function createBroadcaster<T>(options: BroadcasterOptions<T>): Broadcaster
 		end
 
 		return state
-	end
-
-	local function scheduleBroadcast()
-		if pendingBroadcast then
-			return
-		end
-
-		pendingBroadcast = RunService.Heartbeat:Once(function()
-			pendingBroadcast = nil
-			broadcast(players, pendingActions)
-			pendingActions = {}
-		end)
 	end
 
 	local middleware: applyMiddleware.Middleware = function(dispatch, resolve, producer)
