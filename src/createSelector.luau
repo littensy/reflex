@@ -1,3 +1,26 @@
+--- Memoizes a function by caching the result of the last call. Recomputes the
+--- result if any of the arguments have changed.
+--- @param callback The function to memoize.
+--- @return A memoized function.
+local function memoize(callback)
+	local lastArguments = {}
+	local lastResult
+
+	return function(...)
+		for index = 1, select("#", ...) do
+			local argument = select(index, ...)
+
+			if argument ~= lastArguments[index] then
+				lastArguments = { ... }
+				lastResult = callback(...)
+				break
+			end
+		end
+
+		return lastResult
+	end
+end
+
 --- Creates a memoized selector function. The selector is only called if the
 --- outputs of the dependencies have changed.
 ---
@@ -7,69 +30,22 @@
 --- the component will re-render even if the inputs haven't changed.
 ---
 --- @param dependencies A list of dependencies that the selector depends on.
---- @param selector A function that selects a subset of the state.
+--- @param combiner A function that takes the dependencies as arguments and
+--- returns the result of the selector.
 --- @return A memoized selector function.
-local function createSelector(dependencies, selector)
+local function createSelector(dependencies, combiner)
 	local dependencyCount = #dependencies
-	local dependencyCache = {}
-	local inputCache = {}
+	local memoizedCombiner = memoize(combiner)
 
-	local value
-	local firstRun = true
+	return memoize(function(...)
+		local inputs = table.create(dependencyCount)
 
-	return function(...)
-		-- local inputsChanged = firstRun
-		-- local recompute = firstRun
-
-		-- firstRun = false
-
-		-- -- Iterate through arguments in any order. If any argument is not equal to
-		-- -- the cached argument, then the inputs have changed.
-		-- for index = 1, select("#", ...) do
-		-- 	local input = select(index, ...)
-		-- 	if input ~= inputCache[index] then
-		-- 		inputsChanged = true
-		-- 		inputCache[index] = input
-		-- 	end
-		-- end
-
-		-- -- The above loop skips any argument that changed to 'nil', so this loop
-		-- -- checks if any argument changed to 'nil'.
-		-- if not inputsChanged then
-		-- 	for index in inputCache do
-		-- 		if select(index, ...) == nil then
-		-- 			inputsChanged = true
-		-- 			inputCache[index] = nil
-		-- 		end
-		-- 	end
-		-- end
-
-		-- if inputsChanged then
-		-- 	for index, dependency in dependencies do
-		-- 		local dependencyValue = dependency(...)
-		-- 		if dependencyValue ~= dependencyCache[index] then
-		-- 			dependencyCache[index] = dependencyValue
-		-- 			recompute = true
-		-- 		end
-		-- 	end
-		-- end
-
-		local recompute = false
-
-		-- TODO: Dependencies should be inexpensive to compute, so they might not
-		-- have to be memoized. Test later.
 		for index = 1, dependencyCount do
-			local dependencyValue = dependencies[index](...)
-			if dependencyValue ~= dependencyCache[index] then
-				dependencyCache[index] = dependencyValue
-				recompute = true
-			end
+			inputs[index] = dependencies[index](...)
 		end
 
-		if recompute then
-			value = selector(unpack(dependencyCache, 1, dependencyCount))
-		end
-
-		return value
-	end
+		return memoizedCombiner(table.unpack(inputs, 1, dependencyCount))
+	end)
 end
+
+return createSelector
