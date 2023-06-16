@@ -18,7 +18,7 @@ end
 
 --- A middleware that logs every action that is dispatched, and the new state
 --- after the action is handled.
-local loggerMiddleware: applyMiddleware.Middleware = function(dispatch, name, producer)
+local loggerMiddleware: applyMiddleware.Middleware = function(dispatch, resolve, producer)
 	return function(...)
 		local arguments = { ... }
 
@@ -26,7 +26,7 @@ local loggerMiddleware: applyMiddleware.Middleware = function(dispatch, name, pr
 			arguments[index] = stringify(value)
 		end
 
-		print(`[Reflex]: Dispatching {name()}({table.concat(arguments, ", ", 1, select("#", ...))})`)
+		print(`[Reflex]: Dispatching {resolve()}({table.concat(arguments, ", ", 1, select("#", ...))})`)
 
 		local result = dispatch(...)
 
