@@ -1,5 +1,5 @@
-local createBroadcaster = require(script.broadcaster)
-local createBroadcastReceiver = require(script.broadcastReceiver)
+local createBroadcaster = require(script.createBroadcaster)
+local createBroadcastReceiver = require(script.createBroadcastReceiver)
 
 return {
 	createBroadcaster = createBroadcaster,
