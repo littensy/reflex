@@ -2,6 +2,7 @@ local RunService = game:GetService("RunService")
 
 local Promise = require(script.Parent.Promise)
 local types = require(script.Parent.types)
+local applyMiddleware = require(script.Parent.applyMiddleware)
 
 --[=[
 	Creates a producer that can be used to manage state.
@@ -47,8 +48,12 @@ local function createProducer<State>(
 		end
 	end
 
-	local function subscribe(id: number, listener: () -> ())
+	local function subscribe(listener: () -> ())
 		local connected = false
+
+		local id = listenerIdCounter
+		listenerIdCounter += 1
+
 		ensureCanMutateNextListeners()
 		nextListeners[id] = listener
 
@@ -106,11 +111,8 @@ local function createProducer<State>(
 		end
 
 		local state = self:getState(selector)
-		local id = listenerIdCounter
 
-		listenerIdCounter += 1
-
-		return subscribe(id, function()
+		return subscribe(function()
 			local nextState = self:getState(selector)
 
 			if state ~= nextState then
@@ -169,6 +171,10 @@ local function createProducer<State>(
 		return enhancer(self)
 	end
 
+	function producer:applyMiddleware(...)
+		return self:enhance(applyMiddleware(...))
+	end
+
 	-- Support for APIs that require signal-like objects
 
 	function producer:Connect(listener)
@@ -199,7 +205,6 @@ local function createProducer<State>(
 		end):expect()
 	end
 
-	-- Populate the producer and dispatchers table
 	for name, action in actions do
 		local function dispatch(...)
 			state = action(state, ...)

@@ -29,6 +29,14 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 	getDispatchers: (self: Producer<State, Dispatchers>) -> Dispatchers,
 
 	--[=[
+		Returns the original action functions passed to `createProducer`.
+		@return A map of action functions.
+	]=]
+	getActions: (self: Producer<State, Dispatchers>) -> {
+		[string]: (state: State, ...any) -> any,
+	},
+
+	--[=[
 		Flushes any pending updates by calling listeners immediately.
 	]=]
 	flush: (self: Producer<State, Dispatchers>) -> (),
@@ -112,12 +120,37 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 	) -> Enhanced,
 
 	--[=[
-		Returns the original action functions passed to `createProducer`.
-		@return A map of action functions.
+		Applies the given middlewares to every dispatcher in the producer.
+
+		A middleware is a function that is called before an action is dispatched.
+		It receives the `dispatch` function, the `resolveCurrentDispatcher` function,
+		and the `producer` object as arguments.
+
+		The middleware returns a function that handles an incoming dispatcher call
+		by calling and returning the `dispatch` function.
+
+		```lua
+		local loggerMiddleware: Middleware = function(dispatch, resolve, producer)
+			return function(...)
+				print(`producer.{resolve()} called`, ...)
+				return dispatch(...)
+			end
+		end
+
+		producer:applyMiddleware(loggerMiddleware)
+		```
+
+		@param middlewares A list of middleware to apply.
+		@return The producer.
 	]=]
-	getActions: (self: Producer<State, Dispatchers>) -> {
-		[string]: (state: State, ...any) -> any,
-	},
+	applyMiddleware: (
+		self: Producer<State, Dispatchers>,
+		...((
+			dispatch: (...any) -> any,
+			resolveCurrentDispatcher: () -> string,
+			producer: Producer<State, Dispatchers>
+		) -> (action: any) -> any)
+	) -> Producer<State, Dispatchers>,
 }
 
 --[=[
@@ -166,7 +199,6 @@ export type BroadcasterOptions = {
 }
 
 --[=[
-	@interface Broadcaster
 	A broadcaster that can be used to share actions with the client.
 ]=]
 export type Broadcaster = {
