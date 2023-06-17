@@ -136,7 +136,9 @@ export declare function createSelector<Selectors extends SelectorArray, Result>(
  * @param options The options for the broadcaster.
  * @return The broadcaster.
  */
-export declare function createBroadcaster(options: BroadcasterOptions): Broadcaster;
+export declare function createBroadcaster<ProducerMap extends { [name: string]: Producer }>(
+	options: BroadcasterOptions<ProducerMap>,
+): Broadcaster<ProducerMap>;
 
 /**
  * Creates a broadcast receiver that can be used to receive actions from the
@@ -163,14 +165,21 @@ export declare function createBroadcaster(options: BroadcasterOptions): Broadcas
  * @param options The options for the broadcast receiver.
  * @return The broadcast receiver.
  */
-export declare function createBroadcastReceiver(options: BroadcastReceiverOptions): BroadcastReceiver;
+export declare function createBroadcastReceiver<ProducerMap extends { [name: string]: Producer }>(
+	options: BroadcastReceiverOptions<ProducerMap>,
+): BroadcastReceiver;
+
+/**
+ * A middleware that logs all dispatched actions to the console.
+ */
+export declare const loggerMiddleware: ProducerMiddleware;
 
 /**
  * A Producer is a state container that exposes a set of dispatchers that can
  * be used to modify the state. The state is immmutable, so dispatchers return
  * a new state object.
  */
-export type Producer<State = any, Actions extends ProducerActions<State> = any> = ProducerDispatchers<State, Actions> &
+export type Producer<State = any, Actions = any> = ProducerDispatchers<State, Actions> &
 	ProducerNoDispatch<State, Actions>;
 
 /**
@@ -180,7 +189,7 @@ export type Producer<State = any, Actions extends ProducerActions<State> = any> 
  *
  * This interface is the same as `Producer`, but without the dispatchers.
  */
-export interface ProducerNoDispatch<State, Actions extends ProducerActions<State>> {
+export interface ProducerNoDispatch<State, Actions> {
 	/**
 	 * Returns the current state.
 	 * @return The state.
@@ -303,19 +312,19 @@ export interface ProducerNoDispatch<State, Actions extends ProducerActions<State
  * Infers the state type from a producer.
  * @template T The producer type.
  */
-export type InferProducerState<T> = T extends Producer<infer State> ? State : never;
+export type InferState<T> = T extends Producer<infer State> ? State : never;
 
 /**
  * Infers the actions type from a producer.
  * @template T The producer type.
  */
-export type InferProducerActions<T> = T extends Producer<any, infer Actions> ? Actions : never;
+export type InferActions<T> = T extends Producer<any, infer Actions> ? Actions : never;
 
 /**
  * Infers the dispatcher functions from a producer.
  * @template T The producer type.
  */
-export type InferProducerDispatchers<T> = T extends Producer<infer State, infer Actions>
+export type InferDispatchers<T> = T extends Producer<infer State, infer Actions>
 	? ProducerDispatchers<State, Actions>
 	: never;
 
@@ -333,7 +342,7 @@ export interface ProducerActions<State> {
  * @template State The state type of the producer.
  * @template Actions The actions type of the producer.
  */
-export type ProducerDispatchers<State, Actions extends ProducerActions<any>> = {
+export type ProducerDispatchers<State, Actions> = {
 	[K in keyof Actions]: Actions[K] extends (state: State, ...args: infer Args) => State
 		? (...args: Args) => State
 		: never;
@@ -353,7 +362,7 @@ export type ProducerDispatchers<State, Actions extends ProducerActions<any>> = {
  * @param producer The producer object.
  * @return A function that handles an incoming dispatcher call.
  */
-export type ProducerMiddleware<State = any, Actions extends ProducerActions<State> = any> = (
+export type ProducerMiddleware<State = any, Actions = any> = (
 	dispatch: (...args: unknown[]) => unknown,
 	resolveCurrentDispatcher: () => string,
 	producer: Producer<State, Actions>,
@@ -366,25 +375,31 @@ export type ProducerMiddleware<State = any, Actions extends ProducerActions<Stat
  * @template ProducerMap A map of producer names to producers.
  */
 export type CombineProducers<ProducerMap extends { [name: string]: Producer }> = Producer<
-	CombineProducerStates<ProducerMap>,
-	CombineProducerActions<ProducerMap>
+	CombineStates<ProducerMap>,
+	CombineActions<ProducerMap>
 >;
 
-type CombineProducerStates<ProducerMap extends { [name: string]: Producer }> = {
+type CombineStates<ProducerMap extends { [name: string]: Producer }> = {
 	[K in keyof ProducerMap]: ProducerMap[K] extends Producer<infer State, infer Actions> ? State : never;
 };
 
-type CombineProducerActions<ProducerMap extends { [name: string]: Producer }> = {
+type CombineActions<ProducerMap extends { [name: string]: Producer }> = IntersectObjectValues<{
 	[K in keyof ProducerMap]: ProducerMap[K] extends Producer<infer State, infer Actions>
-		? ReplaceProducerActionStates<Actions, CombineProducerStates<ProducerMap>>
+		? ReplaceActionStateParameters<CombineStates<ProducerMap>, Actions>
 		: never;
-}[keyof ProducerMap];
+}>;
 
-type ReplaceProducerActionStates<Actions extends ProducerActions<any>, State> = {
+type ReplaceActionStateParameters<State, Actions> = {
 	[K in keyof Actions]: Actions[K] extends (state: any, ...args: infer Args) => any
 		? (state: State, ...args: Args) => State
 		: never;
 };
+
+type IntersectObjectValues<T> = {
+	[K in keyof T]: (x: T[K]) => void;
+}[keyof T] extends (x: infer R) => void
+	? R
+	: never;
 
 /**
  * A selector function that can be used to select a subset of the state.
@@ -426,11 +441,11 @@ export interface BroadcastAction {
  * Options for creating a broadcaster.
  * @server
  */
-export interface BroadcasterOptions {
+export interface BroadcasterOptions<ProducerMap extends { [name: string]: Producer }> {
 	/**
 	 * The map of producers to broadcast.
 	 */
-	producers: { [name: string]: Producer };
+	producers: ProducerMap;
 
 	/**
 	 * A function that broadcasts actions to the given players.
@@ -444,7 +459,7 @@ export interface BroadcasterOptions {
  * Options for creating a broadcast receiver.
  * @client
  */
-export interface BroadcastReceiverOptions {
+export interface BroadcastReceiverOptions<ProducerMap extends { [name: string]: Producer }> {
 	/**
 	 * A function that should request the server's state. The state should be
 	 * retrieved through `Broadcaster.playerRequestedState`. Called when the
@@ -452,14 +467,14 @@ export interface BroadcastReceiverOptions {
 	 * client's state.
 	 * @returns A Promise that resolves with the server's state.
 	 */
-	requestState: () => Promise<{ [name: string]: unknown }>;
+	requestState: () => Promise<CombineStates<ProducerMap>>;
 }
 
 /**
  * A broadcaster is used to broadcast actions to a set of players.
  * @server
  */
-export interface Broadcaster {
+export interface Broadcaster<ProducerMap extends { [name: string]: Producer }> {
 	/**
 	 * The middleware that should be applied to the server's root producer.
 	 */
@@ -472,7 +487,7 @@ export interface Broadcaster {
 	 * @returns The combined state of the producers.
 	 * @throws If the player has already requested the state.
 	 */
-	playerRequestedState(player: Player): { [name: string]: unknown };
+	playerRequestedState(player: Player): CombineStates<ProducerMap>;
 }
 
 /**
