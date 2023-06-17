@@ -9,7 +9,7 @@ type CreateSelectorFunction = <Result, Input, Argument...>(
 	@param callback The function to memoize.
 	@return A memoized function.
 ]=]
-local function memoize(callback)
+local function memoize(callback: (...any) -> any): (...any) -> any
 	local lastArguments = {}
 	local lastArgumentCount = 0
 	local lastResult
@@ -63,4 +63,4 @@ local function createSelector(dependencies: { (...any) -> any }, combiner: (...a
 	end)
 end
 
-return createSelector :: CreateSelectorFunction
+return (createSelector :: any) :: CreateSelectorFunction

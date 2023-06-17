@@ -12,7 +12,7 @@ local types = require(script.Parent.types)
 	by calling and returning the `dispatch` function.
 
 	```lua
-	local loggerMiddleware: Middleware = function(dispatch, resolve, producer)
+	local loggerMiddleware: Reflex.Middleware = function(dispatch, resolve, producer)
 		return function(...)
 			print(`producer.{resolve()} called`, ...)
 			return dispatch(...)
@@ -25,7 +25,7 @@ local types = require(script.Parent.types)
 	@param middlewares A list of middleware to apply.
 	@return A producer enhancer.
 ]=]
-local function applyMiddleware(...: { types.Middleware }): <T>(producer: T) -> T
+local function applyMiddleware(...: types.Middleware): <T>(producer: T) -> T
 	local middlewares = { ... }
 
 	return function(producer)
