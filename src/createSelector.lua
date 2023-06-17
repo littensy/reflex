@@ -11,7 +11,7 @@ type CreateSelectorFunction = <Result, Input, Argument...>(
 ]=]
 local function memoize(callback: (...any) -> any): (...any) -> any
 	local lastArguments = {}
-	local lastArgumentCount = 0
+	local lastArgumentCount = -1
 	local lastResult
 
 	return function(...)

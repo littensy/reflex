@@ -101,12 +101,13 @@ return function()
 		end
 
 		local selector = createSelector({ dependency }, function(value)
+			calls += 1
 			return value
 		end)
 
 		-- two calls with nil arguments should trigger one call
-		value = selector(nil, nil, nil)
-		selector(nil, nil, nil)
+		value = selector()
+		selector()
 		expect(value).to.equal("nilnilnil")
 		expect(calls).to.equal(1)
 
