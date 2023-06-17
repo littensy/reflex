@@ -14,8 +14,8 @@ local LOOPS = 500
 
 	Times
 
-	Reflex.Producer: 170 microseconds
-	Rodux.Store:     480 microseconds
+	Reflex.Producer: 160 microseconds
+	Rodux.Store:     470 microseconds
 
 	Summary
 

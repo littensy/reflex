@@ -19,12 +19,12 @@ local Roselect = TS.import(
 
 	Times
 
-	Reflex.createSelector:   40 microseconds
-	- compare deps:          25 microseconds
-	- compare dep params:    5 microseconds
-	Roselect.createSelector: 65 microseconds
-	- compare deps:          40 microseconds
-	- compare dep params:    10 microseconds
+	Reflex.createSelector:   36 microseconds
+	- compare deps:          21 microseconds
+	- compare dep params:    4 microseconds
+	Roselect.createSelector: 62 microseconds
+	- compare deps:          39 microseconds
+	- compare dep params:    8 microseconds
 
 	Summary
 
