@@ -48,12 +48,19 @@ export type Producer<State, Dispatchers = { [string]: (...any) -> State }> = Dis
 	--- time it is called.
 	--- @param selector A selector function that can be used to select a subset
 	--- of the state.
+	--- @param predicate An optional predicate function that must return `true`
+	--- for the listener to be called.
 	--- @param listener A callback that is called when the selected part of the
 	--- state changes.
 	--- @return A function that can be used to unsubscribe from the listener.
-	once: <Selection>(
+	once: (<Selection>(
 		self: Producer<State, Dispatchers>,
 		selector: (state: State) -> Selection,
+		listener: (state: Selection, prevState: Selection) -> ()
+	) -> () -> ()) & <Selection>(
+		self: Producer<State, Dispatchers>,
+		selector: (state: State) -> Selection,
+		predicate: ((state: Selection, prevState: Selection) -> boolean)?,
 		listener: (state: Selection, prevState: Selection) -> ()
 	) -> () -> (),
 
@@ -182,12 +189,12 @@ local function createProducer<State>(
 		currentListeners = nextListeners
 
 		for _, listener in currentListeners :: {} do
-			listener(state)
+			task.spawn(listener)
 		end
 	end
 
-	function producer:subscribe(selectorOrListener, listenerOrUndefined)
-		local selector, listener = selectorOrListener, listenerOrUndefined
+	function producer:subscribe(selectorOrListener, listenerOrNil)
+		local selector, listener = selectorOrListener, listenerOrNil
 
 		if not listener then
 			selector = nil
@@ -196,10 +203,12 @@ local function createProducer<State>(
 
 		local state = self:getState(selector)
 		local id = listenerIdCounter
+
 		listenerIdCounter += 1
 
 		return subscribe(id, function()
 			local nextState = self:getState(selector)
+
 			if state ~= nextState then
 				local prevState = state
 				state = nextState
@@ -208,31 +217,31 @@ local function createProducer<State>(
 		end)
 	end
 
-	function producer:once(selector, listener)
+	function producer:once(selector, predicateOrListener, listenerOrNil)
+		local predicate, listener = predicateOrListener, listenerOrNil
+
+		if not listener then
+			predicate = nil
+			listener = predicateOrListener
+		end
+
 		local unsubscribe
 		unsubscribe = self:subscribe(selector, function(state, prevState)
+			if predicate and not predicate(state, prevState) then
+				return
+			end
+
 			unsubscribe()
 			listener(state, prevState)
 		end)
+
 		return unsubscribe
 	end
 
 	function producer:wait(selector, predicate)
-		selector = selector or function(state)
-			return state
-		end
-
-		predicate = predicate or function()
-			return true
-		end
-
 		return Promise.new(function(resolve, _, onCancel)
-			local unsubscribe
-			unsubscribe = self:subscribe(selector, function(state, prevState)
-				if predicate(state, prevState) then
-					unsubscribe()
-					resolve(state)
-				end
+			local unsubscribe = self:once(selector, predicate, function(state)
+				resolve(state)
 			end)
 
 			onCancel(unsubscribe)
