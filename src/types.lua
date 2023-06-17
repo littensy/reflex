@@ -51,14 +51,12 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 		state changes.
 		@return A function that can be used to unsubscribe from the listener.
 	]=]
-	subscribe: (<Selection>(
-		self: Producer<State, Dispatchers>,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> ()) & <Selection>(
-		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> (),
+	subscribe: ((self: Producer<State, Dispatchers>, listener: (state: State, prevState: State) -> ()) -> () -> ())
+		& <Selection>(
+			self: Producer<State, Dispatchers>,
+			selector: (state: State) -> Selection,
+			listener: (state: Selection, prevState: Selection) -> ()
+		) -> () -> (),
 
 	--[=[
 		Similar to `subscribe`, but the listener is disconnect after the first
@@ -171,7 +169,7 @@ export type Middleware = (
 	dispatch: (...any) -> any,
 	resolveCurrentDispatcher: () -> string,
 	producer: Producer
-) -> (action: any) -> any
+) -> (...any) -> any
 
 export type ProducerMap = { [string]: Producer<any, any> }
 
