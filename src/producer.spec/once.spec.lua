@@ -73,7 +73,7 @@ return function()
 		local calls = 0
 
 		local function isGreaterThan(current, previous)
-			return current.count > previous.count
+			return current > previous
 		end
 
 		producer:once(selectCount, isGreaterThan, function(current, previous)

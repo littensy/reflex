@@ -23,6 +23,7 @@ return function()
 			expect(_producer).to.equal(producer)
 
 			return function(...)
+				expect(resolve()).to.equal("increment")
 				expect(select("#", ...)).to.equal(2)
 				expect(select(1, ...)).to.equal(1)
 				expect(select(2, ...)).to.equal(2)
@@ -32,7 +33,7 @@ return function()
 		end
 
 		applyMiddleware(middleware)(producer)
-		producer.increment(1, 2)
+		expect(producer.increment(1, 2)).to.equal(producer:getState())
 	end)
 
 	it("should call middleware in order", function()

@@ -43,8 +43,8 @@ return function()
 	end)
 
 	it("should support Promise.fromEvent", function()
-		local promise = Promise.fromEvent(producer, function(state)
-			return state.count > 0
+		local promise = Promise.fromEvent(producer, function(current, previous)
+			return current.count > previous.count
 		end)
 
 		producer.decrement(1)
@@ -55,8 +55,8 @@ return function()
 		producer.increment(1)
 		producer:flush()
 
-		local status, count = promise:timeout(1):awaitStatus()
+		local status, state = promise:timeout(1):awaitStatus()
 		expect(status).to.equal(Promise.Status.Resolved)
-		expect(count).to.equal(1)
+		expect(state.count).to.equal(0)
 	end)
 end

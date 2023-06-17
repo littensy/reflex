@@ -63,7 +63,14 @@ return function()
 		producer.incrementFoo(1)
 		producer.incrementBar(2)
 
-		coroutine.yield()
+		task.delay(0.1, function()
+			if thread then
+				coroutine.resume(thread, "broadcast took too long")
+			end
+		end)
+
+		expect(coroutine.yield()).to.equal(nil)
+		thread = nil
 
 		expect(players).to.be.a("table")
 		expect(#players).to.equal(0)
@@ -83,6 +90,7 @@ return function()
 	end)
 
 	it("should exclude state and actions that are not provided", function()
+		local thread = coroutine.running()
 		local pendingActions
 
 		local broadcaster = createBroadcaster({
@@ -91,12 +99,22 @@ return function()
 			},
 			broadcast = function(_players, _pendingActions)
 				pendingActions = _pendingActions
+				coroutine.resume(thread)
 			end,
 		})
 
 		producer:applyMiddleware(broadcaster.middleware)
 		producer.incrementFoo(1)
 		producer.incrementBar(2)
+
+		task.delay(0.1, function()
+			if thread then
+				coroutine.resume(thread, "broadcast took too long")
+			end
+		end)
+
+		expect(coroutine.yield()).to.equal(nil)
+		thread = nil
 
 		-- pending actions should only contain incrementFoo
 		expect(pendingActions).to.be.a("table")

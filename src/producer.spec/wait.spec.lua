@@ -30,10 +30,12 @@ return function()
 		local promise = producer:wait(selectorSpy)
 		promise:cancel()
 
+		expect(calls).to.equal(1) -- called once to get the initial state
+
 		producer.increment(1)
 		producer:flush()
 
-		expect(calls).to.equal(0)
+		expect(calls).to.equal(1) -- should not be called again
 		expect(promise:getStatus()).to.equal(Promise.Status.Cancelled)
 	end)
 
@@ -48,17 +50,17 @@ return function()
 
 	it("should receive a predicate", function()
 		local function isGreaterThan(current, previous)
-			return current.count > previous.count
+			return current > previous
 		end
 
-		local promise = producer:wait(isGreaterThan, selectCount)
+		local promise = producer:wait(selectCount, isGreaterThan)
 
 		producer.decrement(1)
 		producer:flush()
 
 		expect(promise:getStatus()).to.equal(Promise.Status.Started)
 
-		producer.increment(1)
+		producer.increment(2)
 		producer:flush()
 
 		local status, count = promise:timeout(1):awaitStatus()

@@ -103,24 +103,25 @@ return function()
 
 	it("should allow updates during a flush", function()
 		local initialState = producer:getState()
-		local newState, newStateFromFlush
+		local stateBeforeFlush, stateDuringFlush
 
 		producer:subscribe(function()
 			producer.increment(1)
-			newStateFromFlush = producer:getState()
+			stateDuringFlush = producer:getState()
 		end)
 
 		producer:subscribe(function(current, previous)
-			expect(current).to.equal(newState)
-			expect(current).to.never.equal(newStateFromFlush)
+			expect(current).to.equal(stateBeforeFlush)
+			expect(current).to.never.equal(stateDuringFlush)
 			expect(previous).to.equal(initialState)
 		end)
 
 		producer.increment(1)
-		newState = producer:getState()
+		stateBeforeFlush = producer:getState()
 		producer:flush()
 
-		expect(newStateFromFlush).to.equal(newState)
+		expect(stateDuringFlush).to.equal(producer:getState())
+		expect(stateDuringFlush).to.never.equal(stateBeforeFlush)
 	end)
 
 	it("should defer subscriptions from within a listener", function()

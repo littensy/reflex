@@ -27,7 +27,9 @@ return function()
 	it("should return a broadcast receiver", function()
 		local receiver = createBroadcastReceiver({
 			producers = producers,
-			requestState = function() end,
+			requestState = function()
+				return Promise.resolve({})
+			end,
 		})
 
 		expect(receiver).to.be.a("table")
@@ -38,7 +40,9 @@ return function()
 	it("should apply a safe middleware", function()
 		local receiver = createBroadcastReceiver({
 			producers = producers,
-			requestState = function() end,
+			requestState = function()
+				return Promise.resolve({})
+			end,
 		})
 
 		producer:applyMiddleware(receiver.middleware)
@@ -75,10 +79,12 @@ return function()
 			end,
 		})
 
+		producer:applyMiddleware(receiver.middleware)
+
 		receiver:dispatch({
-			{ name = "incrementFoo", args = { 1 } },
-			{ name = "incrementBar", args = { 2 } },
-			{ name = "incrementBaz", args = { 3 } },
+			{ name = "incrementFoo", arguments = { 1 } },
+			{ name = "incrementBar", arguments = { 2 } },
+			{ name = "incrementBaz", arguments = { 3 } },
 		})
 
 		local state = producer:getState()
@@ -119,7 +125,14 @@ return function()
 		serverProducer.incrementFoo(1)
 		serverProducer.incrementBar(2)
 
-		coroutine.yield()
+		task.delay(0.1, function()
+			if thread then
+				coroutine.resume(thread, "broadcast took too long")
+			end
+		end)
+
+		expect(coroutine.yield()).to.equal(nil)
+		thread = nil
 
 		expect(pendingActions).to.be.a("table")
 		expect(#pendingActions).to.equal(2)

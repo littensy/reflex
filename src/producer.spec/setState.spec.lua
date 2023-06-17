@@ -20,20 +20,19 @@ return function()
 	it("should schedule a flush", function()
 		local thread = coroutine.running()
 
+		producer:subscribe(function(state)
+			coroutine.resume(thread)
+		end)
+
+		producer:setState({ count = 1 })
+
 		task.delay(0.1, function()
 			if thread then
 				coroutine.resume(thread, "flush took too long")
 			end
 		end)
 
-		producer:subscribe(function(state)
-			coroutine.resume(thread, true)
-			thread = nil
-		end)
-
-		producer:setState({ count = 1 })
-
-		local ok = coroutine.yield()
-		expect(ok).to.equal(true)
+		expect(coroutine.yield()).to.equal(nil)
+		thread = nil
 	end)
 end
