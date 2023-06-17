@@ -1,21 +1,26 @@
-local TS = require(game:GetService("ReplicatedStorage").include.RuntimeLib)
+local TS = require(game:GetService("ReplicatedStorage").rbxts_include.RuntimeLib)
 local Reflex = TS.import(script, game:GetService("ReplicatedStorage"), "reflex")
 local Rodux =
-	TS.import(script, game:GetService("ReplicatedStorage"), "include", "node_modules", "@rbxts", "rodux", "src")
+	TS.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "rodux", "src")
 
 --[[
 	Benchmarker
 
+	Device: MacBook Pro (M1 Pro, 16-inch, 2021)
 	Run type: Time
 	Run time: 1 second
 
-	Reflex.createProducer:   80 microseconds
-	Reflex.combineProducers: 120 microseconds
+	Times
+
+	Reflex.createProducer:   60 microseconds
+	Reflex.combineProducers: 75 microseconds
 	Rodux.createReducer:     130 microseconds
 	Rodux.combineReducers:   170 microseconds
 
-	Reflex's combineProducers is 30% faster than Rodux's combineReducers in this
-	benchmark, but there is still a 40% overhead from Reflex's createProducer.
+	Summary
+
+	Combining producers does not add a significant amount of overhead. It is
+	faster than Rodux by roughly 50%.
 ]]
 
 return {

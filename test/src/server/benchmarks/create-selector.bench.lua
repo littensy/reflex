@@ -1,23 +1,35 @@
-local TS = require(game:GetService("ReplicatedStorage").include.RuntimeLib)
+local TS = require(game:GetService("ReplicatedStorage").rbxts_include.RuntimeLib)
 local Reflex = TS.import(script, game:GetService("ReplicatedStorage"), "reflex")
-local Roselect =
-	TS.import(script, game:GetService("ReplicatedStorage"), "include", "node_modules", "@rbxts", "roselect", "src")
+local Roselect = TS.import(
+	script,
+	game:GetService("ReplicatedStorage"),
+	"rbxts_include",
+	"node_modules",
+	"@rbxts",
+	"roselect",
+	"src"
+)
 
 --[[
 	Benchmarker
 
+	Device: MacBook Pro (M1 Pro, 16-inch, 2021)
 	Run type: Time
 	Run time: 1 second
 
+	Times
+
 	Reflex.createSelector:   40 microseconds
-	- compare deps:          15 microseconds
-	- compare dep params:    6 microseconds
-	Roselect.createSelector: 70 microseconds
-	- compare deps:          35 microseconds
+	- compare deps:          25 microseconds
+	- compare dep params:    5 microseconds
+	Roselect.createSelector: 65 microseconds
+	- compare deps:          40 microseconds
 	- compare dep params:    10 microseconds
 
-	Reflex tends to be 40% faster than Roselect when creating selectors, with
-	improvements coming from dependency comparison.
+	Summary
+
+	Reflex is faster than Roselect for a simple selector by roughly 40%. Most of
+	the time saved is from faster dependency and parameter comparison.
 ]]
 
 return {
