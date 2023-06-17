@@ -12,22 +12,24 @@ local Rodux =
 
 	Times
 
-	Reflex no middleware: 120 microseconds
-	Reflex middleware:    140 microseconds
-	Rodux no middleware:  310 microseconds
-	Rodux middleware:     340 microseconds
+	Reflex no middleware: 100 microseconds
+	Reflex middleware:    110 microseconds
+	Rodux no middleware:  300 microseconds
+	Rodux middleware:     320 microseconds
 
 	Summary
 
 	Reflex producers with middleware is roughly 60% faster than Rodux stores
-	with middleware and has 30% less overhead.
+	with middleware and has about 40% less overhead.
 ]]
 
 return {
 	ParameterGenerator = function()
-		local function reflexMiddleware(dispatch, resolve, producer)
-			return function(...)
-				return dispatch(...)
+		local function reflexMiddleware(producer)
+			return function(nextDispatch, name)
+				return function(...)
+					return nextDispatch(...)
+				end
 			end
 		end
 

@@ -66,25 +66,24 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 		return state
 	end
 
-	function broadcaster.middleware(dispatch, resolve, producer)
+	function broadcaster.middleware(producer)
 		rootProducer = producer
 
-		return function(...)
-			local name = resolve()
-			local state = dispatch(...)
-
+		return function(dispatch, name)
 			if not actionFilter[name] then
-				return state
+				return dispatch
 			end
 
-			table.insert(pendingActions, {
-				name = name,
-				arguments = { ... },
-			})
+			return function(...)
+				table.insert(pendingActions, {
+					name = name,
+					arguments = { ... },
+				})
 
-			scheduleBroadcast()
+				scheduleBroadcast()
 
-			return state
+				return dispatch(...)
+			end
 		end
 	end
 

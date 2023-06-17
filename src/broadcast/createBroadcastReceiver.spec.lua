@@ -149,4 +149,20 @@ return function()
 		expect(stateAfterDispatch.foo.count).to.equal(1)
 		expect(stateAfterDispatch.bar.count).to.equal(2)
 	end)
+
+	it("should only call requestState once", function()
+		local requestStateCount = 0
+
+		local receiver = createBroadcastReceiver({
+			producers = producers,
+			requestState = function()
+				requestStateCount = requestStateCount + 1
+				return Promise.resolve({})
+			end,
+		})
+
+		producer:applyMiddleware(receiver.middleware)
+
+		expect(requestStateCount).to.equal(1)
+	end)
 end

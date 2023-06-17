@@ -17,18 +17,21 @@ return function()
 	end)
 
 	it("should call middleware with the right parameters", function()
-		local function middleware(dispatch, resolve, _producer)
-			expect(dispatch).to.be.a("function")
-			expect(resolve).to.be.a("function")
+		local function middleware(_producer)
 			expect(_producer).to.equal(producer)
 
-			return function(...)
-				expect(resolve()).to.equal("increment")
-				expect(select("#", ...)).to.equal(2)
-				expect(select(1, ...)).to.equal(1)
-				expect(select(2, ...)).to.equal(2)
+			return function(dispatch, name)
+				expect(dispatch).to.be.a("function")
+				expect(producer[name]).to.equal(dispatch)
 
-				return dispatch(...)
+				return function(...)
+					expect(name).to.equal("increment")
+					expect(select("#", ...)).to.equal(2)
+					expect(select(1, ...)).to.equal(1)
+					expect(select(2, ...)).to.equal(2)
+
+					return dispatch(...)
+				end
 			end
 		end
 
@@ -40,10 +43,12 @@ return function()
 		local order = ""
 
 		local function create(index)
-			return function(dispatch)
-				return function(...)
-					order ..= index
-					return dispatch(...)
+			return function(producer)
+				return function(dispatch)
+					return function(...)
+						order ..= index
+						return dispatch(...)
+					end
 				end
 			end
 		end
@@ -55,10 +60,12 @@ return function()
 	end)
 
 	it("should pass forward the result of the middleware", function()
-		local function middleware(dispatch)
-			return function(...)
-				dispatch(...)
-				return 1
+		local function middleware(producer)
+			return function(dispatch)
+				return function(...)
+					dispatch(...)
+					return 1
+				end
 			end
 		end
 

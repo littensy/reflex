@@ -23,7 +23,7 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 		end
 	end
 
-	function receiver.middleware(dispatch, _, producer)
+	function receiver.middleware(producer)
 		rootProducer = producer
 
 		requestState():andThen(function(serverState)
@@ -36,7 +36,9 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 			producer:setState(nextState)
 		end)
 
-		return dispatch
+		return function(dispatch)
+			return dispatch
+		end
 	end
 
 	return receiver

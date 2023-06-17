@@ -14,7 +14,10 @@ server.OnFunction("requestState", (player) => {
 	return broadcaster.playerRequestedState(player);
 });
 
-producer.applyMiddleware(broadcaster.middleware, loggerMiddleware);
+producer.applyMiddleware(broadcaster.middleware, loggerMiddleware, (producer) => {
+	print(producer);
+	return (dispatch) => dispatch;
+});
 
 // Playing around with syncing shared dispatchers with the client
 // loggerMiddleware should end with the same state on client and server

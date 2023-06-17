@@ -281,20 +281,19 @@ export interface ProducerNoDispatch<State, Actions> {
 	enhance<T>(enhancer: (producer: Producer<State, Actions>) => T): T;
 
 	/**
-	 * Applies the given middlewares to every dispatcher in the producer.
+	 * Applies the given middlewares to the producer and its dispatchers. Returns
+	 * the producer for chaining.
 	 *
-	 * A middleware is a function that is called before an action is dispatched.
-	 * It receives the `dispatch` function, the `resolveCurrentDispatcher` function,
-	 * and the `producer` object as arguments.
-	 *
-	 * The middleware returns a function that handles an incoming dispatcher call
-	 * by calling and returning the `dispatch` function.
+	 * Initially, a middleware is called once when it is applied to a producer.
+	 * Next, the returned function is called on a dispatcher in the producer.
+	 * The final function is called whenever the dispatcher is called.
 	 *
 	 * @example
 	 * ```ts
-	 * const loggerMiddleware: ProducerMiddleware = (dispatch, resolve, producer) => {
-	 * 	return (...args) => {
-	 * 		print(`producer.${resolve()} called`, ...args);
+	 * const loggerMiddleware: ProducerMiddleware = (producer) => {
+	 * 	print("Initial state:", producer.getState());
+	 * 	return (dispatch, name) => (...args) => {
+	 * 		print(`Dispatching ${name}:`, ...args);
 	 * 		return dispatch(...args);
 	 * 	};
 	 * };
@@ -350,23 +349,14 @@ export type ProducerDispatchers<State, Actions> = {
 
 /**
  * A middleware is a function that is called before an action is dispatched.
- * It receives the `dispatch` function, the `resolveCurrentDispatcher` function,
- * and the `producer` object as arguments.
  *
- * The middleware returns a function that handles an incoming dispatcher call
- * by calling and returning the `dispatch` function.
- *
- * @param dispatch The dispatch function.
- * @param resolveCurrentDispatcher A function that returns the name of the
- * currently executing dispatcher.
- * @param producer The producer object.
- * @return A function that handles an incoming dispatcher call.
+ * Initially, a middleware is called once when it is applied to a producer.
+ * Next, the returned function is called on a dispatcher in the producer.
+ * The final function is called whenever that dispatcher is called.
  */
 export type ProducerMiddleware<State = any, Actions = any> = (
-	dispatch: (...args: unknown[]) => unknown,
-	resolveCurrentDispatcher: () => string,
 	producer: Producer<State, Actions>,
-) => (...args: unknown[]) => unknown;
+) => (dispatch: (...args: unknown[]) => unknown, name: string) => (...args: unknown[]) => unknown;
 
 /**
  * Combines multiple producers into a single producer. The state of the

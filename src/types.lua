@@ -118,20 +118,21 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 	) -> Enhanced,
 
 	--[=[
-		Applies the given middlewares to every dispatcher in the producer.
+		Applies the given middlewares to the producer and its dispatchers. Returns
+		the producer for chaining.
 
-		A middleware is a function that is called before an action is dispatched.
-		It receives the `dispatch` function, the `resolveCurrentDispatcher` function,
-		and the `producer` object as arguments.
-
-		The middleware returns a function that handles an incoming dispatcher call
-		by calling and returning the `dispatch` function.
+		Initially, a middleware is called once when it is applied to a producer.
+		Next, the returned function is called on a dispatcher in the producer.
+		The final function is called whenever the dispatcher is called.
 
 		```lua
-		local loggerMiddleware: Middleware = function(dispatch, resolve, producer)
-			return function(...)
-				print(`producer.{resolve()} called`, ...)
-				return dispatch(...)
+		local loggerMiddleware: Reflex.Middleware = function(producer)
+			print("Initial state:", producer.getState())
+			return function(dispatch, name)
+				return function(...)
+					print(`Dispatching {name}:`, ...args)
+					return dispatch(...)
+				end
 			end
 		end
 
@@ -143,33 +144,18 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 	]=]
 	applyMiddleware: (
 		self: Producer<State, Dispatchers>,
-		...((
-			dispatch: (...any) -> any,
-			resolveCurrentDispatcher: () -> string,
-			producer: Producer<State, Dispatchers>
-		) -> (action: any) -> any)
+		...(producer: Producer<State, Dispatchers>) -> (dispatch: (...any) -> any, name: string) -> (...any) -> any
 	) -> Producer<State, Dispatchers>,
 }
 
 --[=[
 	A middleware is a function that is called before an action is dispatched.
-	It receives the `dispatch` function, the `resolveCurrentDispatcher` function,
-	and the `producer` object as arguments.
 
-	The middleware returns a function that handles an incoming dispatcher call
-	by calling and returning the `dispatch` function.
-
-	@param dispatch The dispatch function.
-	@param resolveCurrentDispatcher A function that returns the name of the
-	currently executing dispatcher.
-	@param producer The producer object.
-	@return A function that handles an incoming dispatcher call.
+	Initially, a middleware is called once when it is applied to a producer.
+	Next, the returned function is called on a dispatcher in the producer.
+	The final function is called whenever that dispatcher is called.
 ]=]
-export type Middleware = (
-	dispatch: (...any) -> any,
-	resolveCurrentDispatcher: () -> string,
-	producer: Producer
-) -> (...any) -> any
+export type Middleware = (producer: Producer) -> (dispatch: (...any) -> any, name: string) -> (...any) -> any
 
 export type ProducerMap = { [string]: Producer<any, any> }
 

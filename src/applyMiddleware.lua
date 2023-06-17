@@ -1,21 +1,21 @@
 local types = require(script.Parent.types)
 
 --[=[
-	Creates a producer enhancer that applies the given middleware to every
-	function in the producer.
+	Creates a producer enhancer that applies the given middleware to the
+	producer.
 
-	A middleware is a function that is called before an action is dispatched.
-	It receives the `dispatch` function, the `resolveCurrentDispatcher` function,
-	and the `producer` object as arguments.
-
-	The middleware returns a function that handles an incoming dispatcher call
-	by calling and returning the `dispatch` function.
+	Initially, a middleware is called once when it is applied to a producer.
+	Next, the returned function is called on a dispatcher in the producer.
+	The final function is called whenever the dispatcher is called.
 
 	```lua
-	local loggerMiddleware: Reflex.Middleware = function(dispatch, resolve, producer)
-		return function(...)
-			print(`producer.{resolve()} called`, ...)
-			return dispatch(...)
+	local loggerMiddleware: Reflex.Middleware = function(producer)
+		print("Initial state:", producer.getState())
+		return function(dispatch, name)
+			return function(...)
+				print(`Dispatching {name}:`, ...args)
+				return dispatch(...)
+			end
 		end
 	end
 
@@ -26,33 +26,23 @@ local types = require(script.Parent.types)
 	@return A producer enhancer.
 ]=]
 local function applyMiddleware(...: types.Middleware): <T>(producer: T) -> T
-	local middlewares = { ... }
+	local arguments = { ... }
 
 	return function(producer)
+		local middlewares = table.clone(arguments)
 		local dispatchers = producer:getDispatchers()
-		local currentDispatcher: string?
 
-		local function resolveCurrentDispatcher()
-			assert(currentDispatcher, "Cannot resolve dispatcher outside of middleware")
-			return currentDispatcher
+		for index, middleware in middlewares do
+			middlewares[index] = middleware(producer)
 		end
 
 		for name, dispatcher in dispatchers do
-			local dispatch = dispatcher
-
 			for index = #middlewares, 1, -1 do
-				dispatch = middlewares[index](dispatch, resolveCurrentDispatcher, producer)
+				dispatcher = middlewares[index](dispatcher, name)
 			end
 
-			local startDispatch = dispatch
-
-			function dispatch(...)
-				currentDispatcher = name
-				return startDispatch(...)
-			end
-
-			dispatchers[name] = dispatch
-			producer[name] = dispatch
+			dispatchers[name] = dispatcher
+			producer[name] = dispatcher
 		end
 
 		return producer
