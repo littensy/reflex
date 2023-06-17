@@ -301,16 +301,19 @@ export interface ProducerNoDispatch<State, Actions extends ProducerActions<State
 
 /**
  * Infers the state type from a producer.
+ * @template T The producer type.
  */
 export type InferProducerState<T> = T extends Producer<infer State> ? State : never;
 
 /**
  * Infers the actions type from a producer.
+ * @template T The producer type.
  */
 export type InferProducerActions<T> = T extends Producer<any, infer Actions> ? Actions : never;
 
 /**
  * Infers the dispatcher functions from a producer.
+ * @template T The producer type.
  */
 export type InferProducerDispatchers<T> = T extends Producer<infer State, infer Actions>
 	? ProducerDispatchers<State, Actions>
@@ -318,6 +321,7 @@ export type InferProducerDispatchers<T> = T extends Producer<infer State, infer 
 
 /**
  * A map of action names to action functions.
+ * @template State The state type of the producer.
  */
 export interface ProducerActions<State> {
 	[name: string]: (state: State, ...args: any[]) => State;
@@ -326,6 +330,8 @@ export interface ProducerActions<State> {
 /**
  * Infers the dispatcher functions from the action functions. Dispatchers omit
  * the first argument (the state) and return the new state.
+ * @template State The state type of the producer.
+ * @template Actions The actions type of the producer.
  */
 export type ProducerDispatchers<State, Actions extends ProducerActions<any>> = {
 	[K in keyof Actions]: Actions[K] extends (state: State, ...args: infer Args) => State
@@ -357,6 +363,7 @@ export type ProducerMiddleware<State = any, Actions extends ProducerActions<Stat
  * Combines multiple producers into a single producer. The state of the
  * combined producer is a table with a key for each producer. Actions will
  * be called on the corresponding producer.
+ * @template ProducerMap A map of producer names to producers.
  */
 export type CombineProducers<ProducerMap extends { [name: string]: Producer }> = Producer<
 	CombineProducerStates<ProducerMap>,
