@@ -196,6 +196,8 @@ export interface ProducerNoDispatch<State, Actions> {
 	 */
 	getState(): State;
 
+	getState<Selection>(selector: Selector<State, Selection>): Selection;
+
 	/**
 	 * Sets the state to the given value.
 	 * @param state The new state.
