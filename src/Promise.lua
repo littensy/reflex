@@ -1,4 +1,8 @@
-local packages = script:FindFirstAncestor("rbxts_include") or script.Parent.Parent
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local packages = script:FindFirstAncestor("rbxts_include")
+	or ReplicatedStorage:FindFirstChild("rbxts_include")
+	or script.Parent.Parent
 
 if packages and packages:FindFirstChild("Promise") then
 	return require(packages.Promise)
