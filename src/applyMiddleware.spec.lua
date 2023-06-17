@@ -1,7 +1,7 @@
-local createProducer = require(script.Parent.createProducer)
-local applyMiddleware = require(script.Parent.applyMiddleware)
-
 return function()
+	local createProducer = require(script.Parent.createProducer)
+	local applyMiddleware = require(script.Parent.applyMiddleware)
+
 	local producer
 
 	beforeEach(function()

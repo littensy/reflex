@@ -1,6 +1,6 @@
-local createSelector = require(script.Parent.createSelector)
-
 return function()
+	local createSelector = require(script.Parent.createSelector)
+
 	local function selectFoo(state)
 		return state.foo
 	end

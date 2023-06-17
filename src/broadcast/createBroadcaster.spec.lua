@@ -1,8 +1,8 @@
-local createProducer = require(script.Parent.Parent.createProducer)
-local combineProducers = require(script.Parent.Parent.combineProducers)
-local createBroadcaster = require(script.Parent.createBroadcaster)
-
 return function()
+	local createProducer = require(script.Parent.Parent.createProducer)
+	local combineProducers = require(script.Parent.Parent.combineProducers)
+	local createBroadcaster = require(script.Parent.createBroadcaster)
+
 	local producers, producer
 
 	beforeEach(function()
@@ -103,7 +103,7 @@ return function()
 		expect(#pendingActions).to.equal(1)
 
 		-- state should only contain foo
-		local state = broadcaster:playerRequestedState({} :: Player)
+		local state = broadcaster:playerRequestedState({})
 		expect(state).to.be.a("table")
 		expect(state.foo).to.be.a("table")
 		expect(state.foo.count).to.equal(1)
