@@ -93,7 +93,6 @@ return function()
 	end)
 
 	it("should receive updates from a broadcaster", function()
-		local thread = coroutine.running()
 		local pendingActions
 
 		local clientProducer = producer
@@ -103,7 +102,6 @@ return function()
 			producers = producers,
 			broadcast = function(_players, _pendingActions)
 				pendingActions = _pendingActions
-				coroutine.resume(thread)
 			end,
 		})
 
@@ -125,14 +123,7 @@ return function()
 		serverProducer.incrementFoo(1)
 		serverProducer.incrementBar(2)
 
-		task.delay(0.1, function()
-			if thread then
-				coroutine.resume(thread, "broadcast took too long")
-			end
-		end)
-
-		expect(coroutine.yield()).to.equal(nil)
-		thread = nil
+		broadcaster:flush()
 
 		expect(pendingActions).to.be.a("table")
 		expect(#pendingActions).to.equal(2)

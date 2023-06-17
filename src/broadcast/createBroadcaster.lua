@@ -36,9 +36,18 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 
 		pendingBroadcast = RunService.Heartbeat:Once(function()
 			pendingBroadcast = nil
-			broadcast(players, pendingActions)
-			pendingActions = {}
+			broadcaster:flush()
 		end)
+	end
+
+	function broadcaster:flush()
+		if pendingBroadcast then
+			pendingBroadcast:Disconnect()
+			pendingBroadcast = nil
+		end
+
+		broadcast(players, pendingActions)
+		pendingActions = {}
 	end
 
 	function broadcaster:playerRequestedState(player: Player)
