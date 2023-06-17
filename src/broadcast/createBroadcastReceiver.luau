@@ -8,10 +8,22 @@ local types = require(script.Parent.Parent.types)
 ]=]
 local function createBroadcastReceiver(options: types.BroadcastReceiverOptions): types.BroadcastReceiver
 	local requestState = options.requestState
-
+	local receiver = {} :: types.BroadcastReceiver
 	local rootProducer: types.Producer?
 
-	local middleware: types.Middleware = function(dispatch, _, producer)
+	function receiver:dispatch(actions: { types.BroadcastAction })
+		assert(rootProducer, "Cannot dispatch actions before the middleware is applied")
+
+		local dispatchers = rootProducer:getDispatchers()
+
+		for _, action in actions do
+			if dispatchers[action.name] then
+				dispatchers[action.name](table.unpack(action.arguments))
+			end
+		end
+	end
+
+	function receiver.middleware(dispatch, _, producer)
 		rootProducer = producer
 
 		requestState():andThen(function(serverState)
@@ -27,22 +39,7 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 		return dispatch
 	end
 
-	local function dispatch(actions: { types.BroadcastAction })
-		assert(rootProducer, "Cannot dispatch actions before the middleware is applied")
-
-		local dispatchers = rootProducer:getDispatchers()
-
-		for _, action in actions do
-			if dispatchers[action.name] then
-				dispatchers[action.name](table.unpack(action.arguments))
-			end
-		end
-	end
-
-	return {
-		middleware = middleware,
-		dispatch = dispatch,
-	}
+	return receiver
 end
 
 return createBroadcastReceiver

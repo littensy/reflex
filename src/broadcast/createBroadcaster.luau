@@ -14,6 +14,8 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 	local producers = options.producers
 	local broadcast = options.broadcast
 
+	local broadcaster = {} :: types.Broadcaster
+
 	local players: { Player } = {}
 	local pendingActions: { types.BroadcastAction } = {}
 	local actionFilter: { [string]: boolean } = {}
@@ -39,7 +41,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 		end)
 	end
 
-	local function playerRequestedState(player: Player)
+	function broadcaster:playerRequestedState(player: Player)
 		assert(not table.find(players, player), `Player {player} has already requested state.`)
 		assert(rootProducer, "Cannot call playerRequestedState before middleware is applied.")
 
@@ -55,7 +57,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 		return state
 	end
 
-	local middleware: types.Middleware = function(dispatch, resolve, producer)
+	function broadcaster.middleware(dispatch, resolve, producer)
 		rootProducer = producer
 
 		return function(...)
@@ -81,10 +83,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 		table.remove(players, table.find(players, player) or -1)
 	end)
 
-	return {
-		middleware = middleware,
-		playerRequestedState = playerRequestedState,
-	}
+	return broadcaster
 end
 
 return createBroadcaster

@@ -199,6 +199,19 @@ export type BroadcasterOptions = {
 }
 
 --[=[
+	Options for the broadcast receiver.
+]=]
+export type BroadcastReceiverOptions = {
+	--[=[
+		A function that should request the server's state through its broadcaster.
+		This will be called when the middleware is applied to access the server's
+		state.
+		@returns A Promise that resolves with the server's state.
+	]=]
+	requestState: () -> any,
+}
+
+--[=[
 	A broadcaster that can be used to share actions with the client.
 ]=]
 export type Broadcaster = {
@@ -214,7 +227,7 @@ export type Broadcaster = {
 		@return The combined state of the producers.
 		@error Throws if this is called for a player that has already requested the state.
 	]=]
-	playerRequestedState: (player: Player) -> {},
+	playerRequestedState: (self: Broadcaster, player: Player) -> any,
 }
 
 --[=[
@@ -231,20 +244,7 @@ export type BroadcastReceiver = {
 		Dispatches actions broadcasted by the server.
 		@param actions A list of action containers to dispatch.
 	]=]
-	dispatch: (actions: { BroadcastAction }) -> (),
-}
-
---[=[
-	Options for the broadcast receiver.
-]=]
-export type BroadcastReceiverOptions = {
-	--[=[
-		A function that should request the server's state through its broadcaster.
-		This will be called when the middleware is applied to access the server's
-		state.
-		@returns A Promise that resolves with the server's state.
-	]=]
-	requestState: () -> any,
+	dispatch: (self: BroadcastReceiver, actions: { BroadcastAction }) -> (),
 }
 
 return nil
