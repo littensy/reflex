@@ -1,4 +1,4 @@
-local applyMiddleware = require(script.Parent.Parent.applyMiddleware)
+local types = require(script.Parent.Parent.types)
 
 local function stringify(value: unknown): string
 	if type(value) == "string" then
@@ -18,7 +18,7 @@ end
 
 --- A middleware that logs every action that is dispatched, and the new state
 --- after the action is handled.
-local loggerMiddleware: applyMiddleware.Middleware = function(dispatch, resolve, producer)
+local loggerMiddleware: types.Middleware = function(dispatch, resolve, producer)
 	return function(...)
 		local arguments = { ... }
 

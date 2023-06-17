@@ -1,18 +1,19 @@
+local types = require(script.types)
 local broadcast = require(script.broadcast)
 local createProducer = require(script.createProducer)
 local combineProducers = require(script.combineProducers)
 local createSelector = require(script.createSelector)
 local applyMiddleware = require(script.applyMiddleware)
 
-export type Broadcaster = broadcast.Broadcaster
-export type BroadcastAction = broadcast.BroadcastAction
-export type BroadcasterOptions = broadcast.BroadcasterOptions
+export type Broadcaster = types.Broadcaster
+export type BroadcastAction = types.BroadcastAction
+export type BroadcasterOptions = types.BroadcasterOptions
 
-export type BroadcastReceiver = broadcast.BroadcastReceiver
-export type BroadcastReceiverOptions = broadcast.BroadcastReceiverOptions
+export type BroadcastReceiver = types.BroadcastReceiver
+export type BroadcastReceiverOptions = types.BroadcastReceiverOptions
 
-export type Producer<State, Dispatchers = { [string]: (...any) -> State }> = createProducer.Producer<State, Dispatchers>
-export type Middleware = applyMiddleware.Middleware
+export type Producer<State, Dispatchers = { [string]: (...any) -> State }> = types.Producer<State, Dispatchers>
+export type Middleware = types.Middleware
 
 return {
 	createProducer = createProducer,

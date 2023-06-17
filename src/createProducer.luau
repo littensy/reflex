@@ -1,123 +1,27 @@
 local RunService = game:GetService("RunService")
 
 local Promise = require(script.Parent.Promise)
+local types = require(script.Parent.types)
 
---- A Producer is a state conainer that exposes a set of dispatchers that can
---- be used to modify the state. The state is immmutable, so dispatchers return
---- a new state object.
-export type Producer<State, Dispatchers = { [string]: (...any) -> State }> = Dispatchers & {
-	--- Returns the current state of the producer. Receives an optional selector
-	--- function that can be used to select a subset of the state.
-	--- @param selector An optional selector function that can be used to select
-	--- a subset of the state.
-	--- @return The current state of the producer.
-	getState: ((self: Producer<State, Dispatchers>) -> State)
-		& (<Selection>(self: Producer<State, Dispatchers>, selector: (state: State) -> Selection) -> Selection),
+--[=[
+	Creates a producer that can be used to manage state.
 
-	--- Sets the state of the producer to a shallow copy of the given state.
-	--- Fires listeners on the next frame.
-	--- @param state The new state of the producer.
-	--- @return The new state of the producer.
-	setState: (self: Producer<State, Dispatchers>, state: State) -> (),
+	A producer is a state container that exposes a set of dispatchers that can
+	be used to modify the state. The state is immutable, so the dispatchers
+	return a new state object.
 
-	--- Returns the dispatchers for the actions passed to `createProducer`.
-	--- @return A map of dispatchers.
-	getDispatchers: (self: Producer<State, Dispatchers>) -> Dispatchers,
+	The dispatchers are also exposed as callbacks in the producer, and are based
+	on the actions parameter, but with the first argument omitted.
 
-	--- Flushes any pending updates by calling listeners immediately.
-	flush: (self: Producer<State, Dispatchers>) -> (),
-
-	--- Subscribes to changes in a specific part of the state. State updates
-	--- are deferred until the next frame after all state updates have been
-	--- processed.
-	--- @param selector A selector function that can be used to select a subset
-	--- of the state.
-	--- @param listener A callback that is called when the selected part of the
-	--- state changes.
-	--- @return A function that can be used to unsubscribe from the listener.
-	subscribe: (<Selection>(
-		self: Producer<State, Dispatchers>,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> ()) & <Selection>(
-		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> (),
-
-	--- Similar to `subscribe`, but the listener is disconnect after the first
-	--- time it is called.
-	--- @param selector A selector function that can be used to select a subset
-	--- of the state.
-	--- @param predicate An optional predicate function that must return `true`
-	--- for the listener to be called.
-	--- @param listener A callback that is called when the selected part of the
-	--- state changes.
-	--- @return A function that can be used to unsubscribe from the listener.
-	once: (<Selection>(
-		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> ()) & <Selection>(
-		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		predicate: ((state: Selection, prevState: Selection) -> boolean)?,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> (),
-
-	--- Returns a Promise that resolves once a specific part of the state changes.
-	--- Unsubscribes the listener if the Promise is cancelled or resolved.
-	---
-	--- Receives an optional `predicate` function that must return `true` for the
-	--- Promise to resolve for a given state change.
-	---
-	--- @param selector A selector function that can be used to select a subset
-	--- of the state.
-	--- @param predicate An optional predicate function that must return `true`
-	--- for the Promise to resolve for a given state change.
-	--- @return A Promise that resolves once the selected part of the state changes.
-	wait: <Selection>(
-		self: Producer<State, Dispatchers>,
-		selector: ((state: State) -> Selection)?,
-		predicate: ((state: Selection, prevState: Selection) -> boolean)?
-	) -> any,
-
-	--- Disconnects all listeners and cancels all pending flushes.
-	destroy: (self: Producer<State, Dispatchers>) -> (),
-
-	--- Enhances the producer with new functionality. The enhancer function
-	--- is passed to the producer as an argument and should mutate the producer
-	--- in place.
-	--- @param enhancer A function that mutates the producer.
-	--- @return The enhanced producer.
-	enhance: <Enhanced>(
-		self: Producer<State, Dispatchers>,
-		enhancer: (producer: Producer<State, Dispatchers>) -> Enhanced
-	) -> Enhanced,
-
-	--- Returns the original action functions passed to `createProducer`.
-	--- @return A map of action functions.
-	getActions: (self: Producer<State, Dispatchers>) -> {
-		[string]: (state: State, ...any) -> any,
-	},
-}
-
---- Creates a producer that can be used to manage state.
----
---- A producer is a state container that exposes a set of dispatchers that can
---- be used to modify the state. The state is immutable, so the dispatchers
---- return a new state object.
----
---- The dispatchers are also exposed as callbacks in the producer, and are based
---- on the actions parameter, but with the first argument omitted.
----
---- @param initialState The initial state of the producer.
---- @param actions A set of actions that can be used to modify the state.
---- @return A producer that can be used to manage state.
+	@param initialState The initial state of the producer.
+	@param actions A set of actions that can be used to modify the state.
+	@return A producer that can be used to manage state.
+]=]
 local function createProducer<State>(
 	initialState: State,
 	actions: { [string]: (state: State, ...any) -> any }
-): Producer<State>
-	local producer = {} :: Producer<State>
+): types.Producer<State>
+	local producer = {} :: types.Producer<State>
 
 	local dispatchers = {}
 	local currentListeners: {}? = {}

@@ -1,8 +1,7 @@
+local types = require(script.Parent.types)
 local createProducer = require(script.Parent.createProducer)
 
-type ProducerMap = { [string]: createProducer.Producer<any, any> }
-
-local function combineInitialState(producers: ProducerMap)
+local function combineInitialState(producers: types.ProducerMap)
 	local initialState = {}
 
 	for name, producer in producers do
@@ -12,7 +11,7 @@ local function combineInitialState(producers: ProducerMap)
 	return initialState
 end
 
-local function combineActions(producers: ProducerMap)
+local function combineActions(producers: types.ProducerMap)
 	local combinedActions = {}
 	local actionsByName = {}
 	local producerNamesByAction = {}
@@ -55,7 +54,7 @@ end
 ---
 --- @param producers A map of producers to combine.
 --- @return A combined producer.
-local function combineProducers(producers: ProducerMap)
+local function combineProducers(producers: types.ProducerMap)
 	return createProducer(combineInitialState(producers), combineActions(producers))
 end
 

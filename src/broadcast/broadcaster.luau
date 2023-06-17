@@ -1,53 +1,24 @@
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
-local createProducer = require(script.Parent.Parent.createProducer)
-local applyMiddleware = require(script.Parent.Parent.applyMiddleware)
+local types = require(script.Parent.Parent.types)
 
-type ProducerMap = { [string]: createProducer.Producer<any> }
-
---- A container for storing a Reflex dispatcher's name and arguments.
-export type BroadcastAction = {
-	name: string,
-	arguments: {},
-}
-
---- Options for the broadcast middleware.
-export type BroadcasterOptions = {
-	--- The producers that will be tracked.
-	producers: ProducerMap,
-
-	--- The function that will send the broadcasted actions to the given players.
-	broadcast: (players: { Player }, actions: { BroadcastAction }) -> (),
-}
-
---- A broadcaster that can be used to share actions with the client.
-export type Broadcaster = {
-	--- The middleware that will broadcast actions to the client.
-	middleware: applyMiddleware.Middleware,
-
-	--- Gets the combined states of the producers in the provided map. This
-	--- should only be called once per player and be initiated by the player.
-	--- @param player The player requesting the state.
-	--- @return The combined state of the producers.
-	--- @throws If this is called for a player that has already requested the state.
-	playerRequestedState: (player: Player) -> {},
-}
-
---- Creates a broadcaster that can be used to share actions with the client.
---- It will track all actions that are dispatched by the provided producers and
---- will broadcast them to the client.
---- @param options The options for the broadcaster.
---- @return The broadcaster.
-local function createBroadcaster(options: BroadcasterOptions): Broadcaster
+--[=[
+	Creates a broadcaster that can be used to share actions with the client.
+	It will track all actions that are dispatched by the provided producers and
+	will broadcast them to the client.
+	@param options The options for the broadcaster.
+	@return The broadcaster.
+]=]
+local function createBroadcaster(options: types.BroadcasterOptions): types.Broadcaster
 	local producers = options.producers
 	local broadcast = options.broadcast
 
 	local players: { Player } = {}
-	local pendingActions: { BroadcastAction } = {}
+	local pendingActions: { types.BroadcastAction } = {}
 	local actionFilter: { [string]: boolean } = {}
 
-	local rootProducer: createProducer.Producer<any>?
+	local rootProducer: types.Producer?
 	local pendingBroadcast: RBXScriptConnection?
 
 	for _, producer in producers do
@@ -84,7 +55,7 @@ local function createBroadcaster(options: BroadcasterOptions): Broadcaster
 		return state
 	end
 
-	local middleware: applyMiddleware.Middleware = function(dispatch, resolve, producer)
+	local middleware: types.Middleware = function(dispatch, resolve, producer)
 		rootProducer = producer
 
 		return function(...)

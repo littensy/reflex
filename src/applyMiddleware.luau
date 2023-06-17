@@ -1,18 +1,29 @@
-local createProducer = require(script.Parent.createProducer)
+local types = require(script.Parent.types)
 
-type DefaultProducer = createProducer.Producer<any>
+--[=[
+	Creates a producer enhancer that applies the given middleware to every
+	function in the producer.
 
-export type Middleware<T = DefaultProducer> = (
-	dispatch: (...any) -> any,
-	resolveCurrentDispatcher: () -> string,
-	producer: T
-) -> (action: any) -> any
+	A middleware is a function that is called before an action is dispatched.
+	It receives the `dispatch` function, the `resolveCurrentDispatcher` function,
+	and the `producer` object as arguments.
 
---- Creates a producer enhancer that applies the given middleware to every
---- function in the producer.
---- @param middlewares A list of middleware to apply.
---- @return A producer enhancer.
-local function applyMiddleware(...: { Middleware }): <T>(producer: T) -> T
+	The middleware returns a function that handles an incoming dispatcher call
+	by calling and returning the `dispatch` function.
+
+	```lua
+	local loggerMiddleware: Middleware = function(dispatch, resolve, producer)
+		return function(...)
+			print(`producer.{resolve()} called`, ...)
+			return dispatch(...)
+		end
+	end
+	```
+
+	@param middlewares A list of middleware to apply.
+	@return A producer enhancer.
+]=]
+local function applyMiddleware(...: { types.Middleware }): <T>(producer: T) -> T
 	local middlewares = { ... }
 
 	return function(producer)
