@@ -45,15 +45,17 @@ local function combineActions(producers: types.ProducerMap)
 	return combinedActions
 end
 
---- Combines multiple producers into a single producer. Any dispatchers called
---- on the combined producer will call the dispatchers of the same name on each
---- of the producers passed in.
----
---- **Don't use the individual producers.** The combined producer is the only
---- one that should be used to prevent unexpected behavior.
----
---- @param producers A map of producers to combine.
---- @return A combined producer.
+--[=[
+	Combines multiple producers into a single producer. Any dispatchers called
+	on the combined producer will call the dispatchers of the same name on each
+	of the producers passed in.
+
+	**Don't use the individual producers.** The combined producer is the only
+	one that should be used to prevent unexpected behavior.
+
+	@param producers A map of producers to combine.
+	@return A combined producer.
+]=]
 local function combineProducers(producers: types.ProducerMap)
 	return createProducer(combineInitialState(producers), combineActions(producers))
 end

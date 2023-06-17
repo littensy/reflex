@@ -18,6 +18,8 @@ local types = require(script.Parent.types)
 			return dispatch(...)
 		end
 	end
+
+	producer:enhance(applyMiddleware(loggerMiddleware))
 	```
 
 	@param middlewares A list of middleware to apply.

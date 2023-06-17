@@ -16,8 +16,10 @@ local function stringify(value: unknown): string
 	end
 end
 
---- A middleware that logs every action that is dispatched, and the new state
---- after the action is handled.
+--[=[
+	A middleware that logs every action that is dispatched, and the new state
+	after the action is handled.
+]=]
 local loggerMiddleware: types.Middleware = function(dispatch, resolve, producer)
 	return function(...)
 		local arguments = { ... }
