@@ -19,6 +19,10 @@ return function()
 		})
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should unsubscribe on promise cancel", function()
 		local calls = 0
 

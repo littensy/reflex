@@ -18,6 +18,10 @@ return function()
 		})
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should return a function to unsubscribe", function()
 		local calls = 0
 		local unsubscribe = producer:once(selectCount, function()

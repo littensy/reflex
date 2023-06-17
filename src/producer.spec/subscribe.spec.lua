@@ -18,6 +18,10 @@ return function()
 		})
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should return a function to unsubscribe", function()
 		local calls = 0
 		local unsubscribe = producer:subscribe(function()
@@ -105,9 +109,13 @@ return function()
 		local initialState = producer:getState()
 		local stateBeforeFlush, stateDuringFlush
 
-		producer:subscribe(function()
+		producer:subscribe(function(current, previous)
 			producer.increment(1)
 			stateDuringFlush = producer:getState()
+
+			expect(current).to.equal(stateBeforeFlush)
+			expect(current).to.never.equal(stateDuringFlush)
+			expect(previous).to.equal(initialState)
 		end)
 
 		producer:subscribe(function(current, previous)

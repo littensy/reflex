@@ -22,6 +22,10 @@ return function()
 		producer = combineProducers(producers)
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should return a broadcaster", function()
 		local broadcaster = createBroadcaster({
 			producers = producers,

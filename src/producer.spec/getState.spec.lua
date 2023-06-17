@@ -11,6 +11,10 @@ return function()
 		})
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should return the initial state", function()
 		expect(producer:getState()).to.be.a("table")
 		expect(producer:getState().count).to.equal(0)

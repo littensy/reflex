@@ -11,6 +11,10 @@ return function()
 		})
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should set the state", function()
 		local state = { count = 1 }
 		producer:setState(state)

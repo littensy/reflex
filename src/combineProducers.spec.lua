@@ -27,6 +27,13 @@ return function()
 		producer = combineProducers(producers)
 	end)
 
+	afterEach(function()
+		producer:destroy()
+		for _, producer in pairs(producers) do
+			producer:destroy()
+		end
+	end)
+
 	it("should combine the initial state of each producer", function()
 		local initialState = producer:getState()
 		expect(initialState).to.be.a("table")

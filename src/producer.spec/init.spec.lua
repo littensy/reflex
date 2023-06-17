@@ -15,6 +15,10 @@ return function()
 		})
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should return a producer", function()
 		expect(producer).to.be.a("table")
 		expect(producer.getState).to.be.a("function")

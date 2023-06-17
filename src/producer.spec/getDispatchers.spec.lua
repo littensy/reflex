@@ -14,6 +14,10 @@ return function()
 		})
 	end)
 
+	afterEach(function()
+		producer:destroy()
+	end)
+
 	it("should return a table of dispatchers", function()
 		local dispatchers = producer:getDispatchers()
 		expect(dispatchers).to.be.a("table")
