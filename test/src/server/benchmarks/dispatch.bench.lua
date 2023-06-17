@@ -1,20 +1,25 @@
-local TS = require(game:GetService("ReplicatedStorage").include.RuntimeLib)
+local TS = require(game:GetService("ReplicatedStorage").rbxts_include.RuntimeLib)
 local Reflex = TS.import(script, game:GetService("ReplicatedStorage"), "reflex")
 local Rodux =
-	TS.import(script, game:GetService("ReplicatedStorage"), "include", "node_modules", "@rbxts", "rodux", "src")
+	TS.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "rodux", "src")
 
 local LOOPS = 500
 
 --[[
 	Benchmarker
 
+	Device: MacBook Pro (M1 Pro, 16-inch, 2021)
 	Run type: Time
 	Run time: 1 second
 
-	Reflex.Producer: 250 microseconds
-	Rodux.Store:     500 microseconds
+	Times
 
-	Reflex tends to be 50% faster than Rodux when dispatching light actions.
+	Reflex.Producer: 160 microseconds
+	Rodux.Store:     470 microseconds
+
+	Summary
+
+	Overall, Reflex is nearly 3x faster than Rodux when dispatching simple actions.
 ]]
 
 return {

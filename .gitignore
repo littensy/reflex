@@ -1,4 +1,5 @@
 /node_modules
+/Packages
 /out
 /include
 /.vscode
@@ -6,3 +7,4 @@
 /test/out
 *.tsbuildinfo
 .DS_Store
+sourcemap.json

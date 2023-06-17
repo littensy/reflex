@@ -29,14 +29,12 @@ You can use Reflex with Roact on the client with [`@rbxts/roact-reflex`](https:/
 
 ## 📦 Installation
 
-This package is only available for Roblox TypeScript on NPM:
+This package is available for Roblox TypeScript and [Wally](https://wally.run/package/littensy/reflex).
 
-```console
-$ npm install @rbxts/reflex
-```
-
-```console
-$ pnpm add @rbxts/reflex
+```bash
+npm install @rbxts/reflex
+yarn add @rbxts/reflex
+pnpm add @rbxts/reflex
 ```
 
 &nbsp;
@@ -45,47 +43,55 @@ $ pnpm add @rbxts/reflex
 
 ### 🎂 Producers
 
-**Producers** are state containers that manage state updates and listeners.
+**Producers** are state containers that manage updating and observing state.
 
-**`createProducer()`** takes an initial state and a table of action callbacks. Like Rodux, all state is immutable, so action callbacks should return a new state table if a change is needed.
+**`createProducer()`** takes an initial state and a table of action callbacks. State should be immutable, so action callbacks should return a new state table if a change is made.
+
+Note that in Luau, dispatchers are called with dot notation (`myProducer.increment()`).
 
 ```ts
-const myProducer = createProducer(initialState, {
+const producer = createProducer(initialState, {
 	increment: (state) => ({ ...state, count: state.count + 1 }),
 	decrement: (state) => ({ ...state, count: state.count - 1 }),
 	set: (state, count: number) => ({ ...state, count }),
 });
 
-myProducer.getState(); // { count: 0 }
-myProducer.increment(); // { count: 1 }
+producer.getState(); // { count: 0 }
+producer.increment(); // { count: 1 }
 ```
 
 ### 🍰 Selectors
 
 **Selectors** are functions that take state as an input and return a select portion of it. You can use them to observe a subset of your state, or you can derive new values from it. They're also used in producers to observe state changes.
 
-Selectors are called often during state changes, so it's best to memoize your selectors when deriving unique values or performing an expensive calculation. For that reason, Reflex provides a `createSelector` function that memoizes selectors for you.
+Selectors are called on every state update to compare changes in state. This is not an issue if your selector only indexes the state, but if it derives new data or performs expensive calculations, this is not ideal. To ensure that your selectors are performant, you should memoize them using the `createSelector` function.
 
 ```ts
-const selectCount = (state: State) => state.count;
+const selectUserIds = (state: State) => state.userIds;
 
-const selectWord = createSelector([selectCount] as const, (count) => {
-	return ["E".rep(count)];
+const selectPlayers = createSelector([selectUserIds] as const, (userIds) => {
+	return userIds.mapFiltered((userId) => Players.GetPlayerByUserId(userId));
 });
 
-myProducer.set(10);
-myProducer.getState(selectWord); // ["EEEEEEEEEE"]
-myProducer.getState(selectWord) === myProducer.getState(selectWord); // true
+producer.playerAdded(player.UserId); // { userIds: [2] }
+producer.getState(selectPlayers); // [John Doe]
+producer.getState(selectPlayers) === producer.getState(selectPlayers); // true
 ```
 
 You might also have a selector that depends on outside parameters. In that case, I recommend this pattern:
 
 ```ts
-const createSelectWord = (word: string) => {
-	return createSelector([selectCount] as const, (count) => {
-		return word.rep(count);
+export const selectPlayersOnTeam = (team: Team) => {
+	return createSelector([selectPlayers] as const, (players) => {
+		return players.filter((player) => player.Team === team);
 	});
 };
+
+// General usage
+producer.subscribe(selectPlayersOnTeam(redTeam), print);
+
+// With roact-reflex
+const players = useSelectorCreator(selectPlayersOnTeam, redTeam);
 ```
 
 ### 🔮 Observing state
@@ -94,20 +100,32 @@ You can observe changes to subsets of your state using the `subscribe`, `once`, 
 
 Although dispatchers update state synchronously, the events are deferred until the next frame. This allows you to observe multiple state changes in a single frame.
 
+Additionally, the `once` and `wait` methods take an optional second `predicate` parameter. If provided, the listener will only run once the predicate returns true.
+
 ```ts
-const unsubscribe = myProducer.subscribe(selectCount, (count, prevCount) => {
-	print(`Count changed from ${prevCount} to ${count}`);
+producer.subscribe(selectCounter, (counter, prevCounter) => {
+	print(`Counter changed from ${prevCounter} to ${counter}`);
 });
 
-for (const _ of $range(1, 10)) {
-	myProducer.increment();
-}
+producer.once(selectCounter, (counter, prevCounter) => {
+	print(`Counter changed once from ${prevCounter} to ${counter}`);
+});
 
-unsubscribe();
+producer
+	.wait(selectCounter, (count) => count === 10)
+	.then((counter) => {
+		print(`Counter changed once to ${counter}`);
+	});
+
+for (const _ of $range(1, 10)) {
+	counterProducer.increment();
+}
 ```
 
 ```ts
 // Count changed from 0 to 10
+// Count changed once from 0 to 10
+// Count changed once to 10
 ```
 
 ### 🖥️ Managing multiple producers
@@ -121,24 +139,24 @@ Actions from different producers that have the same name are combined, so callin
 > You should only use the combined producer to dispatch actions.
 
 ```ts
-const producerA = createProducer(initialStateA, {
+const fooProducer = createProducer(initialState, {
+	incrementFoo: (state) => ({ ...state, count: state.count + 1 }),
 	shared: (state) => ({ ...state, count: state.count + 1 }),
-	privateA: (state) => ({ ...state, count: state.count + 1 }),
 });
 
-const producerB = createProducer(initialStateB, {
+const barProducer = createProducer(initialState, {
+	incrementBar: (state) => ({ ...state, count: state.count + 1 }),
 	shared: (state) => ({ ...state, count: state.count + 1 }),
-	privateB: (state) => ({ ...state, count: state.count + 1 }),
 });
 
-const combinedProducer = combineProducers({
-	a: producerA,
-	b: producerB,
+const producer = combineProducers({
+	foo: fooProducer,
+	bar: barProducer,
 });
 
-combinedProducer.shared(); // { a: { count: 1 }, b: { count: 1 } }
-combinedProducer.privateA(); // { ..., a: { count: 2 } }
-combinedProducer.privateB(); // { ..., b: { count: 2 } }
+producer.getState(); // { foo: { count: 0 }, bar: { count: 0 } }
+producer.incrementFoo(); // { foo: { count: 1 }, bar: { count: 0 } }
+producer.incrementBar(); // { foo: { count: 1 }, bar: { count: 1 } }
 ```
 
 ### ⚛️ Roact
@@ -148,15 +166,15 @@ Reflex offers support for [`@rbxts/roact-hooked`](https://npmjs.com/package/@rbx
 If you don't want to use generics to get the Producer type you want, Reflex exports the `UseSelectorHook` and `UseProducerHook` types to make it easier:
 
 ```tsx
-// use-app-producer.ts
-export const useAppProducer: UseProducerHook<AppProducer> = useProducer;
+export const useRootProducer: UseProducerHook<RootProducer> = useProducer;
+export const useRootSelector: UseSelectorHook<RootProducer> = useSelector;
 ```
 
 ```tsx
-// App.tsx
-export default function App() {
-	const { increment, decrement } = useAppProducer();
-	const count = useSelector(selectCount);
+export function App() {
+	const { increment, decrement } = useRootProducer();
+
+	const count = useRootSelector((state) => state.count);
 
 	return (
 		<textbutton
@@ -174,69 +192,74 @@ export default function App() {
 ```
 
 ```tsx
-// main.client.tsx
 Roact.mount(
-	<ReflexProvider producer={myProducer}>
+	<ReflexProvider producer={producer}>
 		<App />
 	</ReflexProvider>,
 );
 ```
 
-When using selector creators, you should avoid calling them in your render method (i.e. `useSelector(createSelectWord("E"))`), since it creates a new selector every time the component renders and risks excessive re-renders. Instead, you can use the `useSelectorCreator()` hook to memoize the selector:
+When using selector creators, you should avoid creating them in your render method (i.e. `useSelector(selectPlayersOnTeam(redTeam))`), since it creates a new selector every time the component renders and risks excessive re-renders. Instead, you can use the `useSelectorCreator()` hook to memoize the selector:
 
 ```tsx
-const createSelectWord = (word: string) => {
-	return createSelector([selectCount] as const, (count) => {
-		return word.rep(count);
+export const selectPlayersOnTeam = (team: Team) => {
+	return createSelector([selectPlayers] as const, (players) => {
+		return players.filter((player) => player.Team === team);
 	});
 };
 ```
 
 ```ts
-const word = useSelectorCreator(createSelectWord, "E");
+const players = useSelectorCreator(selectPlayersOnTeam, redTeam);
 ```
 
 ### 🛠️ Middleware
 
-Producers have an `enhance()` method that allows you to add custom functionality to your producers. The enhancer you will most likely use is `applyMiddleware()`, which allows you to add middleware to your producers.
+Middleware are higher-order functions that can be used to add logging, cancel dispatches, or to perform side effects.
 
-Middleware are higher-order functions called before every dispatcher, and can be used to add logging, cancel actions, or to perform side effects.
+They are structured as such:
 
-They're called with the following arguments:
-
--   `dispatch`: The next middleware in the chain, or the dispatcher if this is the last middleware.
--   `resolve`: A function that returns the name of the dispatcher that was called.
--   `producer`: The producer that the dispatcher was called on.
+```ts
+// Called once when the middleware is applied to a producer
+export const middleware: ProducerMiddleware = (producer) => {
+	// Called for each dispatcher on this producer
+	return (dispatch, name) => {
+		// Called every time this dispatcher is called
+		return (...args) => {
+			return dispatch(...args);
+		};
+	};
+};
+```
 
 Middleware can be used to log every action:
 
 ```ts
-export const loggerMiddleware: Middleware =
-	(dispatch, resolve, producer) =>
-	(...args) => {
-		print(`[loggerMiddleware]: Dispatching ${resolve()}`);
-		const result = dispatch(...args);
-		print("[loggerMiddleware]: New state:", producer.getState());
-		return result;
+export const loggerMiddleware: Middleware = (producer) => {
+	print("Initial state", producer.getState());
+	return (dispatch, name) => {
+		return (...args) => {
+			print(`Dispatching ${name} with args`, ...args);
+			return dispatch(...args);
+		};
 	};
+};
 
-const producer = createProducer(initialState, {
-	// ...
-}).enhance(applyMiddleware(loggerMiddleware));
+producer.applyMiddleware(loggerMiddleware);
 ```
 
-Enhance can also be called on a combined producer:
+If you have a combined producer, you should apply your middleware to the combined producer:
 
 ```ts
-const combinedProducer = combineProducers({
-	a: producerA,
-	b: producerB,
-}).enhance(applyMiddleware(loggerMiddleware));
+export const producer = combineProducers({
+	foo: fooProducer,
+	bar: barProducer,
+}).applyMiddleware(loggerMiddleware);
 ```
 
 ### 🤝 Syncing server and client
 
-With enhancers and middleware, you can easily sync the state between the server and client. The `createBroadcaster()` and `createBroadcastReceiver()` functions allow you to share dispatcher calls with the client while filtering out actions that are only meant for the server.
+With middleware, you can easily sync the state between the server and client. The `createBroadcaster()` and `createBroadcastReceiver()` functions allow you to broadcast dispatcher calls to clients while filtering out actions that are not meant to be shared.
 
 #### ⚙️ Setting up
 
@@ -246,90 +269,82 @@ Before you can use them, you should set up a shared producer table that contains
 // shared/producers.ts
 export type SharedState = CombineStates<typeof sharedProducers>;
 
-export const sharedProducers = { a: producerA, b: producerB };
+export const sharedProducers = {
+	foo: fooProducer,
+	bar: barProducer,
+};
 
 // client/producers.ts
-export const producer = combineProducers({ ...sharedProducers, c: producerC });
+export const producer = combineProducers({ ...sharedProducers, baz: bazProducer });
 
 // server/producers.ts
-export const producer = combineProducers({ ...sharedProducers, d: producerD });
+export const producer = combineProducers({ ...sharedProducers, qux: quxProducer });
 ```
 
 #### 📡 Broadcasting to the client
 
-To automate sending actions to the client, you can use the `createBroadcaster()` function on the server. It takes a map of the producers you want to sync, and `broadcast`, a callback that sends the actions to the players who can receive state. Note that you should only send actions to the players specified in the `players` argument to avoid sending data to unloaded players.
+To automate sending actions to the client, you can use the `createBroadcaster()` function on the server. It takes a map of the producers you want to sync, and `broadcast`, a callback that sends dispatcher calls in bulk to the players who can receive state.
 
-The broadcaster is an object that contains a middleware function that you can apply to your producer, and a `playerRequestedState()` function that you can call when a player fires a remote event to request the initial state.
+The broadcaster is an object that contains a middleware function that you can apply to your producer, and a `playerRequestedState()` method that you can call when a player fires a remote event to request the initial state.
 
 This example uses the `@rbxts/net` library:
 
 ```ts
-// server/main.server.ts
 const broadcaster = createBroadcaster({
 	// The producer map that contains all of the producers you want to sync
 	producers: sharedProducers,
 
 	// The function that sends the action to players that are listening
 	broadcast: (players, actions) => {
-		remote.Server.Get("broadcastDispatcher").SendToPlayers(players, actions);
+		remote.Server.Get("onServerDispatch").SendToPlayers(players, actions);
 	},
 });
 
 // The remote that the client fires when joining to request the initial state
-remote.Server.OnFunction("getServerState", broadcaster.playerRequestedState);
+remote.Server.OnFunction("requestState", (player) => {
+	return broadcaster.playerRequestedState(player);
+});
 
-// Apply the middleware to intercept actions and send them to the client
-producer.enhance(applyMiddleware(broadcaster.middleware));
+// Apply the middleware to send dispatches to the client
+producer.applyMiddleware(broadcaster.middleware);
 ```
 
 #### 📡 Receiving actions from the server
 
-You're not done yet! You also need to set up the client to receive actions from the server. This is done with the `createBroadcastReceiver()` function, which returns a `dispatch()` callback and an enhancer. The dispatch function takes the actions that were sent from the server through your remote, and calls their dispatchers on the enhanced producer.
+You're not done yet! You also need to set up the client to receive actions from the server. This is done with the `createBroadcastReceiver()` function, which returns a `dispatch()` method and a middleware. The dispatch function takes the actions that were sent from the server through your remote, and calls their dispatchers on the enhanced producer.
 
-The `getServerState()` function is called when the client first joins, and should retrieve the initial state from `playerRequestedState()` on the server. The result gets merged with the current state, so you can use your producer even before the server state gets added.
+The `requestState()` function is called when the middleware is applied, and should retrieve the initial state from `playerRequestedState()` on the server. The result gets merged with the current state, so you can use your producer even before the server state gets synced.
 
 ```ts
-// client/main.client.ts
-const broadcastReceiver = createBroadcastReceiver({
-	// The function that retrieves the initial state from the server
-	getServerState: async () => {
-		return remote.Client.Get("getServerState").CallServerAsync();
+const receiver = createBroadcastReceiver({
+	// The function that requests the initial state from the server
+	requestState: async () => {
+		return remote.Client.Get("requestState").CallServerAsync();
 	},
 });
 
-// Run the dispatchers that were sent from the server
-remote.Client.On("broadcastDispatcher", broadcastReceiver.dispatch);
+// Dispatch the actions that were sent from the server
+remote.Client.OnEvent("onServerDispatch", (actions) => {
+	receiver.dispatch(actions);
+});
 
-// Apply the enhancer so the receiver can hydrate the state
-producer.enhance(broadcastReceiver.enhancer);
+// Apply the middleware to request the initial state from the server
+producer.applyMiddleware(receiver.middleware);
 ```
-
-&nbsp;
-
-## 🚧 Roadmap
-
-This project is still in early development! Here are some of the things that are planned:
-
--   [x] Middleware
--   [x] Logging
--   [x] Standardized server-to-client syncing
--   [ ] Example project (for now, see the [test](test/src) folder)
 
 &nbsp;
 
 ## 📖 Terminology
 
--   ♻️ **Producer**: A producer is a table that contains state events and dispatchers.
+-   ♻️ **Producer**: A producer manages state and can dispatch actions or subscribe to state changes.
 
--   🎂 **State**: An immutable table that represents the current state of the application.
+-   🎂 **State**: An immutable table that represents the current state of the game.
 
 -   🍰 **Selector**: A function that returns a subset of the state.
 
--   ⚙️ **Action**: A function that, given the current state and some parameters, returns a new state.
+-   ⚙️ **Action**: A pure function that, given the current state and some parameters, returns a new state.
 
--   ⚡️ **Dispatcher**: The callback in the producer that updates the state and is based on an action.
-
--   📡 **Broadcast**: The interfaces that allow you to sync server and client state.
+-   ⚡️ **Dispatcher**: A function that calls an action and updates the state.
 
 &nbsp;
 

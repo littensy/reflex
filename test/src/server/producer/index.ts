@@ -1,6 +1,6 @@
 import { InferDispatchers, InferState, combineProducers } from "@rbxts/reflex";
 import { sharedProducers } from "shared/producer";
-import { serverCounterProducer } from "./server-counter.producer";
+import { serverCounterProducer } from "./server-counter";
 
 export type RootProducer = typeof producer;
 export type RootState = InferState<RootProducer>;

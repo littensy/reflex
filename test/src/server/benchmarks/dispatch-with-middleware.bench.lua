@@ -1,27 +1,35 @@
-local TS = require(game:GetService("ReplicatedStorage").include.RuntimeLib)
+local TS = require(game:GetService("ReplicatedStorage").rbxts_include.RuntimeLib)
 local Reflex = TS.import(script, game:GetService("ReplicatedStorage"), "reflex")
 local Rodux =
-	TS.import(script, game:GetService("ReplicatedStorage"), "include", "node_modules", "@rbxts", "rodux", "src")
+	TS.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "rodux", "src")
 
 --[[
 	Benchmarker
 
+	Device: MacBook Pro (M1 Pro, 16-inch, 2021)
 	Run type: Time
 	Run time: 1 second
 
-	Reflex no middleware: 95 microseconds
-	Reflex middleware:    130 microseconds
-	Rodux no middleware:  200 microseconds
-	Rodux middleware:     220 microseconds
+	Times
 
-	Reflex tends to be 40% faster than Rodux, but middleware adds a 30% overhead.
+	Reflex no middleware: 100 microseconds
+	Reflex middleware:    110 microseconds
+	Rodux no middleware:  300 microseconds
+	Rodux middleware:     320 microseconds
+
+	Summary
+
+	Reflex producers with middleware is roughly 60% faster than Rodux stores
+	with middleware and has about 40% less overhead.
 ]]
 
 return {
 	ParameterGenerator = function()
-		local function reflexMiddleware(dispatch, resolve, producer)
-			return function(...)
-				return dispatch(...)
+		local function reflexMiddleware(producer)
+			return function(nextDispatch, name)
+				return function(...)
+					return nextDispatch(...)
+				end
 			end
 		end
 
@@ -42,7 +50,7 @@ return {
 				incrementC = function(state)
 					return { countA = state.countA + 1, countB = state.countB + 1 }
 				end,
-			}):enhance(Reflex.applyMiddleware(reflexMiddleware)),
+			}):applyMiddleware(reflexMiddleware),
 
 			producerNoMiddleware = Reflex.createProducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)
