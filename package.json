@@ -2,7 +2,7 @@
 	"name": "@rbxts/reflex",
 	"version": "2.2.3",
 	"description": "A state container for side effects",
-	"main": "src/init.luau",
+	"main": "src/init.lua",
 	"scripts": {
 		"watch": "rbxtsc -w --type=game -p test -i test/include",
 		"serve": "rojo serve test/default.project.json"
@@ -25,7 +25,7 @@
 	"files": [
 		"src",
 		"!**/*.tsbuildinfo",
-		"!**/*.spec.luau"
+		"!**/*.spec.lua"
 	],
 	"publishConfig": {
 		"access": "public"
