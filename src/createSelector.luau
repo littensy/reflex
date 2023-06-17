@@ -51,11 +51,10 @@ end
 ]=]
 local function createSelector(dependencies: { (...any) -> any }, combiner: (...any) -> any)
 	local dependencyCount = #dependencies
+	local inputs = table.create(dependencyCount)
 	local memoizedCombiner = memoize(combiner)
 
 	return memoize(function(...)
-		local inputs = table.create(dependencyCount)
-
 		for index = 1, dependencyCount do
 			inputs[index] = dependencies[index](...)
 		end
