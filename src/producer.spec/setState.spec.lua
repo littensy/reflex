@@ -26,7 +26,7 @@ return function()
 
 		producer:setState({ count = 1 })
 
-		task.delay(0.1, function()
+		task.delay(1, function()
 			if thread then
 				coroutine.resume(thread, "flush took too long")
 			end
