@@ -1,8 +1,11 @@
 [package]
 name = "littensy/reflex"
+description = "A state container built for Roblox"
 version = "3.0.1"
+license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
+exclude = ["sourcemap.json", "node_modules", "Packages", "test"]
 
 [dependencies]
 promise = "evaera/promise@4.0.0"
