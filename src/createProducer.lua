@@ -27,7 +27,7 @@ local function createProducer<State>(
 	local dispatchers = {}
 	local currentListeners: {}? = {}
 	local nextListeners = currentListeners :: {}
-	local listenerIdCounter = 0
+	local listenerIdCounter = 1
 
 	local state = initialState
 	local stateSinceLastFlush = initialState
@@ -48,7 +48,7 @@ local function createProducer<State>(
 		end
 	end
 
-	local function subscribe(listener: () -> ())
+	local function subscribe(listener: (state: State) -> ())
 		local connected = true
 
 		local id = listenerIdCounter
@@ -97,8 +97,10 @@ local function createProducer<State>(
 		stateSinceLastFlush = state
 		currentListeners = nextListeners
 
+		local currentState = state
+
 		for _, listener in currentListeners :: {} do
-			task.spawn(listener)
+			task.spawn(listener, currentState)
 		end
 	end
 
@@ -112,8 +114,8 @@ local function createProducer<State>(
 
 		local state = self:getState(selector)
 
-		return subscribe(function()
-			local nextState = self:getState(selector)
+		return subscribe(function(current)
+			local nextState = if selector then selector(current) else current
 
 			if state ~= nextState then
 				local prevState = state
