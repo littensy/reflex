@@ -1,3 +1,8 @@
+type CreateSelectorFunction = <Result, Input, Argument...>(
+	dependencies: { (Argument...) -> Input },
+	resultFunc: (...Input) -> Result
+) -> (Argument...) -> Result
+
 --[=[
 	Memoizes a function by caching the result of the last call. Recomputes the
 	result if any of the arguments have changed.
@@ -6,16 +11,23 @@
 ]=]
 local function memoize(callback)
 	local lastArguments = {}
+	local lastArgumentCount = 0
 	local lastResult
 
 	return function(...)
-		for index = 1, select("#", ...) do
-			local argument = select(index, ...)
+		local argumentCount = select("#", ...)
 
-			if argument ~= lastArguments[index] then
-				lastArguments = { ... }
-				lastResult = callback(...)
-				break
+		if argumentCount ~= lastArgumentCount then
+			lastResult = callback(...)
+			lastArgumentCount = argumentCount
+			lastArguments = { ... }
+		else
+			for index = 1, argumentCount do
+				if select(index, ...) ~= lastArguments[index] then
+					lastResult = callback(...)
+					lastArguments = { ... }
+					break
+				end
 			end
 		end
 
@@ -37,7 +49,7 @@ end
 	returns the result of the selector.
 	@return A memoized selector function.
 ]=]
-local function createSelector(dependencies, combiner)
+local function createSelector(dependencies: { (...any) -> any }, combiner: (...any) -> any)
 	local dependencyCount = #dependencies
 	local memoizedCombiner = memoize(combiner)
 
@@ -52,4 +64,4 @@ local function createSelector(dependencies, combiner)
 	end)
 end
 
-return createSelector
+return createSelector :: CreateSelectorFunction
