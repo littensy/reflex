@@ -49,7 +49,7 @@ local function createProducer<State>(
 	end
 
 	local function subscribe(listener: () -> ())
-		local connected = false
+		local connected = true
 
 		local id = listenerIdCounter
 		listenerIdCounter += 1

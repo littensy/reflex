@@ -34,7 +34,7 @@ local function applyMiddleware(...: types.Middleware): <T>(producer: T) -> T
 
 		local function resolveCurrentDispatcher()
 			assert(currentDispatcher, "Cannot resolve dispatcher outside of middleware")
-			return dispatchers[currentDispatcher]
+			return currentDispatcher
 		end
 
 		for name, dispatcher in dispatchers do

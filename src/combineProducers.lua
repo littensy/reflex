@@ -17,7 +17,7 @@ local function combineActions(producers: types.ProducerMap)
 	local producerNamesByAction = {}
 
 	for producerName, producer in producers do
-		for actionName, action in producer:getDispatchers() do
+		for actionName, action in producer:getActions() do
 			if actionsByName[actionName] then
 				table.insert(actionsByName[actionName], action)
 			else
