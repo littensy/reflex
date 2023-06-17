@@ -1,9 +1,10 @@
-import { CombineStates } from "../../types";
-import { sharedCounterProducer } from "./shared-counter.producer";
+import { CombineStates } from "@rbxts/reflex";
+import { sharedCounterProducer } from "./shared-counter";
 
 export type SharedState = CombineStates<typeof sharedProducers>;
 
-// Don't combine state yet! This gets merged with the client and server state.
+// This gets spread into the client and server state, and is used to create the
+// broadcaster and receiver.
 export const sharedProducers = {
 	sharedCounter: sharedCounterProducer,
 };

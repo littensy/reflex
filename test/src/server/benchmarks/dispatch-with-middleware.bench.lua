@@ -42,7 +42,7 @@ return {
 				incrementC = function(state)
 					return { countA = state.countA + 1, countB = state.countB + 1 }
 				end,
-			}):enhance(Reflex.applyMiddleware(reflexMiddleware)),
+			}):applyMiddleware(reflexMiddleware),
 
 			producerNoMiddleware = Reflex.createProducer({ countA = 0, countB = 0 }, {
 				incrementA = function(state)

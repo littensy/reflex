@@ -35,6 +35,7 @@
 		"@rbxts/net": "^3.0.3",
 		"@rbxts/rodux": "3.0.0-ts.3",
 		"@rbxts/roselect": "^0.1.2",
+		"@rbxts/services": "^1.5.1",
 		"@rbxts/testez": "0.4.2-ts.0",
 		"@rbxts/types": "^1.0.666",
 		"@typescript-eslint/eslint-plugin": "^5.55.0",
