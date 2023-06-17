@@ -1,6 +1,6 @@
 [package]
-name = "richerd/reflex"
-version = "0.1.0"
+name = "littensy/reflex"
+version = "2.2.3"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
