@@ -268,6 +268,56 @@ export interface ProducerNoDispatch<State, Actions> {
 	wait<T>(selector: (state: State) => T, predicate?: (state: T, previousState: T) => boolean): Promise<T>;
 
 	/**
+	 * Tracks the addition and removal of entries in an object. Calls the given
+	 * observer for each added item and calls the cleanup function when the item
+	 * is removed.
+	 *
+	 * If your state contains immutable objects, you can use the `discriminator`
+	 * argument to return a unique identifier for each item. This allows the
+	 * observer to avoid calling the observer for items that have already been
+	 * added.
+	 *
+	 * @example
+	 * ```
+	 * // Observe the addition and removal of primitives in state.
+	 * producer.observe((state) => state.ids, (id) => {
+	 * 	print(`Added ${id}`);
+	 * 	return () => print(`Removed ${id}`);
+	 * });
+	 *
+	 * // Observe the addition and removal of objects in state.
+	 * producer.observe((state) => state.items, (item) => item.id, (item) => {
+	 * 	print(`Added ${item.id}`);
+	 * 	return () => print(`Removed ${item.id}`);
+	 * });
+	 * ```
+	 *
+	 * @param selector The selector to track.
+	 * @param discriminator Optional function that returns a unique identifier for
+	 * each item. Useful when tracking immutable objects.
+	 * @param observer The observer to call when an item is added. Returns a
+	 * function that is called when the item is removed.
+	 * @returns An observer that calls the given observer for each added item and
+	 * unsubscribes when the item is removed.
+	 */
+	observe<T extends object>(
+		selector: (state: State) => { readonly [K in any]: T } | readonly T[],
+		discriminator: (item: T) => any,
+		observer: (item: T) => (() => void) | void,
+	): () => void;
+
+	observe<T>(
+		selector: (state: State) => { readonly [K in any]: T } | readonly T[],
+		discriminator: ((item: T) => any) | undefined,
+		observer: (item: T) => (() => void) | void,
+	): () => void;
+
+	observe<T>(
+		selector: (state: State) => { readonly [K in any]: T } | readonly T[],
+		observer: (item: T) => (() => void) | void,
+	): () => void;
+
+	/**
 	 * Disconnects all listeners and cancels all pending flushes.
 	 */
 	destroy(): void;

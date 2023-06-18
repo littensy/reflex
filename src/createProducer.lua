@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local Promise = require(script.Parent.Promise)
 local types = require(script.Parent.types)
 local applyMiddleware = require(script.Parent.applyMiddleware)
+local createSelectArrayDiffs = require(script.Parent.utils.createSelectArrayDiffs)
 
 --[=[
 	Creates a producer that can be used to manage state.
@@ -154,6 +155,56 @@ local function createProducer<State>(
 
 			onCancel(unsubscribe)
 		end)
+	end
+
+	function producer:observe(selector, discriminatorOrObserver, observerOrNil)
+		local discriminator, observer = discriminatorOrObserver, observerOrNil
+
+		if not observer then
+			discriminator = nil
+			observer = discriminatorOrObserver
+		end
+
+		discriminator = discriminator or function(item)
+			return item
+		end
+
+		local tracked = {}
+		local selectDiffs = createSelectArrayDiffs(selector, discriminator)
+
+		local function checkDiffs(diffs)
+			for _, item in diffs.deletions do
+				local id = discriminator(item)
+				local cleanup = tracked[id]
+
+				if cleanup then
+					tracked[id] = nil
+					cleanup()
+				end
+			end
+
+			for _, item in diffs.additions do
+				local id = discriminator(item)
+
+				if not tracked[id] then
+					tracked[id] = observer(item)
+				end
+			end
+		end
+
+		local unsubscribe = self:subscribe(selectDiffs, checkDiffs)
+
+		checkDiffs(self:getState(selectDiffs))
+
+		return function()
+			unsubscribe()
+
+			for _, cleanup in tracked do
+				cleanup()
+			end
+
+			table.clear(tracked)
+		end
 	end
 
 	function producer:destroy()

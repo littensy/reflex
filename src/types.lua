@@ -100,6 +100,35 @@ export type Producer<State = {}, Dispatchers = { [string]: (...any) -> State }> 
 	) -> any,
 
 	--[=[
+		Tracks the addition and removal of items in an array. Calls the given
+		observer for each added item and calls the cleanup function when the
+		item is removed.
+
+		If your array contains immutable objects, you can use the `discriminator`
+		argument to return a unique identifier for each item. This allows the
+		observer to avoid calling the observer for items that have already been
+		added.
+
+		@param selector The selector to track.
+		@param discriminator Optional function that returns a unique identifier for
+		each item. Useful when tracking immutable objects.
+		@param observer The observer to call when an item is added. Returns a
+		function that is called when the item is removed.
+		@returns An observer that calls the given observer for each added item and
+		unsubscribes when the item is removed.
+	]=]
+	observe: (<T>(
+		self: Producer<State, Dispatchers>,
+		selector: (state: State) -> { [any]: T },
+		discriminator: ((item: T) -> unknown)?,
+		observer: (item: T) -> (() -> ())?
+	) -> () -> ()) & (<T>(
+		self: Producer<State, Dispatchers>,
+		selector: (state: State) -> { [any]: T },
+		observer: (item: T) -> (() -> ())?
+	) -> () -> ()),
+
+	--[=[
 		Disconnects all listeners and cancels all pending flushes.
 	]=]
 	destroy: (self: Producer<State, Dispatchers>) -> (),
