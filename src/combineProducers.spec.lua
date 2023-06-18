@@ -29,7 +29,7 @@ return function()
 
 	afterEach(function()
 		producer:destroy()
-		for _, producer in pairs(producers) do
+		for _, producer in producers do
 			producer:destroy()
 		end
 	end)
