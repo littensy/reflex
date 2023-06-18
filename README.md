@@ -128,6 +128,47 @@ for (const _ of $range(1, 10)) {
 // Count changed once to 10
 ```
 
+### 🔭 Tracking items in an array
+
+You might want to create and track unique items in your state, like matches in a matchmaking queue. You can use the `observe` method to track the addition and eventual removal of items in an object.
+
+The `observe` method takes a selector, a discriminator to track objects, and an observer callback. The selector should return an object/array containing items, and the observer will be called whenever an item is added. The observer can return a cleanup callback, which will be called when the item is removed.
+
+It returns an unsubscribe function, which you can call to stop observing state changes and destroy all observers.
+
+```ts
+const matchProducer = createProducer(initialState, {
+	add: (state, id: number) => ({
+		...state,
+		matches: { ...state.matches, [id]: { id } },
+	}),
+});
+
+const unsubscribe = matchProducer.observe(
+	(state) => state.matches,
+	(match) => match.id,
+	(match) => {
+		print(`Match ${match.id} was added`);
+		return () => print(`Match ${match.id} was removed`);
+	},
+);
+
+matchProducer.add("1");
+```
+
+The discriminator parameter is optional, and defaults to the item itself. This means that if you're tracking primitives, you can omit the discriminator.
+
+```ts
+const matchProducer = createProducer([1, 2, 3], {
+	add: (state, id: number) => [...state, id],
+});
+
+matchProducer.observe(selectMatches, (id) => {
+	print(`Match ${id} was added`);
+	return () => print(`Match ${id} was removed`);
+});
+```
+
 ### 🖥️ Managing multiple producers
 
 Reflex allows you to organize your state into multiple producers, and then combine them into a single root producer. The `combineProducers()` function takes a table of producers, and returns a new producer that re-uses the state and actions from the original producers.
@@ -215,9 +256,7 @@ const players = useSelectorCreator(selectPlayersOnTeam, redTeam);
 
 ### 🛠️ Middleware
 
-Middleware are higher-order functions that can be used to add logging, cancel dispatches, or to perform side effects.
-
-They are structured as such:
+Middleware are higher-order functions that can be used to add logging, cancel dispatches, or to perform side effects. They are structured as such:
 
 ```ts
 // Called once when the middleware is applied to a producer
@@ -232,7 +271,7 @@ export const middleware: ProducerMiddleware = (producer) => {
 };
 ```
 
-Middleware can be used to log every action:
+Middleware can be used to log every dispatch call:
 
 ```ts
 export const loggerMiddleware: Middleware = (producer) => {
@@ -248,42 +287,47 @@ export const loggerMiddleware: Middleware = (producer) => {
 producer.applyMiddleware(loggerMiddleware);
 ```
 
-If you have a combined producer, you should apply your middleware to the combined producer:
+If you have a combined producer, you should prefer to apply your middleware to the combined producer:
 
 ```ts
 export const producer = combineProducers({
 	foo: fooProducer,
 	bar: barProducer,
-}).applyMiddleware(loggerMiddleware);
+});
+
+producer.applyMiddleware(loggerMiddleware);
 ```
 
 ### 🤝 Syncing server and client
 
-With middleware, you can easily sync the state between the server and client. The `createBroadcaster()` and `createBroadcastReceiver()` functions allow you to broadcast dispatcher calls to clients while filtering out actions that are not meant to be shared.
+With Reflex, you can easily sync the state between the server and client. The `createBroadcaster()` and `createBroadcastReceiver()` functions allow you to broadcast dispatcher calls to clients while filtering out state updates that are not meant to be shared.
 
-#### ⚙️ Setting up
+#### ⚙️ Setup
 
 Before you can use them, you should set up a shared producer table that contains all of the producers that you want to sync:
 
 ```ts
-// shared/producers.ts
+// Shared producers file
 export type SharedState = CombineStates<typeof sharedProducers>;
 
 export const sharedProducers = {
 	foo: fooProducer,
 	bar: barProducer,
 };
-
-// client/producers.ts
-export const producer = combineProducers({ ...sharedProducers, baz: bazProducer });
-
-// server/producers.ts
-export const producer = combineProducers({ ...sharedProducers, qux: quxProducer });
 ```
 
-#### 📡 Broadcasting to the client
+```ts
+// Client or server producer file
+export const producer = combineProducers({
+	baz: bazProducer,
+	qux: quxProducer,
+	...sharedProducers,
+});
+```
 
-To automate sending actions to the client, you can use the `createBroadcaster()` function on the server. It takes a map of the producers you want to sync, and `broadcast`, a callback that sends dispatcher calls in bulk to the players who can receive state.
+#### 🛰️ Send server dispatches to clients
+
+To automate sending server dispatches to the client, you can use the `createBroadcaster()` function on the server. It takes a map of the producers you want to sync, and `broadcast`, a callback that sends dispatcher calls in bulk to the players who can receive state.
 
 The broadcaster is an object that contains a middleware function that you can apply to your producer, and a `playerRequestedState()` method that you can call when a player fires a remote event to request the initial state.
 
@@ -309,11 +353,12 @@ remote.Server.OnFunction("requestState", (player) => {
 producer.applyMiddleware(broadcaster.middleware);
 ```
 
-#### 📡 Receiving actions from the server
+#### 📡 Receive server dispatches on the client
 
-You're not done yet! You also need to set up the client to receive actions from the server. This is done with the `createBroadcastReceiver()` function, which returns a `dispatch()` method and a middleware. The dispatch function takes the actions that were sent from the server through your remote, and calls their dispatchers on the enhanced producer.
+You also need to set up the client to receive actions from the server. This is done with the `createBroadcastReceiver()` function, which returns a receiver with a `dispatch()` method and a middleware. The dispatch method runs the actions that were sent by the server.
 
-The `requestState()` function is called when the middleware is applied, and should retrieve the initial state from `playerRequestedState()` on the server. The result gets merged with the current state, so you can use your producer even before the server state gets synced.
+The `requestState()` function is called when the middleware is applied, and should retrieve the initial state from the server broadcaster. The result gets merged with the current state, so it's safe to use your producer
+before the server state is loaded.
 
 ```ts
 const receiver = createBroadcastReceiver({
@@ -338,7 +383,7 @@ producer.applyMiddleware(receiver.middleware);
 
 -   ♻️ **Producer**: A producer manages state and can dispatch actions or subscribe to state changes.
 
--   🎂 **State**: An immutable table that represents the current state of the game.
+-   🎂 **State**: An immutable object that represents the current state of the application.
 
 -   🍰 **Selector**: A function that returns a subset of the state.
 
