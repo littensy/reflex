@@ -255,8 +255,10 @@ local initialState: TodoState = {
 
 local producer = Reflex.createProducer(initialState, {
     addTodo = function(state, test: string): TodoState
+        // highlight-start
         local nextState = table.clone(state)
         local nextTodos = table.clone(state.todos)
+        // highlight-end
 
         table.insert(nextTodos, { text = text, completed = false })
         nextState.todos = nextTodos
@@ -265,9 +267,11 @@ local producer = Reflex.createProducer(initialState, {
     end,
 
     toggleTodo = function(state, index: number): TodoState
+        // highlight-start
         local nextState = table.clone(state)
         local nextTodos = table.clone(state.todos)
         local nextTodo = table.clone(nextTodos[index])
+        // highlight-end
 
         nextTodo.completed = not nextTodo.completed
         nextTodos[index] = nextTodo
@@ -296,8 +300,7 @@ This is not required in TypeScript, since types can be inferred from the produce
 <Tabs>
 <TabItem value="TypeScript" default>
 
-```ts
-// counter-producer.ts
+```ts title="counter-producer.ts"
 export interface CounterState {
 	readonly count: number;
 }
@@ -315,8 +318,7 @@ export const counterProducer = createProducer(initialState, {
 });
 ```
 
-```ts
-// root-producer.ts
+```ts title="root-producer.ts"
 import { InferState } from "@rbxts/reflex";
 import { counterProducer } from "./counter-producer";
 
@@ -333,8 +335,7 @@ export const rootProducer = combineProducers({
 </TabItem>
 <TabItem value="Luau">
 
-```lua
--- counterProducer.lua
+```lua title="counterProducer.lua"
 export type CounterState = {
     count: number,
 }
@@ -356,8 +357,7 @@ return Reflex.createProducer(initialState, {
 })
 ```
 
-```lua
--- rootProducer.lua
+```lua title="rootProducer.lua"
 local counterProducer = require(script.Parent.counterProducer)
 local otherProducer = require(script.Parent.otherProducer)
 
@@ -394,6 +394,7 @@ Code like this assumes a _mutable_ state object:
 ```ts
 const producer = createProducer(initialState, {
 	increment: (state, value: number) => {
+		// error-next-line
 		state.count += value;
 		return state;
 	},
@@ -406,6 +407,7 @@ const producer = createProducer(initialState, {
 ```lua
 local producer = Reflex.createProducer(initialState, {
     increment = function(state, value: number): CounterState
+        // error-next-line
         state.count += value
         return state
     end,
@@ -437,6 +439,7 @@ const producer = createProducer(initialState, {
 ```lua
 local producer = Reflex.createProducer(initialState, {
     increment = function(state, value: number): CounterState
+        // highlight-next-line
         local nextState = table.clone(state)
         nextState.count += value
         return nextState
