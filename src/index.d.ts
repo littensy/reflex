@@ -50,9 +50,9 @@ export declare function createProducer<State, Actions extends ProducerActions<St
  * @param producers A map of producers to combine.
  * @return A combined producer.
  */
-export declare function combineProducers<ProducerMap extends { [name: string]: Producer }>(
-	producers: ProducerMap,
-): CombineProducers<ProducerMap>;
+export declare function combineProducers<Producers extends ProducerMap>(
+	producers: Producers,
+): CombineProducers<Producers>;
 
 /**
  * Creates a producer enhancer that applies the given middleware to every
@@ -136,9 +136,9 @@ export declare function createSelector<Selectors extends SelectorArray, Result>(
  * @param options The options for the broadcaster.
  * @return The broadcaster.
  */
-export declare function createBroadcaster<ProducerMap extends { [name: string]: Producer }>(
-	options: BroadcasterOptions<ProducerMap>,
-): Broadcaster<ProducerMap>;
+export declare function createBroadcaster<Producers extends ProducerMap>(
+	options: BroadcasterOptions<Producers>,
+): Broadcaster<Producers>;
 
 /**
  * Creates a broadcast receiver that can be used to receive actions from the
@@ -165,12 +165,14 @@ export declare function createBroadcaster<ProducerMap extends { [name: string]: 
  * @param options The options for the broadcast receiver.
  * @return The broadcast receiver.
  */
-export declare function createBroadcastReceiver<ProducerMap extends { [name: string]: Producer }>(
-	options: BroadcastReceiverOptions<ProducerMap>,
+export declare function createBroadcastReceiver<Producers extends ProducerMap>(
+	options: BroadcastReceiverOptions<Producers>,
 ): BroadcastReceiver;
 
 /**
  * A middleware that logs all dispatched actions to the console.
+ * @example
+ * producer.applyMiddleware(loggerMiddleware);
  */
 export declare const loggerMiddleware: ProducerMiddleware;
 
@@ -179,17 +181,14 @@ export declare const loggerMiddleware: ProducerMiddleware;
  * be used to modify the state. The state is immmutable, so dispatchers return
  * a new state object.
  */
-export type Producer<State = any, Actions = any> = ProducerDispatchers<State, Actions> &
-	ProducerNoDispatch<State, Actions>;
+export type Producer<State = any, Actions = any> = ProducerDispatchers<Readonly<State>, Readonly<Actions>> &
+	ProducerImpl<Readonly<State>, Readonly<Actions>>;
 
 /**
- * A Producer is a state container that exposes a set of dispatchers that can
- * be used to modify the state. The state is immmutable, so dispatchers return
- * a new state object.
- *
- * This interface is the same as `Producer`, but without the dispatchers.
+ * An implementation of the Producer interface. This is used internally and
+ * intersected with the action dispatchers.
  */
-export interface ProducerNoDispatch<State, Actions> {
+interface ProducerImpl<State, Actions> {
 	/**
 	 * Returns the current state.
 	 * @return The state.
@@ -387,7 +386,7 @@ export type InferDispatchers<T> = T extends Producer<infer State, infer Actions>
  * @template State The state type of the producer.
  */
 export interface ProducerActions<State> {
-	[name: string]: (state: State, ...args: any[]) => State;
+	readonly [name: string]: (state: Readonly<State>, ...args: any[]) => Readonly<State>;
 }
 
 /**
@@ -397,8 +396,8 @@ export interface ProducerActions<State> {
  * @template Actions The actions type of the producer.
  */
 export type ProducerDispatchers<State, Actions> = {
-	[K in keyof Actions]: Actions[K] extends (state: State, ...args: infer Args) => State
-		? (...args: Args) => State
+	readonly [K in keyof Actions]: Actions[K] extends (state: Readonly<State>, ...args: infer Args) => Readonly<State>
+		? (...args: Args) => Readonly<State>
 		: never;
 };
 
@@ -417,25 +416,27 @@ export type ProducerMiddleware<State = any, Actions = any> = (
  * Combines multiple producers into a single producer. The state of the
  * combined producer is a table with a key for each producer. Actions will
  * be called on the corresponding producer.
- * @template ProducerMap A map of producer names to producers.
+ * @template Producers A map of producer names to producers.
  */
-export type CombineProducers<ProducerMap extends { [name: string]: Producer }> = Producer<
-	CombineStates<ProducerMap>,
-	CombineActions<ProducerMap>
+export type CombineProducers<Producers extends ProducerMap> = Producer<
+	CombineStates<Producers>,
+	CombineActions<Producers>
 >;
 
-type CombineStates<ProducerMap extends { [name: string]: Producer }> = {
-	[K in keyof ProducerMap]: ProducerMap[K] extends Producer<infer State, infer Actions> ? State : never;
+type ProducerMap = { readonly [name: string]: Producer };
+
+type CombineStates<Producers extends ProducerMap> = {
+	readonly [K in keyof Producers]: Producers[K] extends Producer<infer State, infer Actions> ? State : never;
 };
 
-type CombineActions<ProducerMap extends { [name: string]: Producer }> = IntersectObjectValues<{
-	[K in keyof ProducerMap]: ProducerMap[K] extends Producer<infer State, infer Actions>
-		? ReplaceActionStateParameters<CombineStates<ProducerMap>, Actions>
+type CombineActions<Producers extends ProducerMap> = IntersectObjectValues<{
+	readonly [K in keyof Producers]: Producers[K] extends Producer<infer State, infer Actions>
+		? ReplaceActionStateParameters<CombineStates<Producers>, Actions>
 		: never;
 }>;
 
 type ReplaceActionStateParameters<State, Actions> = {
-	[K in keyof Actions]: Actions[K] extends (state: any, ...args: infer Args) => any
+	readonly [K in keyof Actions]: Actions[K] extends (state: any, ...args: infer Args) => any
 		? (state: State, ...args: Args) => State
 		: never;
 };
@@ -478,8 +479,8 @@ type MergeSelectors<Selectors extends SelectorArray, Result> = Selector<
  * A container for storing a Reflex dispatcher's name and arguments.
  */
 export interface BroadcastAction {
-	name: string;
-	arguments: unknown[];
+	readonly name: string;
+	readonly arguments: unknown[];
 }
 
 /**
@@ -490,14 +491,14 @@ export interface BroadcasterOptions<ProducerMap extends { [name: string]: Produc
 	/**
 	 * The map of producers to broadcast.
 	 */
-	producers: ProducerMap;
+	readonly producers: ProducerMap;
 
 	/**
 	 * A function that broadcasts actions to the given players.
 	 * @param players The players to broadcast to.
 	 * @param actions The actions to broadcast.
 	 */
-	broadcast: (players: Player[], actions: BroadcastAction[]) => void;
+	readonly broadcast: (players: Player[], actions: BroadcastAction[]) => void;
 }
 
 /**
@@ -512,7 +513,7 @@ export interface BroadcastReceiverOptions<ProducerMap extends { [name: string]: 
 	 * client's state.
 	 * @returns A Promise that resolves with the server's state.
 	 */
-	requestState: () => Promise<CombineStates<ProducerMap>>;
+	readonly requestState: () => Promise<CombineStates<ProducerMap>>;
 }
 
 /**
