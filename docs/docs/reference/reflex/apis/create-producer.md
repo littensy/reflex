@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -18,6 +22,8 @@ const producer = createProducer(initialState, actions);
     -   [Importing and exporting types](#importing-and-exporting-types)
 -   [Troubleshooting](#troubleshooting)
     -   [Actions aren't triggering a state update](#actions-arent-triggering-a-state-update)
+
+---
 
 ## Reference
 
@@ -52,20 +58,30 @@ local producer = Reflex.createProducer(0, {
 </TabItem>
 </Tabs>
 
+Actions define how the state should be updated. They are pure functions that receive the current state and some parameters, and return a new state. They can be dispatched through the producer:
+
+```ts
+producer.increment(1); // state = 1
+```
+
+[See more examples below.](#usage)
+
 #### Parameters
 
--   `initialState`: The initial state of the producer.
--   `actions`: An object containing action functions.
+-   `initialState` - The initial state of the producer.
+-   `actions` - An object containing action functions.
 
 #### Returns
 
 `createProducer` returns a Reflex producer that you can use to dispatch actions and subscribe to state changes.
 
+---
+
 ### `actions` object
 
 `createProducer` takes an object containing action functions. Actions are pure functions that receive the current state and some parameters, and return a new state.
 
-The producer contains dispatchers that call the action functions and update the state.
+The producer contains your action functions that you can dispatch to update the state:
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -78,6 +94,7 @@ const producer = createProducer(0, {
 	// ...
 });
 
+// highlight-next-line
 producer.increment(1);
 ```
 
@@ -98,11 +115,14 @@ local producer = Reflex.createProducer(0, {
     -- ...
 })
 
+// highlight-next-line
 producer.increment(1)
 ```
 
 </TabItem>
 </Tabs>
+
+---
 
 ## Usage
 
@@ -184,11 +204,13 @@ producer.getState(); // { count: 1 }
 
 ```lua
 producer.increment(1)
-producer:getState() -- { count = 1 }
+producer:getState() --> { count = 1 }
 ```
 
 </TabItem>
 </Tabs>
+
+---
 
 ### Updating nested state
 
@@ -285,13 +307,15 @@ local producer = Reflex.createProducer(initialState, {
 </TabItem>
 </Tabs>
 
+---
+
 ### Importing and exporting types
 
 Usually, a project will organize its state between multiple producers in separate files, and then combine them into a single producer.
 
 Producer modules should export the type of their state (and dispatchers in Luau) so that the root producer can import them.
 
-:::info
+:::note
 
 This is not required in TypeScript, since types can be inferred from the producer object.
 
@@ -300,7 +324,7 @@ This is not required in TypeScript, since types can be inferred from the produce
 <Tabs>
 <TabItem value="TypeScript" default>
 
-```ts title="counter-producer.ts"
+```ts title="counter.ts"
 export interface CounterState {
 	readonly count: number;
 }
@@ -320,13 +344,13 @@ export const counterProducer = createProducer(initialState, {
 
 ```ts title="root-producer.ts"
 import { InferState } from "@rbxts/reflex";
-import { counterProducer } from "./counter-producer";
+import { counterProducer } from "./counter";
 
-export type RootProducer = typeof rootProducer;
+export type RootProducer = typeof producer;
 
 export type RootState = InferState<RootProducer>;
 
-export const rootProducer = combineProducers({
+export const producer = combineProducers({
 	counter: counterProducer,
 	// ...
 });
@@ -335,7 +359,7 @@ export const rootProducer = combineProducers({
 </TabItem>
 <TabItem value="Luau">
 
-```lua title="counterProducer.lua"
+```lua title="counter.lua"
 export type CounterState = {
     count: number,
 }
@@ -349,42 +373,48 @@ local initialState: CounterState = {
     count = 0,
 }
 
-return Reflex.createProducer(initialState, {
+local counterProducer = Reflex.createProducer(initialState, {
     increment = function(state, value: number): CounterState
         return { count = state.count + value }
     end,
     -- ...
 })
+
+return {
+    producer = counterProducer,
+}
 ```
 
-```lua title="rootProducer.lua"
-local counterProducer = require(script.Parent.counterProducer)
-local otherProducer = require(script.Parent.otherProducer)
+```lua title="init.lua"
+local counter = require(script.Parent.counter)
+local other = require(script.Parent.other)
 
 export type RootState = {
-    counter: counterProducer.State,
-    other: otherProducer.State,
+    counter: counter.CounterState,
+    other: other.OtherState,
 }
 
-export type RootDispatchers = counterProducer.Dispatchers &
-    otherProducer.Dispatchers
+export type RootDispatchers = counter.CounterDispatchers &
+    other.OtherDispatchers
 
 export type RootProducer = Reflex.Producer<RootState, RootDispatchers>
 
 return Reflex.combineProducers({
-    counter = counterProducer,
-    other = otherProducer,
+    counter = counter.producer,
+    other = other.producer,
 }) :: RootProducer
 ```
 
 </TabItem>
 </Tabs>
 
+---
+
 ## Troubleshooting
 
 ### Actions aren't triggering a state update
 
-If you're dispatching actions but the state isn't updating, make sure that your action functions are returning a new state object.
+If you're dispatching actions, but your state listeners don't run when they should, make sure that your action functions **do not** mutate the state.
 
 Code like this assumes a _mutable_ state object:
 

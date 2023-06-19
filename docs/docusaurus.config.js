@@ -1,8 +1,8 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/vsDark');
+const lightCodeTheme = require('./themes/light');
+const darkCodeTheme = require('./themes/dark');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -61,14 +61,15 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'docSidebar',
+            sidebarId: 'tutorialSidebar',
             position: 'left',
-            label: 'Docs',
+            label: 'Tutorials',
           },
           {
-            label: 'API',
+            type: 'docSidebar',
+            sidebarId: 'referenceSidebar',
             position: 'left',
-            to: 'docs/api/api-reference',
+            label: 'Reference',
           },
           {
             href: 'https://github.com/littensy/reflex',
@@ -85,7 +86,7 @@ const config = {
             items: [
               {
                 label: 'Tutorial',
-                to: '/docs/intro',
+                to: '/docs/tutorial/intro',
               },
               {
                 label: 'API Reference',
@@ -98,7 +99,7 @@ const config = {
             items: [
               {
                 label: 'Roblox-TS',
-                href: 'https://discord.gg/9bZpRBDWdw',
+                href: 'https://discord.roblox-ts.com/',
               },
               {
                 label: 'Roblox OSS Community',
