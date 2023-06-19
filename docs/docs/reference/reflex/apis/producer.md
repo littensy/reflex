@@ -69,6 +69,8 @@ producer.increment(1) --> 1
 </TabItem>
 </Tabs>
 
+[See how to create actions here.](create-producer#updating-state)
+
 #### Parameters
 
 -   `...args` - The parameters to pass to the action function.
@@ -151,6 +153,8 @@ producer.increment(1) --> 1, 0
 </TabItem>
 </Tabs>
 
+[See more examples below.](#running-side-effects)
+
 #### Parameters
 
 -   **optional** `selector` - A function that selects a part of the state. If not provided, the entire state is passed to the listener.
@@ -169,7 +173,7 @@ producer.increment(1) --> 1, 0
 
 -   Similar to Redux, if you subscribe, unsubscribe, or change state while a listener is being called, the changes will not affect the current dispatch. However, they will affect the next dispatch.
 
--   The previous state is a reference to the last emit's state. This means that if multiple actions are dispatched, the previous state will be the state the listener was last called with, not the state from the last action.
+-   The second argument to a listener is a reference to the previous state passed to the listener. This means that if multiple actions are dispatched, the second argument will be the state the listener was last called with, not the state from the last action.
 
 ---
 
@@ -212,6 +216,8 @@ end)
 </TabItem>
 </Tabs>
 
+[See more examples below.](#waiting-for-state-changes)
+
 #### Parameters
 
 -   `selector` - A function that selects a part of the state.
@@ -226,7 +232,9 @@ end)
 
 #### Caveats
 
-`once` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
+-   `once` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
+
+-   If the predicate returns `true` at the time of subscription, the listener **will not** be called immediately. It will only be called once the selected state changes, and only if the predicate returns `true` at that time. This behavior is analogous to `Promise.fromEvent` and how it waits for the _next_ event.
 
 ---
 
@@ -269,6 +277,8 @@ end)
 </TabItem>
 </Tabs>
 
+[See more examples below.](#waiting-for-state-changes)
+
 #### Parameters
 
 -   `selector` - A function that selects a part of the state.
@@ -281,7 +291,9 @@ end)
 
 #### Caveats
 
-`wait` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
+-   `wait` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
+
+-   If the predicate returns `true` at the time `wait` is called, the Promise **will not** resolve immediately. It will only be resolve once the selected state changes, and only if the predicate returns `true` at that time. This behavior is analogous to `Promise.fromEvent` and how it waits for the _next_ event.
 
 ---
 
@@ -333,6 +345,8 @@ end)
 
 </TabItem>
 </Tabs>
+
+[See more examples below.](#observing-additions-and-removals)
 
 #### Parameters
 
@@ -436,6 +450,8 @@ producer:applyMiddleware(loggerMiddleware)
 </TabItem>
 </Tabs>
 
+[See more examples below.](#using-middleware)
+
 #### Parameters
 
 -   `...middlewares` - A list of middleware functions. The middleware functions are called in the order they are provided.
@@ -450,7 +466,7 @@ producer:applyMiddleware(loggerMiddleware)
 
 -   **Middleware functions are called in the order they are provided.** This means that middleware functions that depend on other middleware functions should be provided after their dependencies.
 
--   **The return value matters!** Middleware functions can intercept dispatches and make them return a value other than the new state. If a middleware function returns a value, the next middleware function will receive that value instead of the original value.
+-   **The return value matters!** Middleware functions can intercept dispatches and make them return a value other than the new state. If a middleware function returns a value, the next middleware function will receive that value, and eventually will be returned by the dispatch function.
 
 ---
 
@@ -494,11 +510,9 @@ You pass two parameters to the `subscribe` method:
 1.  A `selector` that returns the part of the state you want to subscribe to.
 2.  A `listener` that is called when the selected part of the state changes.
 
-Once you have subscribed to state changes, you can perform side effects in the listener function. The listener will be called once the selector returns a different value than it did in the previous state.
+Once you have subscribed to state changes, you can perform side effects in the listener function. The listener will be called once the selector returns a new value after a state update.
 
-**Here's an example of using `subscribe` to perform side effects:**
-
-Say you have a game where the player's health is stored in the state:
+**Say you have a game where the player's health is stored in the state:**
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -593,9 +607,9 @@ But what if you want to wait for some specific state change to occur? [Producers
 
 Sometimes, you want to wait for a specific state change before performing a side effect.
 
-For example, say your state contains a `jumping` boolean that is set to `true` when the player holds down the jump button. If you want to keep jumping while the player holds down the jump button, you can use [`once`](#onceselector-predicate-listener).
+For example, say your state contains a `jumping` boolean that is set to `true` when the player holds down the jump button. You want it to run a `jump()` function in a loop, and disconnect it when it stops. One way to do this is with [`once`](#onceselector-predicate-listener).
 
-This code uses `once` to keep the player jumping while the `jumping` state is `true`, and then stops jumping once the `jumping` state becomes `false`:
+This code calls the function while the `jumping` state is `true`, and then stops once the `jumping` state becomes `false`:
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -650,7 +664,7 @@ end)
 
 The `predicate` parameter is optional. If you pass a predicate, the listener will only be called when the predicate returns `true`. Otherwise, the listener will be called when the selector returns a new value.
 
-**If you want to use this with Promises,** [`wait`](#waitselector-predicate) provides a shorthand for waiting for a state change:
+Producers also provide [`wait`](#waitselector-predicate), a shorthand for [`once`](#onceselector-predicate-listener) that returns a promise:
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -963,7 +977,7 @@ const selectPlayerIds = createSelector([selectPlayers] as const, (players) => {
 });
 // highlight-end
 
-producer.observe(selectPlayerIds, (id) => {
+producer.observe(selectPlayerIds, (id: number) => {
 	// mounted
 	return () => {
 		// unmounted
@@ -985,7 +999,7 @@ local selectPlayerIds = Reflex.createSelector({ selectPlayers }, function(player
 end)
 // highlight-end
 
-producer:observe(selectPlayerIds, function(id)
+producer:observe(selectPlayerIds, function(id: number)
     -- mounted
     return function()
         -- unmounted

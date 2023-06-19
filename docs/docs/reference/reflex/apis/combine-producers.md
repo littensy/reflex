@@ -151,7 +151,7 @@ export const routerProducer = createProducer(initialState, {
 import { createProducer } from "@rbxts/reflex";
 
 export interface LeaderboardState {
-	readonly players: number[];
+	readonly players: readonly number[];
 }
 
 const initialState: LeaderboardState = {
