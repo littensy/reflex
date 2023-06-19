@@ -326,7 +326,10 @@ export interface ProducerNoDispatch<State, Actions> {
 	 * Enhances the producer with new functionality. The enhancer function is
 	 * passed to the producer as na argument and can patch the producer object
 	 * with new methods.
-	 * @deprecated Use `applyMiddleware` instead.
+	 *
+	 * Consider using `applyMiddleware` instead of `enhance` to make it easier
+	 * to compose enhancers/middleware.
+	 *
 	 * @param enhancer A function that patches the producer object.
 	 * @return The enhanced producer.
 	 */
