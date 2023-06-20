@@ -4,6 +4,7 @@ sidebar_position: 1
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import TOCInline from '@theme/TOCInline';
 
 # createProducer
 
@@ -13,15 +14,7 @@ import TabItem from '@theme/TabItem';
 const producer = createProducer(initialState, actions);
 ```
 
--   [Reference](#reference)
-    -   [`createProducer(initialState, actions)`](#createproducerinitialstate-actions)
-    -   [`actions` object](#actions-object)
--   [Usage](#usage)
-    -   [Updating state](#updating-state)
-    -   [Updating nested state](#updating-nested-state)
-    -   [Importing and exporting types](#importing-and-exporting-types)
--   [Troubleshooting](#troubleshooting)
-    -   [Actions aren't triggering a state update](#actions-arent-triggering-a-state-update)
+<TOCInline toc={toc} />
 
 ---
 
@@ -29,7 +22,7 @@ const producer = createProducer(initialState, actions);
 
 ### `createProducer(initialState, actions)`
 
-Creates a [Producer](producer) initialized with the given `initialState` and merged with your `actions`.
+Creates a [producer](producer) initialized with the given `initialState` and merged with your `actions`.
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -37,6 +30,8 @@ Creates a [Producer](producer) initialized with the given `initialState` and mer
 ```ts
 const producer = createProducer(0, {
 	increment: (state, value: number) => state + value,
+	decrement: (state, value: number) => state - value,
+	set: (_, value: number) => value,
 });
 ```
 
@@ -51,6 +46,12 @@ type Dispatchers = {
 local producer = Reflex.createProducer(0, {
     increment = function(state, value: number): number
         return state + value
+    end,
+    decrement = function(state, value: number): number
+        return state - value
+    end,
+    set = function(_, value: number): number
+        return value
     end,
 }) :: Reflex.Producer<number, Dispatchers>
 ```
@@ -73,54 +74,15 @@ producer.increment(1); // state = 1
 
 #### Returns
 
-`createProducer` returns a Reflex producer that you can use to dispatch actions and subscribe to state changes.
+`createProducer` returns a Reflex [producer](producer) that you can use to dispatch actions and subscribe to state changes.
 
----
+:::info caveats
 
-### `actions` object
+-   **State must be immutable.** Instead of mutating any part of the state, actions should return a new state object. Otherwise, the producer won't be able to detect state changes.
 
-`createProducer` takes an object containing action functions. Actions are pure functions that receive the current state and some parameters, and return a new state.
+-   **Actions should be pure and idempotent.** Ideally, they would not have any side effects, and should always return the same state for the same parameters.
 
-The producer contains your action functions that you can dispatch to update the state:
-
-<Tabs>
-<TabItem value="TypeScript" default>
-
-```ts
-const producer = createProducer(0, {
-	increment: (state, value: number) => state + value,
-	decrement: (state, value: number) => state - value,
-	set: (_, value: number) => value,
-	// ...
-});
-
-// highlight-next-line
-producer.increment(1);
-```
-
-</TabItem>
-<TabItem value="Luau">
-
-```lua
-local producer = Reflex.createProducer(0, {
-    increment = function(state, value: number): number
-        return state + value
-    end,
-    decrement = function(state, value: number): number
-        return state - value
-    end,
-    set = function(_, value: number): number
-        return value
-    end,
-    -- ...
-})
-
-// highlight-next-line
-producer.increment(1)
-```
-
-</TabItem>
-</Tabs>
+:::
 
 ---
 
@@ -292,7 +254,7 @@ local producer = Reflex.createProducer(initialState, {
         // highlight-start
         local nextState = table.clone(state)
         local nextTodos = table.clone(state.todos)
-        local nextTodo = table.clone(nextTodos[index])
+        local nextTodo = table.clone(state.todos[index])
         // highlight-end
 
         nextTodo.completed = not nextTodo.completed
@@ -407,6 +369,8 @@ return Reflex.combineProducers({
 
 </TabItem>
 </Tabs>
+
+[Learn more about combining producers](combine-producers)
 
 ---
 

@@ -4,6 +4,7 @@ sidebar_position: 3
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import TOCInline from '@theme/TOCInline';
 
 # combineProducers
 
@@ -17,12 +18,7 @@ const producer = combineProducers({
 });
 ```
 
--   [Reference](#reference)
-    -   [`combineProducers(producers)`](#combineproducersproducers)
--   [Usage](#usage)
-    -   [Using multiple producers](#using-multiple-producers)
-    -   [Selecting combined state](#selecting-combined-state)
-    -   [Dispatching one action to multiple producers](#dispatching-one-action-to-multiple-producers)
+<TOCInline toc={toc} />
 
 ---
 
@@ -94,11 +90,13 @@ A game managed by Reflex will typically have a single root producer that contain
 
 A new [producer](producer) with the combined initial states and actions of the given producers.
 
-#### Caveats
+:::info Caveats
 
 -   The producer returned by `combineProducers` is decoupled from the original producers. Updating the state of the combined producer will not update the state of the original producers.
 
 -   Unlike state, combined actions are _not_ scoped to their respective producers. If two actions with the same name are dispatched, they will both be called and update their respective sub-states.
+
+:::
 
 ---
 
@@ -465,4 +463,4 @@ Some use cases for this include:
 
 -   **Global events:** A script can dispatch a `playerAdded` action to multiple producers to notify them of a new player.
 
--   [**Modular player save data:**](todo) A `playerDataOpen` and `playerDataClose` action can be dispatched to multiple producers to initialize and clear player data.
+-   **Modular player save data:** A `playerDataOpen` and `playerDataClose` action can be dispatched to multiple producers to initialize and clear player data.

@@ -4,6 +4,7 @@ sidebar_position: 2
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import TOCInline from '@theme/TOCInline';
 
 # Producer
 
@@ -13,22 +14,7 @@ A producer is a state container with built-in functions to update state and run 
 const producer = createProducer(initialState, actions);
 ```
 
--   [Reference](#reference)
-    -   [`action` functions](#action-functions)
-    -   [`getState(selector?)`](#getstateselector)
-    -   [`subscribe(selector?, listener)`](#subscribeselector-listener)
-    -   [`once(selector, predicate?, listener)`](#onceselector-predicate-listener)
-    -   [`wait(selector, predicate?)`](#waitselector-predicate)
-    -   [`observe(selector, discriminator?, observer)`](#observeselector-discriminator-observer)
-    -   [`flush()`](#flush)
-    -   [`applyMiddleware(...middlewares)`](#applymiddlewaremiddlewares)
--   [Usage](#usage)
-    -   [Running side effects](#running-side-effects)
-    -   [Waiting for state changes](#waiting-for-state-changes)
-    -   [Deriving new data from state](#deriving-new-data-from-state)
-    -   [Observing additions and removals](#observing-additions-and-removals)
-    -   [Using middleware](#using-middleware)
-    -   [Using multiple producers](#using-multiple-producers)
+<TOCInline toc={toc} />
 
 ---
 
@@ -165,7 +151,9 @@ producer.increment(1) --> 1, 0
 
 `subscribe` returns a function that can be called to unsubscribe the listener.
 
-#### Caveats
+:::info Caveats
+
+-   If you pass a selector to `subscribe`, the listener will only be called once the selector returns a new value. Changes are compared **by reference (`===`)**, so if your selector creates a new object, remember to [memoize it with `createSelector`.](create-selector)
 
 -   State updates within a `subscribe` event should only be done in response to a selected state or under certain conditions. Otherwise, you may end up in an infinite loop.
 
@@ -173,7 +161,7 @@ producer.increment(1) --> 1, 0
 
 -   Similar to Redux, if you subscribe, unsubscribe, or change state while a listener is being called, the changes will not affect the current dispatch. However, they will affect the next dispatch.
 
--   The second argument to a listener is a reference to the previous state passed to the listener. This means that if multiple actions are dispatched, the second argument will be the state the listener was last called with, not the state from the last action.
+:::
 
 ---
 
@@ -230,11 +218,13 @@ end)
 
 `once` returns a function that can be called to unsubscribe the listener.
 
-#### Caveats
+:::info Caveats
 
 -   `once` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
 
 -   If the predicate returns `true` at the time of subscription, the listener **will not** be called immediately. It will only be called once the selected state changes, and only if the predicate returns `true` at that time. This behavior is analogous to `Promise.fromEvent` and how it waits for the _next_ event.
+
+:::
 
 ---
 
@@ -289,11 +279,13 @@ end)
 
 `wait` returns a promise that resolves once the selected state changes _and_ the predicate returns `true`.
 
-#### Caveats
+:::info Caveats
 
 -   `wait` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
 
 -   If the predicate returns `true` at the time `wait` is called, the Promise **will not** resolve immediately. It will only be resolve once the selected state changes, and only if the predicate returns `true` at that time. This behavior is analogous to `Promise.fromEvent` and how it waits for the _next_ event.
+
+:::
 
 ---
 
@@ -360,7 +352,7 @@ end)
 
 `observe` returns a function that can be called to unsubscribe from the state and clean up all Observers.
 
-#### Caveats
+:::info Caveats
 
 -   **Passing a discriminator is highly recommended when tracking unique objects.** This is because immutable objects are compared by reference. If you pass a record of objects without a discriminator, the Observer will be called every time an object is updated.
 
@@ -369,6 +361,8 @@ end)
 -   **The Observer is called immediately for each item in the initial state.** This means that if the state is already populated with items, the Observer will be called for each item.
 
 -   **The first argument of the Observer is the item that was added.** It acts as an initial state and **does not update** when the item is updated.
+
+:::
 
 ---
 
@@ -393,9 +387,11 @@ producer:flush()
 </TabItem>
 </Tabs>
 
-#### Caveats
+:::info Caveats
 
 -   `flush` should not be called during a state update. Doing so might cause unexpected behavior.
+
+:::
 
 ---
 
@@ -460,13 +456,15 @@ producer:applyMiddleware(loggerMiddleware)
 
 `applyMiddleware` returns the original producer.
 
-#### Caveats
+:::info Caveats
 
 -   Middleware functions have **three layers** of abstraction: the producer, the dispatch function, and individual dispatches. The producer is the **highest level of abstraction** and is called once when applying the middleware. The dispatch function is the **middle layer of abstraction** and called with the dispatch functions in the producer. The individual dispatches are the **lowest level of abstraction** and run before each dispatch.
 
 -   **Middleware functions are called in the order they are provided.** This means that middleware functions that depend on other middleware functions should be provided after their dependencies.
 
 -   **The return value matters!** Middleware functions can intercept dispatches and make them return a value other than the new state. If a middleware function returns a value, the next middleware function will receive that value, and eventually will be returned by the dispatch function.
+
+:::
 
 ---
 
@@ -1016,7 +1014,7 @@ end)
 
 **Middleware is a powerful tool for extending the behavior of producers and actions.** In Reflex, middleware can be used to add logging, cancel actions, analytics, add undo/redo functionality, and more.
 
-**This example is a custom implementation of [`loggerMiddleware`](logger-middleware):**
+**This example is a custom implementation of `loggerMiddleware`:**
 
 <Tabs>
 <TabItem value="TypeScript" default>
