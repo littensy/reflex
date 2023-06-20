@@ -1106,3 +1106,7 @@ Additionally, changing the arguments or return value in the third level will **p
 **Reflex is best used with a single producer holding the entire state of your application.**
 
 It's good practice to organize state into different producers, and combine them with [`combineProducers`](combine-producers). [See the documentation for more details.](combine-producers)
+
+---
+
+## Troubleshooting
