@@ -472,9 +472,9 @@ producer:applyMiddleware(loggerMiddleware)
 
 ### Running side effects
 
-Games often have a lot of state that changes over time. For example, a producer might contain a player's health, money, and inventory. You will sometimes need to perform side effects for certain state updates. Let's first look at how to subscribe to state changes, and then we'll cover which cases you should use it for.
+Games have a lot of state that changes over time, and you often need to perform _side effects_ for certain state updates. Let's first look at how to subscribe to state changes, and then we'll cover some use cases.
 
-To subscribe to state changes, use the [`subscribe`](#subscribeselector-listener) method:
+You can use [`subscribe`](#subscribeselector-listener) to connect a listener function that runs whenever a certain part of the state changes:
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -485,6 +485,8 @@ const selectCount = (state: State) => state.count;
 producer.subscribe(selectCount, (count) => {
 	print("count changed:", count);
 });
+
+producer.increment(10); // count changed: 10
 ```
 
 </TabItem>
@@ -498,17 +500,21 @@ end
 producer:subscribe(selectCount, function(count, prevCount)
     print("count changed:", count)
 end)
+
+producer.increment(10) --> count changed: 10
 ```
 
 </TabItem>
 </Tabs>
 
+The listener runs whenever the value given by `selectCount` changes. Once the `increment` action is dispatched, the listener will output the new value of `count` on the next tick.
+
 You pass two parameters to the `subscribe` method:
 
-1.  A `selector` that returns the part of the state you want to subscribe to.
-2.  A `listener` that is called when the selected part of the state changes.
+1.  A _selector_ that returns a subset of the state you want to subscribe to.
+2.  The _listener_ to call when the state changes.
 
-Once you have subscribed to state changes, you can perform side effects in the listener function. The listener will be called once the selector returns a new value after a state update.
+Once you have subscribed to the state you want, you can safely run side effects in the listener function. For example, you play a damage sound when a player gets hurt.
 
 **Say you have a game where the player's health is stored in the state:**
 
@@ -560,9 +566,9 @@ local producer = createProducer(initialState, {
 </TabItem>
 </Tabs>
 
-Your producer has an action to deal damage to the player, but it's not good practice to run side effects in actions. So, how can you run a side effect when damage is dealt?
+Your producer has an action to deal damage to the player, and a `health` field for the player in the state. You now know how to select the `health` field and subscribe to changes, but how can you play a sound when they _lose_ health?
 
-**You can do this by subscribing to a selector that returns the player's health:**
+**You can do this by checking if the new health is lower than the previous health:**
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -595,19 +601,19 @@ end)
 </TabItem>
 </Tabs>
 
-**This code calls the `playDamageSound` function whenever the player's health decreases.** The listener is called with the new health and the previous health. If the new health is less than the previous health, the listener plays a sound.
+**This code calls the `playDamageSound` function whenever the player's health decreases.** If the current health is less than the previous health, the player was hurt, and the sound should play.
 
-But what if you want to wait for some specific state change to occur? [Producers provide methods for that, too!](#waiting-for-state-changes)
+But what if you want to wait for a specific state change to occur? [Producers provide methods for that, too!](#waiting-for-state-changes)
 
 ---
 
 ### Waiting for state changes
 
-Sometimes, you want to wait for a specific state change before performing a side effect.
+Sometimes, you want to delay a side effect until a specific state change occurs. Producers offer the [`once`](#onceselector-predicate-listener) and [`wait`](#waitselector-predicate) methods to help wait for an event to occur.
 
-For example, say your state contains a `jumping` boolean that is set to `true` when the player holds down the jump button. You want it to run a `jump()` function in a loop, and disconnect it when it stops. One way to do this is with [`once`](#onceselector-predicate-listener).
+For example, say your player state also contains a `jumping` boolean that is set to `true` when the player holds down the jump button. You want it to run a `jump()` function in a loop, and disconnect it when it stops. One way to automatically disconnect the loop is with [`once`](#onceselector-predicate-listener).
 
-This code calls the function while the `jumping` state is `true`, and then stops once the `jumping` state becomes `false`:
+This code starts the loop when `jumping` is set to `true`, and then disconnects the loop when the state changes to `false`:
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -892,15 +898,15 @@ end)
 
 :::info
 
-**`selectPlayerById` and `selectPlayerHealth` are selector creators.** Creators are useful when you want to create a reusable selector that is memoized for a specific set of inputs. [See more on why this approach helps with performance](create-selector).
+**`selectPlayerById` and `selectPlayerHealth` are [selector factories](create-selector#selector-factories).** Factories are useful when you want to create a reusable selector that is memoized for a specific set of inputs. [See more on why this approach helps with performance](create-selector#passing-input-parameters).
 
 :::
 
 **Now you can subscribe to changes in a specific player's health!** But creating this subscription for new players and unsubscribing when they are removed can be difficult to set up. This is where the [`observe`](#observeselector-discriminator-observer) method comes in handy.
 
-[`observe`](#observeselector-discriminator-observer) takes a **selector**, an optional **discriminator**, and an **Observer**. The selector returns a list or record of items, in which the Observer is called when a unique item is added. The Observer may return a **cleanup function** that is automatically called when the item is removed from the list.
+[`observe`](#observeselector-discriminator-observer) takes a **selector**, an optional **discriminator**, and an **Observer**. The selector returns a list or record of items, in which the Observer is called when a unique item is added. The Observer may return a cleanup function that is automatically called when the item is removed from the list.
 
-**This code observes the lifetime of the players that are currently alive.** The Observer can then subscribe to changes in the player's health, and run side effects when the player is damaged or dies. When the player is removed from the list, that means they are no longer alive, and the cleanup function is called.
+**The Observer in this code exists throughout the lifetime of each player.** It can subscribe to changes in the player's health, and run side effects when the player is damaged or dies. When the player no longer alive, they are removed from the list, and the cleanup function is called.
 
 <Tabs>
 <TabItem value="TypeScript" default>

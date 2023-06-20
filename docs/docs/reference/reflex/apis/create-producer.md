@@ -90,13 +90,13 @@ producer.increment(1); // state = 1
 
 ### Updating state
 
-Producers allow you to contain your game's state in a single source of truth.
+Producers are the state containers that you can use to dispatch actions and observe state changes. They work with _immutable data_, ensuring safety and predictability when working with state.
 
-Use `createProducer` to create a producer with a set of actions that update the state.
+Typically, games and applications keep all of their state in a single root producer. This allows them to easily observe and modify any part of the state.
+
+Use `createProducer` to create a producer with an initial state and action functions:
 
 :::info
-
-State is immutable. Instead of mutating any part of the state, actions should return a new state object.
 
 See libraries like [Sift](https://csqrl.github.io/sift/) and [Immut](https://solarhorizon.github.io/immut/) for utilities that make it easier to work with immutable data.
 
