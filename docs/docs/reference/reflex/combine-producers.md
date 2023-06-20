@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+description: Combine multiple producers into a single producer.
 ---
 
 import Tabs from '@theme/Tabs';

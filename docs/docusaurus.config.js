@@ -90,7 +90,7 @@ const config = {
               },
               {
                 label: 'API Reference',
-                to: '/docs/reference/reflex/apis',
+                to: '/docs/reference/reflex',
               },
             ],
           },

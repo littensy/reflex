@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: The root component for Roact Reflex.
 ---
 
 import Tabs from '@theme/Tabs';

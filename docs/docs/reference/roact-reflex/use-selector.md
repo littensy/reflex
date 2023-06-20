@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+description: Subscribe to a selector's state with useSelector.
 ---
 
 import Tabs from '@theme/Tabs';

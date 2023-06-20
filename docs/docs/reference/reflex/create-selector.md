@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+description: Optimize your selectors with createSelector.
 ---
 
 import Tabs from '@theme/Tabs';

@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+description: Memoize and subscribe to to a selector factory with useSelectorCreator.
 ---
 
 import Tabs from '@theme/Tabs';

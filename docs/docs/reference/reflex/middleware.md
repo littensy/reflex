@@ -1,5 +1,6 @@
 ---
 sidebar_position: 5
+description: Middleware functions provided by Reflex.
 ---
 
 import Tabs from '@theme/Tabs';

@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+description: Manage your game's state with producers.
 ---
 
 import Tabs from '@theme/Tabs';
