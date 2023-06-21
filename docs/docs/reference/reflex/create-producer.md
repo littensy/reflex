@@ -276,7 +276,7 @@ local producer = Reflex.createProducer(initialState, {
 
 Usually, a project will organize its state between multiple producers in separate files, and then combine them into a single producer.
 
-Producer modules should export the type of their state (and dispatchers in Luau) so that the root producer can import them.
+Producer modules should export the type of their state (and dispatchers in Luau). This allows you to use a fully typed root producer that contains all of your actions and state.
 
 :::note
 
@@ -412,7 +412,7 @@ local producer = Reflex.createProducer(initialState, {
 </TabItem>
 </Tabs>
 
-This action does not return a new state object, so the producer assumes that nothing has changed.
+This action does not return a new state object. As far as Reflex knows, the new state is equal (`===`) to the old sttae, so it assumes that nothing has changed.
 
 To fix this, apply the changes to a new object and return it:
 
@@ -444,3 +444,7 @@ local producer = Reflex.createProducer(initialState, {
 
 </TabItem>
 </Tabs>
+
+This action returns a new state object, so Reflex quickly knows that the state has changed and will trigger state listeners.
+
+This problem can also occur with nested state, so make sure your actions never mutate any state!
