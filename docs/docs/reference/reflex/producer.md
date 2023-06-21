@@ -1019,95 +1019,14 @@ end)
 
 ### Using middleware
 
-**Middleware is a powerful tool for extending the behavior of producers and actions.** In Reflex, middleware can be used to add logging, cancel actions, analytics, add undo/redo functionality, and more.
+**Middleware is a powerful tool for extending the behavior of producers and actions.** In Reflex, middleware can be used to add logging, cancel actions, add undo/redo functionality, and more.
 
-**This example is a custom implementation of `loggerMiddleware`:**
-
-<Tabs>
-<TabItem value="TypeScript" default>
-
-```ts
-const loggerMiddleware: ProducerMiddleware = (producer) => {
-	// First level, called by applyMiddleware
-
-	producer.subscribe((state) => {
-		print("state changed to", state);
-	});
-
-	return (dispatch, name) => {
-		// Second level, called per action function
-
-		return (...args) => {
-			// Third level, called before action dispatch
-
-			print("dispatching", name, "with", args);
-
-			return dispatch(...args);
-		};
-	};
-};
-
-producer.applyMiddleware(loggerMiddleware);
-```
-
-</TabItem>
-<TabItem value="Luau">
-
-```lua
-local loggerMiddleware: Reflex.Middleware = function(producer)
-    -- First level, called by applyMiddleware
-
-    producer:subscribe(function(state)
-        print("state changed to", state)
-    end)
-
-    return function(dispatch, name)
-        -- Second level, called action function
-
-        return function(...)
-            -- Third level, called before action dispatch
-
-            print("dispatching", name, "with", ...)
-
-            return dispatch(...)
-        end
-    end
-end
-
-producer:applyMiddleware(loggerMiddleware)
-```
-
-</TabItem>
-</Tabs>
-
-**A middleware has three layers of control that allow you to fine-tune behavior:**
-
-1.  **The producer**
-    -   The first level, the middleware itself, is called when it is applied to a producer.
-    -   You can make subscriptions or patch methods here.
-2.  **An action**
-    -   The second level is called once for every action in the producer, and receives a `dispatch` function and the action name.
-    -   You might log a list of actions or permanently disable an action here.
-3.  **On dispatch**
-    -   The final level receives the action's arguments and calls `dispatch` to invoke the next middleware in the chain.
-    -   You can cancel an action or log individual dispatches here.
-
-:::tip
-
-**The third level of middleware acts as a wrapper for actions.** Calling `dispatch` will invoke the next middleware in the chain, or the action if it is the last middleware.
-
-Additionally, changing the arguments or return value in the third level will **pass them on** to the next middleware or action.
-
-:::
+[See how to create middleware →](middleware#building-middleware)
 
 ---
 
 ### Using multiple producers
 
-**Reflex is best used with a single producer holding the entire state of your application.**
+**Reflex is best used with a single producer holding the entire state of your application.** It's also good practice to organize state into different producers, and combine them with [`combineProducers`](combine-producers).
 
-It's good practice to organize state into different producers, and combine them with [`combineProducers`](combine-producers). [See the documentation for more details.](combine-producers)
-
----
-
-## Troubleshooting
+[See `combineProducers` for more details →](combine-producers)

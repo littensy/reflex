@@ -93,9 +93,11 @@ A new [producer](producer) with the combined initial states and actions of the g
 
 :::info Caveats
 
--   The producer returned by `combineProducers` is decoupled from the original producers. Updating the state of the combined producer will not update the state of the original producers.
+-   The producer returned by `combineProducers` is **decoupled** from the original producers. Updating the state of the combined producer will not update the state of the original producers.
 
--   Actions can be stacked. If two actions with the same name are dispatched, they will both be called and update their respective sub-states. This can be useful for [batching updates](#dispatching-one-action-to-multiple-producers), but make sure the functions have identical signatures.
+-   **Actions can be stacked.** If two actions with the same name are dispatched, they will both be called and update their respective sub-states. This can be useful for [batching updates](#dispatching-one-action-to-multiple-producers), but make sure the functions have identical signatures.
+
+-   **[Middleware](middleware) is not inherited from the original producers.** If you want to use middleware, you should apply it to the combined producer.
 
 :::
 
@@ -465,7 +467,3 @@ Some use cases for this include:
 -   **Global events:** A script can dispatch a `playerAdded` action to multiple producers to notify them of a new player.
 
 -   **Modular save data:** A `playerDataLoaded` and `playerDataClosing` action can be dispatched to multiple producers to initialize and clear player data.
-
----
-
-## Troubleshooting

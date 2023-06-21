@@ -444,5 +444,3 @@ local producer = Reflex.createProducer(initialState, {
 
 </TabItem>
 </Tabs>
-
----

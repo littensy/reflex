@@ -444,7 +444,3 @@ producer:subscribe(selectFilteredItems, print)
 :::
 
 </details>
-
----
-
-## Troubleshooting
