@@ -39,7 +39,7 @@ export declare function createProducer<State, Actions extends ProducerActions<St
  * @example
  * ```ts
  * export type RootProducer = typeof producer;
- * export type RootState = InferProducerState<RootProducer>;
+ * export type RootState = InferState<RootProducer>;
  *
  * export const producer = combineProducers({
  * 	foo: fooProducer,
@@ -181,8 +181,8 @@ export declare const loggerMiddleware: ProducerMiddleware;
  * be used to modify the state. The state is immmutable, so dispatchers return
  * a new state object.
  */
-export type Producer<State = any, Actions = any> = ProducerDispatchers<Readonly<State>, Readonly<Actions>> &
-	ProducerImpl<Readonly<State>, Readonly<Actions>>;
+export type Producer<State = any, Actions = any> = ProducerDispatchers<State, Actions> &
+	ProducerImpl<DeepReadonly<State>, Actions>;
 
 /**
  * An implementation of the Producer interface. This is used internally and
@@ -362,6 +362,11 @@ interface ProducerImpl<State, Actions> {
 }
 
 /**
+ * Makes a type deeply immutable.
+ */
+export type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
+
+/**
  * Infers the state type from a producer.
  * @template T The producer type.
  */
@@ -386,7 +391,7 @@ export type InferDispatchers<T> = T extends Producer<infer State, infer Actions>
  * @template State The state type of the producer.
  */
 export interface ProducerActions<State> {
-	readonly [name: string]: (state: Readonly<State>, ...args: any[]) => Readonly<State>;
+	readonly [name: string]: (state: DeepReadonly<State>, ...args: any[]) => DeepReadonly<State>;
 }
 
 /**
@@ -396,8 +401,8 @@ export interface ProducerActions<State> {
  * @template Actions The actions type of the producer.
  */
 export type ProducerDispatchers<State, Actions> = {
-	readonly [K in keyof Actions]: Actions[K] extends (state: Readonly<State>, ...args: infer Args) => Readonly<State>
-		? (...args: Args) => Readonly<State>
+	readonly [K in keyof Actions]: Actions[K] extends (state: State, ...args: infer Args) => State
+		? (...args: Args) => DeepReadonly<State>
 		: never;
 };
 
