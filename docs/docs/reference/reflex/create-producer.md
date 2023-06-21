@@ -89,7 +89,7 @@ producer.increment(1); // state = 1
 
 ## Usage
 
-### Updating state
+### Updating state with actions
 
 Producers are the state containers that you can use to dispatch actions and observe state changes. They work with _immutable data_, ensuring safety and predictability when working with state.
 

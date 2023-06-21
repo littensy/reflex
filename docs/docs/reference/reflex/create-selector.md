@@ -294,7 +294,7 @@ Selector factories are functions that, given an initial set of arguments, return
 
 **It's best to use factories when selectors are created for a specific purpose.** This can include:
 
--   **Selecting the state of an item by ID.** For example, you might want to [play a damage sound when a specific player is hurt](producer#observing-additions-and-removals).
+-   **Selecting the state of an item by ID.** For example, you might want to [play a damage sound when a specific player is hurt](producer#using-the-observer-pattern).
 
 -   **Deriving new values from a specific item.** If you want to enhance an item with additional data, like a formatted price or a localized name, you can create a factory that takes an ID as an argument and returns a selector that enhances the item.
 

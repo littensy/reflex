@@ -56,7 +56,7 @@ producer.increment(1) --> 1
 </TabItem>
 </Tabs>
 
-[See how to create actions here.](create-producer#updating-state)
+[See how to create actions here.](create-producer#updating-state-with-actions)
 
 #### Parameters
 
@@ -339,7 +339,7 @@ end)
 </TabItem>
 </Tabs>
 
-[See more examples below.](#observing-additions-and-removals)
+[See more examples below.](#using-the-observer-pattern)
 
 #### Parameters
 
@@ -726,11 +726,11 @@ end)
 
 ---
 
-### Deriving new data from state
+### Transforming state with selectors
 
-**A good rule of thumb is to keep your state as simple as possible.** This includes avoiding redundant data that can be derived from other parts of the state. However, that might make it harder to perform side effects on your existing state. How can you **derive new data** from the state without changing it?
+**A good rule of thumb is to keep your state as simple as possible.** This includes avoiding redundant data that can be derived from other parts of the state. However, that might make it harder to perform side effects on your existing state. How can you derive _new data_ from the state without changing it?
 
-Say your game's state contains a list of players, and each player has a `health` and `id` property. If you want to retrieve a list of players that are alive, you can create a **selector** that creates a new list of players from the existing state:
+Say your game's state contains a list of players, and each player has a `health` and `id` property. If you want to retrieve a list of players that are alive, you can create a _selector_ that creates a new list of players from the existing state:
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -822,21 +822,21 @@ end)
 
 **But finding differences between lists can quickly get cumbersome.** What if you want to track the health of a specific player? Or what if you want to clean up some state when a player dies?
 
-This is where the [`observe`](#observeselector-discriminator-observer) method comes in handy. [See how to use it in the next section.](#observing-additions-and-removals)
+This is where the [`observe`](#observeselector-discriminator-observer) method comes in handy. [See how to use it in the next section.](#using-the-observer-pattern)
 
 ---
 
-### Observing additions and removals
+### Using the observer pattern
 
 **Game state often contains many lists and records of data.** You will likely need to run code when a new item is added to a record, or clean something up when the item is removed. We'll explore Observers, their use cases, and using [`observe`](#observeselector-discriminator-observer).
 
-**Reflex brings the [Observer pattern](https://sleitnick.github.io/RbxObservers/docs/observer-pattern) to immutable state management.** Some good use cases for [`observe`](#observeselector-discriminator-observer) include:
+**Reflex brings the [Observer pattern](https://sleitnick.github.io/RbxObservers/docs/observer-pattern) to game state.** Some good use cases for [`observe`](#observeselector-discriminator-observer) include:
 
 -   Managing the lifecycle of a match in a multiplayer game
 -   Spawning players and cleaning up when they die or leave the game
 -   Applying temporary status effects to players
 
-Let's say your state has a list of players, and each player has a `health` and `id` property. You want to play a sound whenever a player is damaged or dies. To help track individual players, you should first create a [memoized selector](#deriving-new-data-from-state) that selects a player's health by their ID:
+Let's say your state has a list of players, and each player has a `health` and `id` property. You want to play a sound whenever a player is damaged or dies. To help track individual players, you should first create a [memoized selector](#transforming-state-with-selectors) that selects a player's health by their ID:
 
 <Tabs>
 <TabItem value="TypeScript" default>

@@ -262,7 +262,7 @@ Exporting `SharedState` and `SharedDispatchers` helps to build a fully-typed Ref
 </TabItem>
 </Tabs>
 
-In this example, we have two shared producers: `players` and `world`. They are put together in a map and returned by `shared/producers` as a map of producers. The contents of these producers are not important - they're just like any other producer - but if you want to see how to write producers, [check out the reference page](create-producer#updating-state).
+In this example, we have two shared producers: `players` and `world`. They are put together in a map and returned by `shared/producers` as a map of producers. The contents of these producers are not important - they're just like any other producer - but if you want to see how to write producers, [check out the reference page](create-producer#updating-state-with-actions).
 
 The main benefit of using a _shared producer map_ like this is how simple it is to add them to your root producers:
 
