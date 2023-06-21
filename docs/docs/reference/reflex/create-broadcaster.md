@@ -103,7 +103,7 @@ On the client, call [`createBroadcastReceiver`](create-broadcast-receiver) to re
 
 :::info caveats
 
--   **Data that is not JSON-friendly will be lost.** Because data is sent through remote events, you will lose metatables, functions, and numeric keys.
+-   [**Data that is not remote-friendly will be lost.**](#the-client-receives-invalid-state) Because data is sent through remote events, you will lose metatables, functions, and numeric keys.
 
 -   **You need to set up two remotes:** one to send actions to clients, and another to invoke [`playerRequestedState`](#broadcasterplayerrequestedstateplayer) for a client. This can be done with a remote library of your choice.
 
@@ -399,7 +399,7 @@ It returns a broadcaster object, which has two properties:
 
 :::caution pitfall
 
-**Avoid data types and structures that cannot be sent over remote events!** This only applies to _shared_ state, and client or server-only state is fine. See [Troubleshooting](#troubleshooting) for more information on this common pitfall.
+**Make sure your shared state can be sent over a remote!** Objects that use non-string keys or certain values will not be sent over intact. See [Troubleshooting](#troubleshooting) for more information on this common pitfall.
 
 :::
 
@@ -417,7 +417,7 @@ Now that you have your broadcaster set up, you can use [`createBroadcastReceiver
 
 ### The client receives invalid state
 
-A common oversight when syncing state over remotes is that data that can't be serialized is lost or unexpectedly changed. This is because data is sent through remote events, which only support JSON-friendly data.
+A common oversight when syncing state over remotes is that data that can't be serialized is lost or unexpectedly changed. This is because data is sent through remote events, which only support certain data structures.
 
 Make sure your shared producers are free from:
 

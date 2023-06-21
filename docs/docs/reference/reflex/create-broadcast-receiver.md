@@ -103,7 +103,7 @@ On the server, call [`createBroadcaster`](create-broadcaster) to share state and
 
 :::info caveats
 
--   **Data that is not JSON-friendly will be lost.** Because data is sent through remote events, you will lose metatables, functions, and numeric keys.
+-   [**Data that is not remote-friendly will be lost.**](create-broadcaster#the-client-receives-invalid-state) Because data is sent through remote events, you will lose metatables, functions, and numeric keys.
 
 :::
 
