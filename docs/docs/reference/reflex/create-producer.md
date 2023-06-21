@@ -412,7 +412,7 @@ local producer = Reflex.createProducer(initialState, {
 </TabItem>
 </Tabs>
 
-This action does not return a new state object. As far as Reflex knows, the new state is equal (`===`) to the old sttae, so it assumes that nothing has changed.
+This action does not return a new state object. As far as Reflex knows, the new state is equal (`===`) to the old state, so it assumes that nothing has changed.
 
 To fix this, apply the changes to a new object and return it:
 
