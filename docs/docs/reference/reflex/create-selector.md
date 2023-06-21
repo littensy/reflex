@@ -280,13 +280,13 @@ For a more in-depth explanation of selectors, check out the [official Redux docu
 
 Common use cases for selectors are retrieving an item's state and applying search filters, but passing the external parameters needed to retrieve the information can be unintuitive at first.
 
-We'll go over two main ways to pass arguments to a selector:
+We'll go over two ways to pass arguments:
 
 1.  [**Selector factories:**](#selector-factories) Pass arguments to a creator function, which returns a new selector. This is best used for creating selectors that are **specialized for unique, unchanging parameters,** like tracking an item's state by ID.
 
 2.  [**Store parameters in state:**](#store-parameters-in-state) Store parameters in state and use them as dependencies. This is best used for selectors that depend on **shared or frequently-changing parameters,** like search queries or the sort order of a list.
 
-This decision only _really_ matters if your selectors are expensive to run, and in most cases, you can just use whichever makes the most sense to you. There's also [currying dependencies](https://redux.js.org/usage/deriving-data-selectors#passing-input-parameters), but it's not fully supported by Reflex's APIs.
+This decision only _really_ matters if your selectors are expensive to run, and in most cases, you can just use whichever makes the most sense to you. There's also [currying dependencies](https://redux.js.org/usage/deriving-data-selectors#passing-input-parameters), but the syntax can be awkward, so we won't cover it here.
 
 #### Selector factories
 
@@ -341,17 +341,6 @@ producer:subscribe(selectItemById(2), print)
 </TabItem>
 </Tabs>
 
-:::info caveats
-
-**Having too many selectors with the same arguments at once can be wasteful.** _Duplicate selectors_ are not ideal because each selector has its own cache, and can re-compute their value even if another duplicate just performed the same update. However, if you're only using a few selectors at a time, this is perfectly fine.
-
-[Consider storing parameters in state if you don't need unique selectors.](#store-parameters-in-state)
-
-:::
-
-<details>
-<summary>What are the pros and cons of this approach?</summary>
-
 :::tip pros
 
 -   **Results are cached per selector.** Two selectors created to select different user IDs will only trigger a state update if their respective users change. This is unlike [sharing parameters in state](#store-parameters-in-state), where one selector tracks changing parameters.
@@ -362,19 +351,17 @@ producer:subscribe(selectItemById(2), print)
 
 :::danger cons
 
--   **Memoizing the result is up to you.** Be careful when using factories in Roact function components, as **creating new selectors every re-render will reset the cache.** Reflex offers memoization of factories with the `useSelectorCreator` Hook.
+-   **Memoizing the result is up to you.** Be careful when using factories in Roact function components, as **creating new selectors every re-render will reset the cache.** Reflex offers memoization of factories with the [`useSelectorCreator`](../roact-reflex/use-selector-creator) Hook.
 
 -   **Avoid duplicate selectors.** While selectors having their own caches is useful, it can become suboptimal if you create lots of selectors with the same arguments. This can lead to unnecessary re-computations, as duplicate selectors don't know that the other has already been called with the same arguments.
 
 :::
 
-</details>
-
 #### Store parameters in state
 
 If you need to pass parameters that change often to a selector, it's best to store them in state and use them as dependencies. This is useful for selectors that are used in many places with shared parameters, or selectors only used in one place, like a search query or a sort order.
 
-**It's best to use state when selector parameters update frequently,** like in response to user input. This is because in order to update a parameter with [selector factories](#selector-factories), you need to create a new selector, which is not always necessary. You can instead store the query in state and use it as a dependency:
+**It's best to use state when selector parameters update frequently,** like in response to user input. Storing parameters in state can be better than using [selector factories](#selector-factories) here because, to update the parameters, you need to create a new selector with a new cache, which is not always necessary. You can instead store the query in state and use it as a dependency:
 
 <Tabs>
 <TabItem value="TypeScript" default>
@@ -424,9 +411,6 @@ producer:subscribe(selectFilteredItems, print)
 </TabItem>
 </Tabs>
 
-<details>
-<summary>What are the pros and cons of this approach?</summary>
-
 :::tip pros
 
 -   **Multiple listeners can share the same selector.** This is unlike [selector factories](#selector-factories), where each selector has its own cache and can re-compute their value even if another duplicate just performed the same update.
@@ -439,8 +423,21 @@ producer:subscribe(selectFilteredItems, print)
 
 -   **You can't pass different parameters to the same selector.** If you want to apply different transformations to your state in different places, consider [selector factories](#selector-factories).
 
--   **It's not a replacement for factories.** If you don't want to share parameters, or find yourself setting parameters manually before calling a selector, you should use a [selector factory](#selector-factories) instead.
+-   **It's not a replacement for factories.** If you don't want to share parameters, or find yourself setting parameters manually before calling a selector, neither of these approaches may seem ideal. [Consider currying dependencies instead.](https://redux.js.org/usage/deriving-data-selectors#passing-input-parameters)
 
 :::
 
-</details>
+---
+
+## Troubleshooting
+
+### My combiner's types are incorrect
+
+**If you're using multiple dependencies, you may find that your combiner's types are incorrect.** This is because TypeScript 4.9 (the version used by Roblox-TS) doesn't fully support inferring the types of return values from an array of functions. You can fix this by using the `as const` assertion on your dependencies:
+
+```ts
+// highlight-next-line
+createSelector([selectCart, selectUser] as const, (cart, user) => {
+	return cart.items.filter((item) => item.owner === user.id);
+});
+```

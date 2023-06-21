@@ -9,6 +9,10 @@ const lightTheme = require('prism-react-renderer/themes/github');
 
 const theme = {
   ...lightTheme,
+  plain: {
+    ...lightTheme.plain,
+    backgroundColor: '#ffffff',
+  },
   styles: [
     ...lightTheme.styles,
     {
@@ -94,6 +98,7 @@ const theme = {
       types: ['comment'],
       style: {
         color: '#6B6B6B',
+        fontStyle: 'normal',
       },
     },
   ],

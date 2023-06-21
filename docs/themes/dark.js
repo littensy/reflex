@@ -10,10 +10,16 @@ const darkTheme = require('prism-react-renderer/themes/vsDark');
 const theme = {
   plain: {
     color: '#D4D4D4',
-    backgroundColor: '#212121',
+    backgroundColor: '#212124',
   },
   styles: [
     ...darkTheme.styles,
+    {
+      types: ['comment'],
+      style: {
+        color: '#6A737D',
+      },
+    },
     {
       types: ['title'],
       style: {

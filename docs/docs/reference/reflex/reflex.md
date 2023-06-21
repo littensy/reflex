@@ -6,6 +6,15 @@ description: API Reference for Reflex, a state management library for Roblox.
 
 _Reflex_ allow you to efficiently track and manage the state of your game. This page documents the core Reflex APIs.
 
+Reflex provides these top-level exports:
+
+-   [`createProducer(initialState, actions)`](create-producer)
+-   [`combineProducers(producers)`](combine-producers)
+-   [`createSelector(dependencies, combiner)`](create-selector)
+-   [`createBroadcaster(options)`](create-broadcaster)
+-   [`createBroadcastReceiver(options)`](create-broadcast-receiver)
+-   [`loggerMiddleware`](middleware#loggermiddleware)
+
 ---
 
 ## Producers
@@ -64,14 +73,14 @@ Reflex provides some commonly used middleware:
 
 -   [`loggerMiddleware`](middleware#loggermiddleware) logs all actions and state changes.
 
-```ts
-producer.applyMiddleware(loggerMiddleware, customMiddleware);
-```
-
 You can also [define your own middleware](middleware#your-first-middleware):
 
 -   [Your first middleware](middleware#your-first-middleware)
 -   [Cancelling actions](middleware#cancelling-actions)
+
+```ts
+producer.applyMiddleware(loggerMiddleware, customMiddleware);
+```
 
 ---
 
@@ -81,6 +90,11 @@ Reflex offers a built-in solution to sync state between the server and the clien
 
 -   [`createBroadcaster`](create-broadcaster) creates a broadcaster that shares server state with clients.
 -   [`createBroadcastReceiver`](create-broadcast-receiver) creates a receiver that syncs client state with the server.
+
+Explore how to use broadcasters and receivers to sync state:
+
+-   [Sending server state to clients](create-broadcaster#sending-server-state-to-clients)
+-   [Syncing server state on the client](create-broadcast-receiver#syncing-server-state-on-the-client)
 
 ```ts title="Server snippet"
 const broadcaster = createBroadcaster({
@@ -99,8 +113,3 @@ const receiver = createBroadcastReceiver({
 	},
 });
 ```
-
-Explore how to use broadcasters and receivers to sync state:
-
--   [Sending server state to clients](create-broadcaster#sending-server-state-to-clients)
--   [Syncing server state on the client](create-broadcast-receiver#syncing-server-state-on-the-client)

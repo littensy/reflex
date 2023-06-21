@@ -4,39 +4,70 @@
  * work well for content-centric websites.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&display=swap");
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-font-family-monospace: 'JetBrains Mono', monospace;
-  --ifm-code-font-size: 90%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+	--ifm-color-primary: #2e8555;
+	--ifm-color-primary-dark: #29784c;
+	--ifm-color-primary-darker: #277148;
+	--ifm-color-primary-darkest: #205d3b;
+	--ifm-color-primary-light: #33925d;
+	--ifm-color-primary-lighter: #359962;
+	--ifm-color-primary-lightest: #3cad6e;
+	--ifm-font-family-monospace: "JetBrains Mono", monospace;
+	--ifm-code-font-size: 90%;
+	--ifm-code-border-radius: 1em;
+	--ifm-alert-border-radius: 1em;
+	--ifm-alert-padding-vertical: 2em;
+	--ifm-alert-padding-horizontal: 1.5em;
+	--ifm-toc-border-color: #00000000 !important;
+	--ifm-alert-shadow: rgba(0, 0, 0, 0.03) 0px 0.8px 2px 0px, rgba(0, 0, 0, 0.047) 0px 2.7px 6.7px 0px,
+		rgba(0, 0, 0, 0.08) 0px 12px 30px 0px;
+	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-  --ifm-color-primary: #25c29b;
-  --ifm-color-primary-dark: #21a88b;
-  --ifm-color-primary-darker: #1d8c7a;
-  --ifm-color-primary-darkest: #1a7568;
-  --ifm-color-primary-light: #2acca8;
-  --ifm-color-primary-lighter: #2ddbb2;
-  --ifm-color-primary-lightest: #33e0b9;
-  --ifm-hr-background-color: #3e3e44;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+[data-theme="dark"] {
+	--ifm-color-primary: #25c29b;
+	--ifm-color-primary-dark: #21a88b;
+	--ifm-color-primary-darker: #1d8c7a;
+	--ifm-color-primary-darkest: #1a7568;
+	--ifm-color-primary-light: #2acca8;
+	--ifm-color-primary-lighter: #2ddbb2;
+	--ifm-color-primary-lightest: #33e0b9;
+	--ifm-hr-background-color: #3e3e44;
+	--ifm-alert-shadow: rgba(0, 0, 0, 0.06) 0px 0.8px 2px 0px, rgba(0, 0, 0, 0.1) 0px 2.7px 6.7px 0px,
+		rgba(0, 0, 0, 0.2) 0px 10px 26px 0px;
+	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] {
+	--docusaurus-highlighted-code-line-bg: rgba(100, 180, 255, 0.1);
+}
+
+.menu {
+	padding-top: 1em !important;
+}
+
+code {
+	--ifm-code-border-radius: 0.5em;
+}
+
+.theme-code-block {
+	--ifm-global-shadow-lw: rgba(0, 0, 0, 0.03) 0px 0.8px 2px 0px, rgba(0, 0, 0, 0.047) 0px 2.7px 6.7px 0px,
+		rgba(0, 0, 0, 0.08) 0px 12px 30px 0px;
+}
+
+[data-theme="dark"] .theme-code-block {
+	--ifm-global-shadow-lw: rgba(0, 0, 0, 0.06) 0px 0.8px 2px 0px, rgba(0, 0, 0, 0.1) 0px 2.7px 6.7px 0px,
+		rgba(0, 0, 0, 0.2) 0px 10px 26px 0px;
 }
 
 .code-block-error-line {
-  background-color: #ff000020;
-  display: block;
-  margin: 0 calc(-1 * var(--ifm-pre-padding));
-  padding: 0 var(--ifm-pre-padding);
-  border-left: 3px solid #ff000080;
+	background-color: #ff000020;
+	display: block;
+	margin: 0 calc(-1 * var(--ifm-pre-padding));
+	padding: 0 var(--ifm-pre-padding);
+	border-left: 3px solid #ff000080;
 }
