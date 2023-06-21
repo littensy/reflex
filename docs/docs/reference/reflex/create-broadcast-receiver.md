@@ -171,7 +171,7 @@ end)
 
 ### Syncing server state on the client
 
-If you haven't already, see how to [send server state to clients](craete-broadcaster#sending-server-state-to-clients) to create a basic project setup. The [`createBroadcaster`](create-broadcaster) page is treated as the primary reference for this feature.
+If you haven't already, see how to [send server state to clients](create-broadcaster#sending-server-state-to-clients) to create a basic project setup. The [`createBroadcaster`](create-broadcaster) page is treated as the primary reference for this feature.
 
 Once you have your broadcaster set up, you can use [`createBroadcastReceiver`](#createbroadcastreceiveroptions) to initialize the client state with the server's shared state and keep it in sync.
 
