@@ -426,3 +426,96 @@ Make sure your shared producers are free from:
 -   **Non-string keys:** Arrays that have blank spaces and objects with non-string keys will be converted to use string keys.
 
 [See Roblox's API reference for an exhaustive list of unsupported data types.](https://create.roblox.com/docs/scripting/argument-limitations-for-bindables-and-remotes)
+
+---
+
+### The client state diverges from the server state
+
+**Your action functions should be _idempotent_.** This means that they should always return the same result when given the same arguments. For example, if you need to generate a random value, it should be passed to the action function as an argument, rather than generated inside the function.
+
+Here's an example of an action that is _not_ idempotent:
+
+<Tabs>
+<TabItem value="TypeScript" default>
+
+```ts
+const producer = createProducer(initialState, {
+    addItem: (state) => ({
+        ...items,
+        // error-next-line
+        // 🔴 Syncing this action will cause state to diverge
+        // error-next-line
+        { id: HttpService.GenerateGUID(), name: "New Item" },
+    })
+})
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local producer = Reflex.createProducer(initialState, {
+    addItem = function(state)
+        local nextState = table.clone(state)
+
+        // error-next-line
+        -- 🔴 Syncing this action will cause state to diverge
+        // error-next-line
+        table.insert(nextState.items, {
+            // error-next-line
+            id = HttpService:GenerateGUID(),
+            // error-next-line
+            name = "New Item"
+            // error-next-line
+        })
+
+        return nextState
+    end,
+})
+```
+
+</TabItem>
+</Tabs>
+
+Actions that are not idempotent will cause the client and server to diverge, as they will generate different results when the client tries to run them with the same arguments.
+
+Instead, you should pass the random value as an argument to the action function:
+
+<Tabs>
+<TabItem value="TypeScript" default>
+
+```ts
+const producer = createProducer(initialState, {
+    addItem: (state, id: string) => ({
+        ...items,
+        // highlight-start
+        // ✅ This will always output the same result
+        { id, name: "New Item" },
+        // highlight-end
+    })
+})
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local producer = Reflex.createProducer(initialState, {
+    addItem = function(state, id)
+        local nextState = table.clone(state)
+
+        // highlight-start
+        -- ✅ This will always output the same result
+        table.insert(nextState.items, {
+            id = id,
+            name = "New Item"
+        })
+        // highlight-end
+
+        return nextState
+    end,
+})
+```
+
+</TabItem>
+</Tabs>
