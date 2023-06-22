@@ -56,7 +56,7 @@ function Todos() {
 
 ### `isEqual` function
 
-`equalityFn` is a function that compares the current and previous values. If the function returns `true`, the component will not re-render. By default, `===` is used.
+`isEqual` is a function that compares the current and previous values. If the function returns `true`, the component will not re-render. By default, `===` is used.
 
 ```ts
 import { useSelector } from "@rbxts/roact-reflex";
@@ -75,7 +75,7 @@ function Todos() {
 
 #### Returns
 
-`equalityFn` returns `true` if the current and previous values are equal.
+`isEqual` returns `true` if the current and previous values are equal.
 
 ---
 
