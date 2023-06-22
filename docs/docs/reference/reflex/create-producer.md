@@ -390,6 +390,8 @@ Code like this assumes a _mutable_ state object:
 const producer = createProducer(initialState, {
 	increment: (state, value: number) => {
 		// error-next-line
+		// 🔴 You are not allowed to mutate state
+		// error-next-line
 		state.count += value;
 		return state;
 	},
@@ -402,6 +404,8 @@ const producer = createProducer(initialState, {
 ```lua
 local producer = Reflex.createProducer(initialState, {
     increment = function(state, value: number): CounterState
+        // error-next-line
+        -- 🔴 You are not allowed to mutate state
         // error-next-line
         state.count += value
         return state
@@ -421,10 +425,13 @@ To fix this, apply the changes to a new object and return it:
 
 ```ts
 const producer = createProducer(initialState, {
+	// highlight-start
+	// ✅ Apply changes to a new object instead of mutating
 	increment: (state, value: number) => ({
 		...state,
 		count: state.count + value,
 	}),
+	// highlight-end
 });
 ```
 
@@ -434,10 +441,12 @@ const producer = createProducer(initialState, {
 ```lua
 local producer = Reflex.createProducer(initialState, {
     increment = function(state, value: number): CounterState
-        // highlight-next-line
+        // highlight-start
+        -- ✅ Apply changes to a new object instead of mutating
         local nextState = table.clone(state)
         nextState.count += value
         return nextState
+        // highlight-end
     end,
 })
 ```

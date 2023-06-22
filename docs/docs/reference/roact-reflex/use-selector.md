@@ -195,10 +195,10 @@ function TodosApp() {
 	// ...
 }
 
-// highlight-start
+// error-next-line
 // 🔴 Don't forget to wrap your root elements in a <ReflexProvider>
+// error-next-line
 Roact.mount(<TodosApp />, container);
-// highlight-end
 ```
 
 Roact Reflex uses [Roact contexts](https://roblox.github.io/roact/advanced/context/) to pass the producer to your components and allow them to use Reflex Hooks. If you don't wrap your root elements in a `<ReflexProvider>`, your components won't be able to access the producer.
@@ -235,12 +235,14 @@ const selectTodos = (state: RootState) => {
 	state.todos;
 };
 
-// highlight-start
+// error-next-line
 // 🔴 This selector creates a new array every time it's called
+// error-next-line
 const selectTodosDone = (state: RootState) => {
+	// error-next-line
 	return state.todos.filter((todo) => todo.done);
+	// error-next-line
 };
-// highlight-end
 ```
 
 Because selectors are called every time the producer updates, and `selectTodosDone` works by creating a new array, Reflex assumes that the value changed. This will cause the component to re-render with the new value, even if the underlying `todos` state didn't change.

@@ -116,10 +116,10 @@ Here's an example of what _not_ to do:
 import { selectTodos } from "./selectors";
 
 function Todo() {
-	// highlight-start
+	// error-next-line
 	// 🔴 This array is not memoized
+	// error-next-line
 	const todos = useSelectorCreator(selectTodos, [1, 2, 3]);
-	// highlight-end
 	// ...
 }
 ```

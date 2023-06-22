@@ -830,11 +830,11 @@ This is where the [`observe`](#observeselector-discriminator-observer) method co
 
 **Game state often contains many lists and records of data.** You will likely need to run code when a new item is added to a record, or clean something up when the item is removed. We'll explore Observers, their use cases, and using [`observe`](#observeselector-discriminator-observer).
 
-**Reflex brings the [Observer pattern](https://sleitnick.github.io/RbxObservers/docs/observer-pattern) to game state.** Some good use cases for [`observe`](#observeselector-discriminator-observer) include:
+**[]`observe`](#observeselector-discriminator-observer) brings the [Observer pattern](https://sleitnick.github.io/RbxObservers/docs/observer-pattern) to Reflex.** Some good use cases for [`observe`](#observeselector-discriminator-observer) include:
 
--   Managing the lifecycle of a match in a multiplayer game
+-   Managing matches in a multiplayer game
 -   Spawning players and cleaning up when they die or leave the game
--   Applying temporary status effects to players
+-   Applying temporary status effects
 
 Let's say your state has a list of players, and each player has a `health` and `id` property. You want to play a sound whenever a player is damaged or dies. To help track individual players, you should first create a [memoized selector](#transforming-state-with-selectors) that selects a player's health by their ID:
 

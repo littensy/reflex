@@ -122,10 +122,10 @@ function App() {
 	// ...
 }
 
-// highlight-start
-// 🔴 Don't forget to wrap your root elements in a <ReflexProvider>
+// error-next-line
+// 🔴 You need to wrap your root elements in a <ReflexProvider>
+// error-next-line
 Roact.mount(<App />, container);
-// highlight-end
 ```
 
 Roact Reflex uses [Roact contexts](https://roblox.github.io/roact/advanced/context/) to pass the producer to your components and allow them to use Reflex Hooks. If you don't wrap your root elements in a `<ReflexProvider>`, your components won't be able to access the producer.
@@ -158,10 +158,10 @@ function Button() {
 	const { increment } = useProducer<RootProducer>();
 	const counter = useSelector((state) => state.counter);
 
-	// highlight-start
+	// error-next-line
 	// 🔴 This action updates counter and causes a re-render loop
+	// error-next-line
 	increment(1);
-	// highlight-end
 }
 ```
 
