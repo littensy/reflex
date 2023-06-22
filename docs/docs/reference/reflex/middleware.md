@@ -201,18 +201,15 @@ A throttle middleware would cancel actions if they're called within a certain ti
 ```ts
 const throttleMiddleware: ProducerMiddleware = (producer) => {
 	return (dispatch, name) => {
-		// This is stored *per action function* to ensure each action
-		// is throttled separately.
 		let resumptionTime = 0;
 
 		return (...args) => {
+			// highlight-start
 			if (os.clock() < resumptionTime) {
-				// Cancel the action by returning early. Typically,
-				// actions return their new state, so we'll return
-				// the current state instead.
-				// highlight-next-line
+				// Cancel the action by returning early
 				return producer.getState();
 			}
+			// highlight-end
 			resumptionTime = os.clock() + 1;
 			return dispatch(...args);
 		};
@@ -224,8 +221,8 @@ producer.applyMiddleware(throttleMiddleware);
 producer.increment(1); // { counter: 1 }
 producer.increment(1); // { counter: 1 } (cancelled)
 
-producer.decrement(1); // { counter: 0 } (new action, different throttle)
-producer.decrement(1); // { counter: 0 } (cancelled)
+task.wait(1);
+producer.increment(1); // { counter: 2 }
 ```
 
 </TabItem>
@@ -234,18 +231,15 @@ producer.decrement(1); // { counter: 0 } (cancelled)
 ```lua
 local throttleMiddleware: Reflex.Middleware = function(producer)
     return function(dispatch, name)
-        -- This is stored *per action function* to ensure each action
-        -- is throttled separately.
         local resumptionTime = 0
 
         return function(...)
+            // highlight-start
             if os.clock() < resumptionTime then
-                -- Cancel the action by returning early. Typically,
-                -- actions return their new state, so we'll return
-                -- the current state instead.
-                // highlight-next-line
+                -- Cancel the action by returning early
                 return producer:getState()
             end
+            // highlight-end
             resumptionTime = os.clock() + 1
             return dispatch(...)
         end
@@ -257,8 +251,8 @@ producer:applyMiddleware(throttleMiddleware)
 producer.increment(1) --> { counter = 1 }
 producer.increment(1) --> { counter = 1 } (cancelled)
 
-producer.decrement(1) --> { counter = 0 } (new action, different throttle)
-producer.decrement(1) --> { counter = 0 } (cancelled)
+task.wait(1)
+producer.increment(1) --> { counter = 2 }
 ```
 
 </TabItem>
@@ -271,9 +265,3 @@ This implementation throttles individual actions by storing their `resumptionTim
 **Cancelling actions also cancels the middlewares after it in the chain.** For example, if we had a `loggerMiddleware` _after_ `throttleMiddleware`, it would not log actions that were throttled. If we wanted to log throttled actions, we would have to move `loggerMiddleware` _before_ `throttleMiddleware`.
 
 :::
-
-**Note the highlighted line, which returns the current state of the producer instead of returning nothing.** This is to be consistent with the return value of actions dispatched through the producer, which typically return the new state of the producer:
-
-```ts
-print(producer.increment(1)); // { counter: 1 }
-```
