@@ -423,6 +423,6 @@ Make sure your shared producers are free from:
 
 -   **Metatables:** Instances of classes that have metatables will lose their metatables.
 -   **Mixed tables:** Objects must consist entirely of either key-value pairs or numeric indices.
--   **Non-string keys:** Arrays that have blank spaces and objects with non-string keys will be converted to use string keys.=
+-   **Non-string keys:** Arrays that have blank spaces and objects with non-string keys will be converted to use string keys.
 
 [See Roblox's API reference for an exhaustive list of unsupported data types.](https://create.roblox.com/docs/scripting/argument-limitations-for-bindables-and-remotes)
