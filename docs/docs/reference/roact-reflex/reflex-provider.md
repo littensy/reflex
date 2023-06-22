@@ -100,6 +100,24 @@ Roact.mount(
 
 It can also help to create a custom provider that combines all of your providers into one:
 
+<Tabs>
+<TabItem value="RootProvider.tsx" default>
+
+```tsx
+import Roact from "@rbxts/roact";
+
+export function RootProvider(props: Roact.PropsWithChildren) {
+	return (
+		<ReflexProvider producer={producer}>
+			<OtherProvider>{props[Roact.Children]}</OtherProvider>
+		</ReflexProvider>
+	);
+}
+```
+
+</TabItem>
+<TabItem value="main.client.tsx">
+
 ```tsx
 import Roact from "@rbxts/roact";
 import { RootProvider } from "./RootProvider";
@@ -112,12 +130,5 @@ Roact.mount(
 );
 ```
 
-```tsx title="RootProvider.tsx"
-function RootProvider(props: Roact.PropsWithChildren) {
-	return (
-		<ReflexProvider producer={producer}>
-			<OtherProvider>{props[Roact.Children]}</OtherProvider>
-		</ReflexProvider>
-	);
-}
-```
+</TabItem>
+</Tabs>
