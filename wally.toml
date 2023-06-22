@@ -8,4 +8,4 @@ realm = "shared"
 exclude = ["sourcemap.json", "node_modules", "Packages", "test"]
 
 [dependencies]
-promise = "evaera/promise@4.0.0"
+Promise = "evaera/promise@4.0.0"
