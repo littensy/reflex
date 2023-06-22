@@ -10,7 +10,7 @@ import TOCInline from '@theme/TOCInline';
 
 # &lt;ReflexProvider>
 
-`<ReflexProvider>` lets you specify a producer to use with Roact Reflex in your application.
+`<ReflexProvider>` lets you specify a producer to use with Roact Reflex in your app.
 
 ```tsx
 <ReflexProvider producer={producer}>
@@ -74,7 +74,7 @@ Roact.mount(
 );
 ```
 
-Reflex uses this provider to allow components to hook into the state of your game with Hooks like [`useProducer`](use-producer). This component should be present somewhere in the root of your application anywhere you want to use a Reflex Hook.
+Reflex uses this provider to allow components to hook into the state of your game with Hooks like [`useProducer`](use-producer). This component should be present somewhere in the root of your app anywhere you want to use a Reflex Hook.
 
 ---
 

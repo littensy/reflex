@@ -163,6 +163,26 @@ Selectors can receive parameters other than state using [selector factories](../
 
 ---
 
+### Using selectors with curried arguments
+
+Selectors can receive parameters other than state using [curried arguments](../reflex/create-selector#dependency-currying). You can use these selectors with [`useSelector`](#useselectorselector-isequal) by wrapping them in a function:
+
+```ts
+import { useSelector } from "@rbxts/roact-reflex";
+import { selectTodo } from "./selectors";
+
+function Todo({ id }: Props) {
+	const todo = useSelector((state) => selectTodo(state, id));
+	// ...
+}
+```
+
+But you might wonder: _why isn't this selector memoized?_ This is safe because [`useSelector`](#useselectorselector-isequal) will only re-render when the selected value changes, and not necessarily when the selector function changes. It's safe to leave the selector function like this.
+
+On the other hand, [selector factories](../reflex/create-selector#selector-factories) _should_ be memoized, because creating a new selector with [`createSelector`](../reflex/create-selector) on render also creates a new, empty argument cache, causing the selector to re-run when it shouldn't.
+
+---
+
 ## Troubleshooting
 
 ### I'm getting an error: "`useSelector` must be called from within a `ReflexProvider`"

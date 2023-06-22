@@ -151,7 +151,7 @@ Roact.mount(
 
 ### My component won't stop dispatching actions
 
-If your component is dispatching actions in a loop, it's likely that your action is running within the body of the component. This can become an issue if components that depend on the state are re-rendered every time the action is dispatched:
+If your component is dispatching actions in a loop, it's likely that your action is running within the body of the component, or it indirectly triggers itself. This can become an issue if components that depend on the state are re-rendered every time the action is dispatched:
 
 ```ts
 function Button() {
@@ -159,13 +159,13 @@ function Button() {
 	const counter = useSelector((state) => state.counter);
 
 	// highlight-start
-	// 🔴 This action updates counter and causes infinite re-renders
+	// 🔴 This action updates counter and causes a re-render loop
 	increment(1);
 	// highlight-end
 }
 ```
 
-To fix this, you can use [`useEffect`](https://roblox.github.io/roact/advanced/hooks/#useeffect) to dispatch the action during the lifecycle of the component:
+To fix this, you can use [`useEffect`](https://roblox.github.io/roact/advanced/hooks/#useeffect) to dispatch the action when a specific dependency changes:
 
 ```ts
 function Button() {

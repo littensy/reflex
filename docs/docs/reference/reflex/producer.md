@@ -1027,6 +1027,6 @@ end)
 
 ### Using multiple producers
 
-**Reflex is best used with a single producer holding the entire state of your application.** It's also good practice to organize state into different producers, and combine them with [`combineProducers`](combine-producers).
+**Reflex is best used with a single producer holding the entire state of your app.** It's also good practice to organize state into different producers, and combine them with [`combineProducers`](combine-producers).
 
 [See `combineProducers` for more details →](combine-producers)

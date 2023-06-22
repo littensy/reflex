@@ -89,8 +89,12 @@ const config = {
                 to: '/docs/tutorials/intro',
               },
               {
-                label: 'API Reference',
+                label: 'Reflex API',
                 to: '/docs/reference/reflex',
+              },
+              {
+                label: 'Roact Reflex API',
+                to: '/docs/reference/roact-reflex',
               },
             ],
           },

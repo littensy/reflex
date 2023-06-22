@@ -93,7 +93,7 @@ producer.increment(1); // state = 1
 
 Producers are the state containers that you can use to dispatch actions and observe state changes. They work with _immutable data_, ensuring safety and predictability when working with state.
 
-Typically, games and applications keep all of their state in a single root producer. This allows them to easily observe and modify any part of the state.
+Typically, games and apps keep all of their state in a single root producer. This allows them to easily observe and modify any part of the state.
 
 Use `createProducer` to create a producer with an initial state and action functions:
 
