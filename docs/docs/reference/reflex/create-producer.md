@@ -25,7 +25,7 @@ const producer = createProducer(initialState, actions);
 
 Creates a [producer](producer) initialized with the given `initialState` and merged with your `actions`.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -40,7 +40,7 @@ const producer = createProducer(0, {
 <TabItem value="Luau">
 
 ```lua
-type Dispatchers = {
+type Actions = {
     increment: (value: number) -> CounterState,
 }
 
@@ -54,7 +54,7 @@ local producer = Reflex.createProducer(0, {
     set = function(_, value: number): number
         return value
     end,
-}) :: Reflex.Producer<number, Dispatchers>
+}) :: Reflex.Producer<number, Actions>
 ```
 
 </TabItem>
@@ -103,7 +103,7 @@ See libraries like [Sift](https://csqrl.github.io/sift/) and [Immut](https://sol
 
 :::
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -132,7 +132,7 @@ type CounterState = {
     count: number,
 }
 
-type CounterDispatchers = {
+type CounterActions = {
     increment: (value: number) -> CounterState,
     -- ...
 }
@@ -146,7 +146,7 @@ local producer = Reflex.createProducer(initialState, {
         return { count = state.count + value }
     end,
     -- ...
-}) :: Reflex.Producer<CounterState, CounterDispatchers>
+}) :: Reflex.Producer<CounterState, CounterActions>
 ```
 
 </TabItem>
@@ -154,7 +154,7 @@ local producer = Reflex.createProducer(initialState, {
 
 `createProducer` returns a producer combined with your action functions. Producers can update their state by dispatching actions:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -181,7 +181,7 @@ Because state is immutable, updating nested state can be a bit tricky, especiall
 
 The easiest way to do this is to use a library like [Sift](https://csqrl.github.io/sift/) or [Immut](https://solarhorizon.github.io/immut/) to update nested state, but you can also do it manually:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -224,7 +224,7 @@ type TodoState = {
     todos: { Todo },
 }
 
-type TodoDispatchers = {
+type TodoActions = {
     addTodo: (text: string) -> TodoState,
     toggleTodo: (index: number) -> TodoState,
 }
@@ -264,7 +264,7 @@ local producer = Reflex.createProducer(initialState, {
 
         return nextState
     end,
-}) :: Reflex.Producer<TodoState, TodoDispatchers>
+}) :: Reflex.Producer<TodoState, TodoActions>
 ```
 
 </TabItem>
@@ -276,7 +276,7 @@ local producer = Reflex.createProducer(initialState, {
 
 Usually, a project will organize its state between multiple producers in separate files, and then combine them into a single producer.
 
-Producer modules should export the type of their state (and dispatchers in Luau). This allows you to use a fully typed root producer that contains all of your actions and state.
+Producer modules should export the type of their state (and actions in Luau). This allows you to use a fully typed root producer that contains all of your actions and state.
 
 :::note
 
@@ -284,7 +284,7 @@ This is not required in TypeScript, since types can be inferred from the produce
 
 :::
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts title="counter.ts"
@@ -327,7 +327,7 @@ export type CounterState = {
     count: number,
 }
 
-export type CounterDispatchers = {
+export type CounterActions = {
     increment: (value: number) -> CounterState,
     -- ...
 }
@@ -357,10 +357,10 @@ export type RootState = {
     other: other.OtherState,
 }
 
-export type RootDispatchers = counter.CounterDispatchers &
-    other.OtherDispatchers
+export type RootActions = counter.CounterActions &
+    other.OtherActions
 
-export type RootProducer = Reflex.Producer<RootState, RootDispatchers>
+export type RootProducer = Reflex.Producer<RootState, RootActions>
 
 return Reflex.combineProducers({
     counter = counter.producer,
@@ -383,7 +383,7 @@ If you're dispatching actions, but your state listeners don't run when they shou
 
 Code like this assumes a _mutable_ state object:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -420,7 +420,7 @@ This action does not return a new state object. As far as Reflex knows, the new 
 
 To fix this, apply the changes to a new object and return it:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -454,6 +454,6 @@ local producer = Reflex.createProducer(initialState, {
 </TabItem>
 </Tabs>
 
-This action returns a new state object, so Reflex quickly knows that the state has changed and will trigger state listeners.
+This action returns a new state object, so that Reflex knows the state has changed and will trigger state listeners.
 
-This problem can also occur with nested state, so make sure your actions never mutate any state!
+This problem can also occur with nested state objects, so make sure to apply changes to a new object at every level of your state.

@@ -27,7 +27,7 @@ Actions are functions that update the producer's state. They are created by pass
 
 You can dispatch an action by calling it on the producer:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -72,7 +72,7 @@ Dispatching returns the new state of the producer.
 
 Producers allow you to access the current state by calling `getState`. You can optionally pass a selector function to `getState` to select a specific part of the state.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -109,7 +109,7 @@ The `subscribe` method lets you listen for changes to the producer's state. Gene
 
 To unsubscribe from a listener, call the function returned by `subscribe`.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -172,7 +172,7 @@ producer.increment(1) --> 1, 0
 
 To unsubscribe from a listener, call the function returned by `once`.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -235,7 +235,7 @@ end)
 
 To unsubscribe from a listener, cancel the promise returned by `wait`.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -298,7 +298,7 @@ The **discriminator** is used to differentiate between items. If the discriminat
 
 To unsubscribe from an Observer, call the function returned by `observe`.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -371,7 +371,7 @@ end)
 
 The `flush` method is used to immediately run a scheduled update. This is useful for forcing an update to run synchronously, but should generally be avoided.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -400,7 +400,7 @@ producer:flush()
 
 The `applyMiddleware` method is used to apply middleware to the producer. Middleware can be used to enhance producers, dispatch actions, or perform side effects.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -477,7 +477,7 @@ Games have a lot of state that changes over time, and you often need to perform 
 
 You can use [`subscribe`](#subscribeselector-listener) to connect a listener function that runs whenever a certain part of the state changes:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -519,7 +519,7 @@ Once you have subscribed to the state you want, you can safely run side effects 
 
 **Say you have a game where the player's health is stored in the state:**
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -547,7 +547,7 @@ type RootState = {
     health: number,
 }
 
-type RootDispatchers = {
+type RootActions = {
     takeDamage: (health: number) -> void,
 }
 
@@ -561,7 +561,7 @@ local producer = createProducer(initialState, {
         nextState.health -= health
         return nextState
     end,
-}) :: Reflex.Producer<RootState, RootDispatchers>
+}) :: Reflex.Producer<RootState, RootActions>
 ```
 
 </TabItem>
@@ -571,7 +571,7 @@ Your producer has an action to deal damage to the player, and a `health` field f
 
 **You can do this by checking if the new health is lower than the previous health:**
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -616,7 +616,7 @@ For example, say your player state also contains a `jumping` boolean that is set
 
 This code starts the loop when `jumping` is set to `true`, and then disconnects the loop when the state changes to `false`:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -671,7 +671,7 @@ The `predicate` parameter is optional. If you pass a predicate, the listener wil
 
 Producers also provide [`wait`](#waitselector-predicate), a shorthand for [`once`](#onceselector-predicate-listener) that returns a promise:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -732,7 +732,7 @@ end)
 
 Say your game's state contains a list of players, and each player has a `health` and `id` property. If you want to retrieve a list of players that are alive, you can create a _selector_ that creates a new list of players from the existing state:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -779,7 +779,7 @@ end)
 
 For example, you can run some code whenever a player is filtered from the list of alive players:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -838,7 +838,7 @@ This is where the [`observe`](#observeselector-discriminator-observer) method co
 
 Let's say your state has a list of players, and each player has a `health` and `id` property. You want to play a sound whenever a player is damaged or dies. To help track individual players, you should first create a [memoized selector](#transforming-state-with-selectors) that selects a player's health by their ID:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -909,7 +909,7 @@ end)
 
 **The Observer in this code exists throughout the lifetime of each player.** It can subscribe to changes in the player's health, and run side effects when the player is damaged or dies. When the player no longer alive, they are removed from the list, and the cleanup function is called.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -972,7 +972,7 @@ end)
 
 The discriminator is optional in the case that your list contains primitives like strings and numbers:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts

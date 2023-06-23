@@ -27,7 +27,7 @@ const selector = createSelector(dependencies, combiner);
 
 The `combiner` function is called with the results of the dependencies as arguments, in the same order as the dependencies passed to `createSelector`. The result of the `combiner` is the final value that the selector will cache and return.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -96,7 +96,7 @@ Often, you'll want to sort a list of items, filter out items that don't match a 
 
 **But one small mistake can worsen performance or cause unexpected behavior.** Let's say you have a list of items in your cart, and you want to filter out items that are out of stock. Your producer might look something like this:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -160,7 +160,7 @@ You have a shopping cart that contains a list of items, each with a `name`, `pri
 
 Your first instinct might be to write a simple function that filters items with a `stock` above zero:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -212,7 +212,7 @@ In this case, every time the selector is called, it creates an **entirely new li
 
 We can wrap the selector in [`createSelector`](#createselectordependencies-combiner), and specify `state.items` as a dependency. With this change, the selector will only be called when `state.items` updates:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -300,7 +300,7 @@ It's best to use factories when selectors are **created for a specific purpose.*
 
 -   **Deriving new values from a specific item.** If you want to enhance an item with additional data, like a formatted price or a localized name, you can create a factory that takes an ID as an argument and returns a selector that enhances the item.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -371,7 +371,7 @@ If your parameters can change often, and parameters do not conflict in your app,
 -   Applying a sort direction to a list
 -   Selecting a specific page of a paginated list
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts

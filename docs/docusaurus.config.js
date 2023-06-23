@@ -61,9 +61,9 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
+            sidebarId: 'docsSidebar',
             position: 'left',
-            label: 'Tutorials',
+            label: 'Docs',
           },
           {
             type: 'docSidebar',
@@ -85,8 +85,8 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Tutorial',
-                to: '/docs/tutorials/intro',
+                label: 'Docs',
+                to: '/docs/docs/quick-start',
               },
               {
                 label: 'Reflex API',
@@ -99,7 +99,7 @@ const config = {
             ],
           },
           {
-            title: 'Discord',
+            title: 'Community',
             items: [
               {
                 label: 'Roblox-TS',
@@ -126,7 +126,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['typescript', 'lua', 'powershell'],
+        additionalLanguages: ['typescript', 'lua'],
         magicComments: [
           {
             className: 'theme-code-block-highlighted-line',

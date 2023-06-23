@@ -21,7 +21,7 @@ _Middleware_ lets you enhance the behavior of your producers and actions. You ca
 
 Logs all actions, their payloads, and the new state to the output.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -44,7 +44,7 @@ producer.increment(1);
 <TabItem value="Luau">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local producer = Reflex.createProducer(0, {
     increment = function(state, amount: number)
@@ -78,7 +78,7 @@ They sound complicated, but can become straightforward when observing how they w
 
 **This example is a custom implementation of `loggerMiddleware`:**
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -191,11 +191,11 @@ producer.increment(1);
 
 **Middleware can also be used to conditionally run actions.** This is useful for throttling or cancelling actions based on the current state. We'll go over how to implement a middleware that throttles actions.
 
-A throttle middleware would cancel actions if they're called within a certain time frame. You can throttle actions by updating a cooldown timer when the dispatcher is called, and conditionally cancel it by _not_ calling `dispatch`.
+A throttle middleware would cancel actions if they're called within a certain time frame. You can throttle actions by updating a cooldown timer when the action is called, and conditionally cancel it by _not_ calling `dispatch`.
 
 **This example is a custom implementation of `throttleMiddleware`,** which cancels actions if they're called within one second of each other:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts

@@ -25,7 +25,7 @@ const receiver = createBroadcastReceiver({ requestState });
 
 Call `createBroadcastReceiver` to create a receiver that can be used to connect your state to the [broadcaster](create-broadcaster) on the server.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -43,7 +43,7 @@ const receiver = createBroadcastReceiver({
 <TabItem value="Lua">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local receiver = Reflex.createBroadcastReceiver({
     requestState = function()
@@ -59,7 +59,7 @@ local receiver = Reflex.createBroadcastReceiver({
 
 Once you have the receiver, you need to apply the middleware to your producer and connect [`dispatch`](#receiverdispatchactions) to a remote:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -113,7 +113,7 @@ On the server, call [`createBroadcaster`](create-broadcaster) to share state and
 
 Apply the broadcast receiver [middleware](middleware) to call `requestState` and initialize the client's root producer with the server's shared state. It's safe to use the producer before this middleware is applied, and order does not matter.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -136,7 +136,7 @@ producer:applyMiddleware(receiver.middleware)
 
 Connect the receiver's `dispatch` method to a remote to dispatch the actions passed to the remote.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -175,7 +175,7 @@ If you haven't already, see how to [send server state to clients](create-broadca
 
 Once you have your broadcaster set up, you can use [`createBroadcastReceiver`](#createbroadcastreceiveroptions) to initialize the client state with the server's shared state and keep it in sync.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -199,7 +199,7 @@ producer.applyMiddleware(receiver.middleware);
 <TabItem value="Lua">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local receiver = Reflex.createBroadcastReceiver({
     requestState = function()

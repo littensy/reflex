@@ -29,7 +29,7 @@ const producer = combineProducers({
 
 To combine multiple [producers](producer), pass them into `combineProducers` as a map of names to producers.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -117,7 +117,7 @@ producer
 └── leaderboard
 ```
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 :::info
@@ -218,13 +218,13 @@ In Luau, you should exporting the types from each producer file and manually com
 <TabItem value="router.lua">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 export type RouterState = {
     page: string,
 }
 
-export type RouterDispatchers = {
+export type RouterActions = {
     setPage: (page: string) -> RouterState,
 }
 
@@ -247,13 +247,13 @@ return {
 <TabItem value="leaderboard.lua">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 export type LeaderboardState = {
     players: { number },
 }
 
-export type LeaderboardDispatchers = {
+export type LeaderboardActions = {
     addPlayer: (player: number) -> LeaderboardState,
     removePlayer: (player: number) -> LeaderboardState,
 }
@@ -293,19 +293,19 @@ return {
 <TabItem value="init.lua">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 local router = require(script.router)
 local leaderboard = require(script.leaderboard)
 
-export type RootProducer = Reflex.Producer<RootState, RootDispatchers>
+export type RootProducer = Reflex.Producer<RootState, RootActions>
 
 export type RootState = {
     router: router.RouterState,
     leaderboard: leaderboard.LeaderboardState,
 }
 
-export type RootDispatchers = router.RouterDispatchers &
-    leaderboard.LeaderboardDispatchers
+export type RootActions = router.RouterActions &
+    leaderboard.LeaderboardActions
 
 return Reflex.combineProducers({
     router = router.producer,
@@ -317,7 +317,7 @@ return Reflex.combineProducers({
 <TabItem value="Usage">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 local producer = require(script.Parent.producer)
 
 producer.setPage("leaderboard")
@@ -342,7 +342,7 @@ Remember that the combined producer is decoupled from the original producers. Up
 
 Assuming we have the [same producers from above](#using-multiple-producers), we create selectors for the leaderboard like so:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts title="selectors/leaderboard.ts"
@@ -366,7 +366,7 @@ export const selectLeaderboardPlayers = createSelector([selectLeaderboardUserIds
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 local producer = require(script.Parent.Parent.producer)
 
 local function selectLeaderboardUserIds(state: producer.RootState)
@@ -405,7 +405,7 @@ An interesting caveat of [`combineProducers`](combine-producers) is that combine
 
 **Here's a simple example of dispatching one action to multiple producers:**
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts

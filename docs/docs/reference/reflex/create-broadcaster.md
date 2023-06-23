@@ -25,7 +25,7 @@ const broadcaster = createBroadcaster({ producer, options });
 
 Call `createBroadcaster` to create a broadcaster object that syncs shared state and actions with clients.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -44,7 +44,7 @@ const broadcaster = createBroadcaster({
 <TabItem value="Luau">
 
 ```lua
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local broadcaster = Reflex.createBroadcaster({
     producers = producers,
@@ -60,7 +60,7 @@ local broadcaster = Reflex.createBroadcaster({
 
 After you've created the broadcaster, you will need to **apply the middleware** and **call [`playerRequestedState`](#broadcasterplayerrequestedstateplayer)** when a player requests state from the server:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -117,7 +117,7 @@ On the client, call [`createBroadcastReceiver`](create-broadcast-receiver) to re
 
 Apply the broadcaster [middleware](middleware) to hook up your broadcaster to the root producer.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -148,7 +148,7 @@ producer:applyMiddleware(broadcaster.middleware)
 
 Process a player's request for state with `playerRequestedState`.
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -207,7 +207,7 @@ shared
 
 Your shared `producers` module should look something like this:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts title="shared/producers/index.ts"
@@ -239,13 +239,13 @@ export const selectPlayers = (state: SharedState) => state.players;
 <TabItem value="Luau">
 
 ```lua title="shared/producers/init.lua"
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 local players = require(script.players)
 local world = require(script.world)
 
 export type SharedState = players.PlayersState & world.WorldState
 
-export type SharedDispatchers = players.PlayersDispatchers & world.WorldDispatchers
+export type SharedActions = players.PlayersActions & world.WorldActions
 
 return {
     players = players.producer,
@@ -255,7 +255,7 @@ return {
 
 :::info
 
-Exporting `SharedState` and `SharedDispatchers` helps to build a fully-typed Reflex producer. [See more details on importing and exporting types.](create-producer#importing-and-exporting-types)
+Exporting `SharedState` and `SharedActions` helps to build a fully-typed Reflex producer. [See more details on importing and exporting types.](create-producer#importing-and-exporting-types)
 
 :::
 
@@ -266,7 +266,7 @@ In this example, we have two shared producers: `players` and `world`. They are p
 
 The main benefit of using a _shared producer map_ like this is how simple it is to add them to your root producers:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts title="Root producer"
@@ -288,7 +288,7 @@ export const producer = combineProducers({
 <TabItem value="Luau">
 
 ```lua title="Root producer"
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 local producers = require(ReplicatedStorage.shared.producers)
 local foo = require(script.foo)
 local bar = require(script.bar)
@@ -297,9 +297,9 @@ export type RootState = producers.SharedState &
     foo.FooState &
     bar.BarState
 
-export type RootDispatchers = producers.SharedDispatchers &
-    foo.FooDispatchers &
-    bar.BarDispatchers
+export type RootActions = producers.SharedActions &
+    foo.FooActions &
+    bar.BarActions
 
 local map = {
     foo = foo.producer,
@@ -335,7 +335,7 @@ You need a networking solution to use [`createBroadcaster`](#createbroadcasterop
 
 :::
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts title="Server"
@@ -362,7 +362,7 @@ producer.applyMiddleware(broadcaster.middleware);
 <TabItem value="Luau">
 
 ```lua title="Server"
-local Reflex = require(ReplicatedStorage.Packages.reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 local producers = require(ReplicatedStorage.shared.producers)
 local remotes = require(ReplicatedStorage.shared.remotes)
 local producer = require(script.Parent.producer)
@@ -435,7 +435,7 @@ Make sure your shared producers are free from:
 
 Here's an example of an action that is _not_ idempotent:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
@@ -481,7 +481,7 @@ Actions that are not idempotent will cause the client and server to diverge, as 
 
 Instead, you should pass the random value as an argument to the action function:
 
-<Tabs>
+<Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
