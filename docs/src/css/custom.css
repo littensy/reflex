@@ -24,7 +24,7 @@
 	--ifm-toc-border-color: #00000000 !important;
 	--ifm-alert-shadow: rgba(0, 0, 0, 0.03) 0px 0.8px 2px 0px, rgba(0, 0, 0, 0.047) 0px 2.7px 6.7px 0px,
 		rgba(0, 0, 0, 0.08) 0px 12px 30px 0px;
-	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+	--docusaurus-highlighted-code-line-bg: rgba(52, 181, 148, 0.15);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -39,11 +39,6 @@
 	--ifm-hr-background-color: #3e3e44;
 	--ifm-alert-shadow: rgba(0, 0, 0, 0.06) 0px 0.8px 2px 0px, rgba(0, 0, 0, 0.1) 0px 2.7px 6.7px 0px,
 		rgba(0, 0, 0, 0.2) 0px 10px 26px 0px;
-	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="light"] {
-	--docusaurus-highlighted-code-line-bg: rgba(100, 180, 255, 0.1);
 }
 
 .menu {
@@ -70,4 +65,8 @@ code {
 	margin: 0 calc(-1 * var(--ifm-pre-padding));
 	padding: 0 var(--ifm-pre-padding);
 	border-left: 3px solid #ff000080;
+}
+
+.theme-code-block-highlighted-line {
+	border-left: 3px solid rgba(52, 181, 148, 0.8);
 }
