@@ -30,8 +30,8 @@ import { useSelectorCreator } from "@rbxts/roact-reflex";
 import { selectTodo } from "./selectors";
 
 function Todo({ id }: Props) {
-	const todo = useSelectorCreator(selectTodo, id);
-	// ...
+    const todo = useSelectorCreator(selectTodo, id);
+    // ...
 }
 ```
 
@@ -64,9 +64,9 @@ The selector returned by the factory will be memoized in `useMemo` with the give
 
 ```ts
 const selectTodo = (id: number) => {
-	return createSelector([selectTodos], (todos) => {
-		return todos.find((todo) => todo.id === id);
-	});
+    return createSelector([selectTodos], (todos) => {
+        return todos.find((todo) => todo.id === id);
+    });
 };
 ```
 
@@ -78,15 +78,15 @@ To solve this, you might try to memoize the selector with the `useMemo` hook:
 import { selectTodo } from "./selectors";
 
 function Todo({ id }: Props) {
-	// highlight-start
-	const selector = useMemo(() => {
-		return selectTodo(id);
-	}, [id]);
-	// highlight-end
+    // highlight-start
+    const selector = useMemo(() => {
+        return selectTodo(id);
+    }, [id]);
+    // highlight-end
 
-	const todo = useSelector(selector);
+    const todo = useSelector(selector);
 
-	// ...
+    // ...
 }
 ```
 
@@ -97,8 +97,8 @@ import { useSelectorCreator } from "@rbxts/roact-reflex";
 import { selectTodo } from "./selectors";
 
 function Todo({ id }: Props) {
-	const todo = useSelectorCreator(selectTodo, id);
-	// ...
+    const todo = useSelectorCreator(selectTodo, id);
+    // ...
 }
 ```
 
@@ -116,11 +116,11 @@ Here's an example of what _not_ to do:
 import { selectTodos } from "./selectors";
 
 function Todo() {
-	// error-next-line
-	// 🔴 This array is not memoized
-	// error-next-line
-	const todos = useSelectorCreator(selectTodos, [1, 2, 3]);
-	// ...
+    // error-next-line
+    // 🔴 This array is not memoized
+    // error-next-line
+    const todos = useSelectorCreator(selectTodos, [1, 2, 3]);
+    // ...
 }
 ```
 
@@ -130,11 +130,11 @@ Instead, you should memoize the array with `useMemo`:
 import { selectTodos } from "./selectors";
 
 function Todo() {
-	// highlight-start
-	// ✅ This array is memoized
-	const ids = useMemo(() => [1, 2, 3], []);
-	const todos = useSelectorCreator(selectTodos, ids);
-	// highlight-end
-	// ...
+    // highlight-start
+    // ✅ This array is memoized
+    const ids = useMemo(() => [1, 2, 3], []);
+    const todos = useSelectorCreator(selectTodos, ids);
+    // highlight-end
+    // ...
 }
 ```

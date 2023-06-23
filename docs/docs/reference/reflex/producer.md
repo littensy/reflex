@@ -32,7 +32,7 @@ You can dispatch an action by calling it on the producer:
 
 ```ts
 const producer = createProducer(0, {
-	increment: (state, value: number) => state + value,
+    increment: (state, value: number) => state + value,
 });
 
 // highlight-next-line
@@ -116,7 +116,7 @@ To unsubscribe from a listener, call the function returned by `subscribe`.
 const selectCount = (state: State) => state.count;
 
 const unsubscribe = producer.subscribe(selectCount, (count, prevCount) => {
-	print(count, prevCount);
+    print(count, prevCount);
 });
 
 producer.increment(1); // 1, 0
@@ -181,7 +181,7 @@ const selectCounter = (state: State) => state.count;
 const isGreaterThanOne = (count: number) => count > 1;
 
 producer.once(selectCounter, isGreaterThanOne, (count, prevCount) => {
-	print(count, "is greater than 1");
+    print(count, "is greater than 1");
 });
 ```
 
@@ -244,7 +244,7 @@ const selectCounter = (state: State) => state.count;
 const isGreaterThanOne = (count: number) => count > 1;
 
 producer.wait(selectCounter, isGreaterThanOne).then((count) => {
-	print(count, "is greater than 1");
+    print(count, "is greater than 1");
 });
 ```
 
@@ -307,11 +307,11 @@ const selectTodos = (state: State) => state.todos;
 const identifyTodo = (todo: Todo) => todo.id;
 
 producer.observe(selectTodos, identifyTodo, (todo) => {
-	print(todo, "was added");
+    print(todo, "was added");
 
-	return () => {
-		print(todo, "was removed");
-	};
+    return () => {
+        print(todo, "was removed");
+    };
 });
 ```
 
@@ -405,18 +405,18 @@ The `applyMiddleware` method is used to apply middleware to the producer. Middle
 
 ```ts
 const loggerMiddleware: ProducerMiddleware = (producer) => {
-	print("initial state:", producer.getState());
+    print("initial state:", producer.getState());
 
-	producer.subscribe((state) => {
-		print("next state:", state);
-	});
+    producer.subscribe((state) => {
+        print("next state:", state);
+    });
 
-	return (dispatch, name) => {
-		return (...args) => {
-			print(`dispatching ${name}:`, ...args);
-			return dispatch(...args);
-		};
-	};
+    return (dispatch, name) => {
+        return (...args) => {
+            print(`dispatching ${name}:`, ...args);
+            return dispatch(...args);
+        };
+    };
 };
 
 producer.applyMiddleware(loggerMiddleware);
@@ -484,7 +484,7 @@ You can use [`subscribe`](#subscribeselector-listener) to connect a listener fun
 const selectCount = (state: State) => state.count;
 
 producer.subscribe(selectCount, (count) => {
-	print("count changed:", count);
+    print("count changed:", count);
 });
 
 producer.increment(10); // count changed: 10
@@ -524,18 +524,18 @@ Once you have subscribed to the state you want, you can safely run side effects 
 
 ```ts
 interface RootState {
-	readonly health: number;
+    readonly health: number;
 }
 
 const initialState: RootState = {
-	health: 100,
+    health: 100,
 };
 
 const producer = createProducer(initialState, {
-	takeDamage: (state, health: number) => ({
-		...state,
-		health: state.health - health,
-	}),
+    takeDamage: (state, health: number) => ({
+        ...state,
+        health: state.health - health,
+    }),
 });
 ```
 
@@ -578,9 +578,9 @@ Your producer has an action to deal damage to the player, and a `health` field f
 const selectHealth = (state: RootState) => state.health;
 
 producer.subscribe(selectHealth, (health, prevHealth) => {
-	if (health < prevHealth) {
-		playDamageSound();
-	}
+    if (health < prevHealth) {
+        playDamageSound();
+    }
 });
 ```
 
@@ -625,13 +625,13 @@ const selectJumping = (state: RootState) => state.jumping;
 const isFalse = (value: boolean) => value === false;
 
 producer.subscribe(selectJumping, (jumping) => {
-	if (jumping) {
-		const heartbeat = RunService.Heartbeat.Connect(jump);
+    if (jumping) {
+        const heartbeat = RunService.Heartbeat.Connect(jump);
 
-		producer.once(selectJumping, isFalse, (jumping) => {
-			heartbeat.Disconnect();
-		});
-	}
+        producer.once(selectJumping, isFalse, (jumping) => {
+            heartbeat.Disconnect();
+        });
+    }
 });
 ```
 
@@ -680,17 +680,17 @@ const selectJumping = (state: RootState) => state.jumping;
 const isFalse = (value: boolean) => value === false;
 
 async function startJumping() {
-	const heartbeat = RunService.Heartbeat.Connect(jump);
+    const heartbeat = RunService.Heartbeat.Connect(jump);
 
-	return producer.wait(selectJumping, isFalse).finally(() => {
-		heartbeat.Disconnect();
-	});
+    return producer.wait(selectJumping, isFalse).finally(() => {
+        heartbeat.Disconnect();
+    });
 }
 
 producer.subscribe(selectJumping, (jumping) => {
-	if (jumping) {
-		startJumping();
-	}
+    if (jumping) {
+        startJumping();
+    }
 });
 ```
 
@@ -739,7 +739,7 @@ Say your game's state contains a list of players, and each player has a `health`
 const selectPlayers = (state: RootState) => state.players;
 
 const selectAlivePlayers = createSelector([selectPlayers] as const, (players) => {
-	return players.filter((player) => player.health > 0);
+    return players.filter((player) => player.health > 0);
 });
 ```
 
@@ -784,13 +784,13 @@ For example, you can run some code whenever a player is filtered from the list o
 
 ```ts
 producer.subscribe(selectAlivePlayers, (alivePlayers, prevAlivePlayers) => {
-	for (const player of prevAlivePlayers) {
-		const stillAlive = alivePlayers.some((p) => p.id === player.id);
+    for (const player of prevAlivePlayers) {
+        const stillAlive = alivePlayers.some((p) => p.id === player.id);
 
-		if (!stillAlive) {
-			playerDied(player);
-		}
-	}
+        if (!stillAlive) {
+            playerDied(player);
+        }
+    }
 });
 ```
 
@@ -845,21 +845,21 @@ Let's say your state has a list of players, and each player has a `health` and `
 const selectPlayers = (state: RootState) => state.players;
 
 const selectPlayerById = (id: number) => {
-	return createSelector([selectPlayers] as const, (players) => {
-		return players.find((player) => player.id === id);
-	});
+    return createSelector([selectPlayers] as const, (players) => {
+        return players.find((player) => player.id === id);
+    });
 };
 
 // highlight-start
 const selectPlayerHealth = (id: number) => {
-	return createSelector([selectPlayerById(id)] as const, (player) => {
-		return player?.health;
-	});
+    return createSelector([selectPlayerById(id)] as const, (player) => {
+        return player?.health;
+    });
 };
 // highlight-end
 
 producer.subscribe(selectPlayerHealth(123), (health, prevHealth) => {
-	// ...
+    // ...
 });
 ```
 
@@ -916,18 +916,18 @@ end)
 const discriminator = (player: GamePlayer) => player.id;
 
 producer.observe(selectAlivePlayers, discriminator, (initialPlayer) => {
-	const { id } = initialPlayer;
+    const { id } = initialPlayer;
 
-	const unsubscribe = producer.subscribe(selectPlayerHealth(id), (health, prevHealth) => {
-		if (health < prevHealth) {
-			playerDamaged();
-		}
-	});
+    const unsubscribe = producer.subscribe(selectPlayerHealth(id), (health, prevHealth) => {
+        if (health < prevHealth) {
+            playerDamaged();
+        }
+    });
 
-	return () => {
-		unsubscribe();
-		playerDied();
-	};
+    return () => {
+        unsubscribe();
+        playerDied();
+    };
 });
 ```
 
@@ -978,15 +978,15 @@ The discriminator is optional in the case that your list contains primitives lik
 ```ts
 // highlight-start
 const selectPlayerIds = createSelector([selectPlayers] as const, (players) => {
-	return players.map((player) => player.id);
+    return players.map((player) => player.id);
 });
 // highlight-end
 
 producer.observe(selectPlayerIds, (id: number) => {
-	// mounted
-	return () => {
-		// unmounted
-	};
+    // mounted
+    return () => {
+        // unmounted
+    };
 });
 ```
 

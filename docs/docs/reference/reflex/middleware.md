@@ -28,7 +28,7 @@ Logs all actions, their payloads, and the new state to the output.
 import { createProducer, loggerMiddleware } from "@rbxts/reflex";
 
 const producer = createProducer(0, {
-	increment: (state, amount: number) => state + amount,
+    increment: (state, amount: number) => state + amount,
 });
 
 producer.applyMiddleware(loggerMiddleware);
@@ -83,23 +83,23 @@ They sound complicated, but can become straightforward when observing how they w
 
 ```ts
 const loggerMiddleware: ProducerMiddleware = (producer) => {
-	// Producer-level, called by applyMiddleware
+    // Producer-level, called by applyMiddleware
 
-	producer.subscribe((state) => {
-		print("state changed to", state);
-	});
+    producer.subscribe((state) => {
+        print("state changed to", state);
+    });
 
-	return (dispatch, name) => {
-		// Action-level, called per action function
+    return (dispatch, name) => {
+        // Action-level, called per action function
 
-		return (...args) => {
-			// Dispatch-level, wraps around action dispatch
+        return (...args) => {
+            // Dispatch-level, wraps around action dispatch
 
-			print("dispatching", name, "with", args);
+            print("dispatching", name, "with", args);
 
-			return dispatch(...args);
-		};
-	};
+            return dispatch(...args);
+        };
+    };
 };
 
 producer.applyMiddleware(loggerMiddleware);
@@ -170,10 +170,10 @@ const secondWrapper = secondMiddleware(producer);
 const thirdWrapper = thirdMiddleware(producer);
 
 for (const [key, action] of actions) {
-	// Action middlewares wrap around the original action,
-	// each one receiving the next function in the chain:
-	// first -> second -> third -> action
-	actions[key] = thirdWrapper(secondWrapper(firstWrapper(action, key), key), key);
+    // Action middlewares wrap around the original action,
+    // each one receiving the next function in the chain:
+    // first -> second -> third -> action
+    actions[key] = thirdWrapper(secondWrapper(firstWrapper(action, key), key), key);
 }
 
 producer.increment(1);
@@ -200,20 +200,20 @@ A throttle middleware would cancel actions if they're called within a certain ti
 
 ```ts
 const throttleMiddleware: ProducerMiddleware = (producer) => {
-	return (dispatch, name) => {
-		let resumptionTime = 0;
+    return (dispatch, name) => {
+        let resumptionTime = 0;
 
-		return (...args) => {
-			// highlight-start
-			if (os.clock() < resumptionTime) {
-				// Cancel the action by returning early
-				return producer.getState();
-			}
-			// highlight-end
-			resumptionTime = os.clock() + 1;
-			return dispatch(...args);
-		};
-	};
+        return (...args) => {
+            // highlight-start
+            if (os.clock() < resumptionTime) {
+                // Cancel the action by returning early
+                return producer.getState();
+            }
+            // highlight-end
+            resumptionTime = os.clock() + 1;
+            return dispatch(...args);
+        };
+    };
 };
 
 producer.applyMiddleware(throttleMiddleware);

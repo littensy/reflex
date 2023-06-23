@@ -39,23 +39,23 @@ Traditionally, state management libraries like [Rodux](https://roblox.github.io/
 import { createProducer } from "@rbxts/reflex";
 
 export interface TodosState {
-	readonly todos: readonly string[];
+    readonly todos: readonly string[];
 }
 
 const initialState: TodosState = {
-	todos: [],
+    todos: [],
 };
 
 export const todos = createProducer(initialState, {
-	addTodo: (state, todo: string) => ({
-		...state,
-		todos: [...state.todos, todo],
-	}),
+    addTodo: (state, todo: string) => ({
+        ...state,
+        todos: [...state.todos, todo],
+    }),
 
-	removeTodo: (state, todo: string) => ({
-		...state,
-		todos: state.todos.filter((t) => t !== todo),
-	}),
+    removeTodo: (state, todo: string) => ({
+        ...state,
+        todos: state.todos.filter((t) => t !== todo),
+    }),
 });
 ```
 
@@ -137,7 +137,7 @@ import { TodosState, todos } from "./todos";
 const selectTodos = (state: TodosState) => state.todos;
 
 todos.subscribe(selectTodos, (todos) => {
-	print(`TODO: ${todos.join(", ")}`);
+    print(`TODO: ${todos.join(", ")}`);
 });
 
 todos.addTodo("Buy milk");

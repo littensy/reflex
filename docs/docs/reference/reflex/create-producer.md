@@ -30,9 +30,9 @@ Creates a [producer](producer) initialized with the given `initialState` and mer
 
 ```ts
 const producer = createProducer(0, {
-	increment: (state, value: number) => state + value,
-	decrement: (state, value: number) => state - value,
-	set: (_, value: number) => value,
+    increment: (state, value: number) => state + value,
+    decrement: (state, value: number) => state - value,
+    set: (_, value: number) => value,
 });
 ```
 
@@ -108,19 +108,19 @@ See libraries like [Sift](https://csqrl.github.io/sift/) and [Immut](https://sol
 
 ```ts
 interface CounterState {
-	readonly count: number;
+    readonly count: number;
 }
 
 const initialState: CounterState = {
-	count: 0,
+    count: 0,
 };
 
 const producer = createProducer(initialState, {
-	increment: (state, value: number) => ({
-		...state,
-		count: state.count + value,
-	}),
-	// ...
+    increment: (state, value: number) => ({
+        ...state,
+        count: state.count + value,
+    }),
+    // ...
 });
 ```
 
@@ -186,33 +186,33 @@ The easiest way to do this is to use a library like [Sift](https://csqrl.github.
 
 ```ts
 interface TodoState {
-	readonly todos: readonly Todo[];
+    readonly todos: readonly Todo[];
 }
 
 interface Todo {
-	readonly text: string;
-	readonly completed: boolean;
+    readonly text: string;
+    readonly completed: boolean;
 }
 
 const initialState: CounterState = {
-	entries: {},
+    entries: {},
 };
 
 const producer = createProducer(initialState, {
-	addTodo: (state, text: string) => ({
-		...state,
-		todos: [...state.todos, { text, completed: false }],
-	}),
+    addTodo: (state, text: string) => ({
+        ...state,
+        todos: [...state.todos, { text, completed: false }],
+    }),
 
-	toggleTodo: (state, index: number) => ({
-		...state,
-		todos: state.todos.map((todo, i) => {
-			if (i !== index) {
-				return todo;
-			}
-			return { ...todo, completed: !todo.completed };
-		}),
-	}),
+    toggleTodo: (state, index: number) => ({
+        ...state,
+        todos: state.todos.map((todo, i) => {
+            if (i !== index) {
+                return todo;
+            }
+            return { ...todo, completed: !todo.completed };
+        }),
+    }),
 });
 ```
 
@@ -289,19 +289,19 @@ This is not required in TypeScript, since types can be inferred from the produce
 
 ```ts title="counter.ts"
 export interface CounterState {
-	readonly count: number;
+    readonly count: number;
 }
 
 const initialState: CounterState = {
-	count: 0,
+    count: 0,
 };
 
 export const counterSlice = createProducer(initialState, {
-	increment: (state, value: number) => ({
-		...state,
-		count: state.count + value,
-	}),
-	// ...
+    increment: (state, value: number) => ({
+        ...state,
+        count: state.count + value,
+    }),
+    // ...
 });
 ```
 
@@ -314,8 +314,8 @@ export type RootProducer = typeof producer;
 export type RootState = InferState<RootProducer>;
 
 export const producer = combineProducers({
-	counter: counterSlice,
-	// ...
+    counter: counterSlice,
+    // ...
 });
 ```
 
@@ -388,13 +388,13 @@ Code like this assumes a _mutable_ state object:
 
 ```ts
 const producer = createProducer(initialState, {
-	increment: (state, value: number) => {
-		// error-next-line
-		// 🔴 You are not allowed to mutate state
-		// error-next-line
-		state.count += value;
-		return state;
-	},
+    increment: (state, value: number) => {
+        // error-next-line
+        // 🔴 You are not allowed to mutate state
+        // error-next-line
+        state.count += value;
+        return state;
+    },
 });
 ```
 
@@ -425,13 +425,13 @@ To fix this, apply the changes to a new object and return it:
 
 ```ts
 const producer = createProducer(initialState, {
-	// highlight-start
-	// ✅ Apply changes to a new object instead of mutating
-	increment: (state, value: number) => ({
-		...state,
-		count: state.count + value,
-	}),
-	// highlight-end
+    // highlight-start
+    // ✅ Apply changes to a new object instead of mutating
+    increment: (state, value: number) => ({
+        ...state,
+        count: state.count + value,
+    }),
+    // highlight-end
 });
 ```
 
