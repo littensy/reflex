@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
 description: Get started with the basics of using Reflex.
+slug: /
 ---
 
 import Tabs from '@theme/Tabs';

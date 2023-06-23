@@ -86,7 +86,7 @@ const config = {
             items: [
               {
                 label: 'Docs',
-                to: '/docs/docs/quick-start',
+                to: '/docs',
               },
               {
                 label: 'Reflex API',

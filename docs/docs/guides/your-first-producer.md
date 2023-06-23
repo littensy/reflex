@@ -22,7 +22,7 @@ _Producers_ are the building blocks of Reflex. They are the state containers tha
 
 ## What is a producer?
 
-A [producer](../../reference/reflex/producer) is a state container that you can use to dispatch actions or observe state changes. They're designed to be used as a single source of truth for your state, and provide an all-in-one interface for managing your game's state.
+A [producer](../reference/reflex/producer) is a state container that you can use to dispatch actions or observe state changes. They're designed to be used as a single source of truth for your state, and provide an all-in-one interface for managing your game's state.
 
 Unlike [Rodux](https://roblox.github.io/), which delegates state management to reducers, Reflex skips this step and allows actions to set your state. Reflex aims to be quick to set up and easy to use, and producers are the core of that philosophy.
 
@@ -169,7 +169,7 @@ todos.addTodo("Buy eggs")
 --> TODO: Buy milk, Buy eggs
 ```
 
-This example [subscribes](../../reference/reflex/producer#subscribeselector-listener) to changes in `state.todos` and prints the list of todos whenever it changes. After adding `Buy milk` and `Buy eggs` to the list, it prints the updated list.
+This example [subscribes](../reference/reflex/producer#subscribeselector-listener) to changes in `state.todos` and prints the list of todos whenever it changes. After adding `Buy milk` and `Buy eggs` to the list, it prints the updated list.
 
 ### Organizing producers
 

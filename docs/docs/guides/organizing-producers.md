@@ -88,12 +88,19 @@ local todos = Reflex.createProducer(initialState, {
 
 ## Defining slices
 
-A producer slice is a producer that you're going to use as a part of your root producer. By splitting up your producers into slices, you can keep your code organized and easy to maintain.
+A _producer slice_ is a subset of your root producer's state and actions. By splitting up your producers into slices, you can keep your code organized and easy to maintain.
 
 Here, both `todos` and `calendar` have been made into producer slices:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
+
+```text title="File structure"
+producer
+├── calendar.ts
+├── todos.ts
+└── index.ts
+```
 
 <Tabs>
 <TabItem value="Todos">
@@ -159,6 +166,13 @@ export const calendarSlice = createProducer(initialState, {
 
 </TabItem>
 <TabItem value="Luau">
+
+```text title="File structure"
+producer
+├── calendar.lua
+├── todos.lua
+└── init.lua
+```
 
 <Tabs>
 <TabItem value="Todos">
@@ -270,12 +284,6 @@ We export `TodosState` and `TodosActions` to make it easier to type our root pro
 </TabItem>
 </Tabs>
 
-```text title="File structure"
-producer
-├── calendar
-└── todos
-```
-
 Our state has been broken into two slices:
 
 1.  `todosSlice` manages a list of todos
@@ -287,7 +295,7 @@ These slices can then be **combined** into a root producer.
 
 ## Defining a root producer
 
-The root producer file is where you'll combine all of your slices into a single producer. This file is the entry point for accessing your game's state, and also exports some utility types to help us later. You can combine your slices with [`combineProducers`](../../reference/reflex/combine-producers):
+The root producer file is where you'll combine all of your slices into a single producer. This file is the entry point for accessing your game's state, and also exports some utility types to help us later. You can combine your slices with [`combineProducers`](../reference/reflex/combine-producers):
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -339,7 +347,7 @@ Exporting the `RootProducer` and `RootState` types will help you write selectors
 
 :::
 
-Now that we have a root producer, we can use the state and actions from our slices. Calling [`combineProducers`](../../reference/reflex/combine-producers) does three things:
+Now that we have a root producer, we can use the state and actions from our slices. Calling [`combineProducers`](../reference/reflex/combine-producers) does three things:
 
 1.  **Combine** the state from each slice using the shape you provided.
 2.  **Expose** the actions from each slice under the root producer.

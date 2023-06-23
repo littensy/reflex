@@ -76,4 +76,4 @@ pnpm add @rbxts/roact-reflex
 
 ### Next steps
 
-You're now ready to use Reflex! See the [Quick Start](quick-start) guide to get started.
+You're now ready to use Reflex! See the [Quick Start](/docs/) guide to get started.
