@@ -30,8 +30,8 @@ import { useSelector } from "@rbxts/roact-reflex";
 import { selectTodos } from "./selectors";
 
 function Todos() {
-    const todos = useSelector(selectTodos);
-    // ...
+	const todos = useSelector(selectTodos);
+	// ...
 }
 ```
 
@@ -63,8 +63,8 @@ import { useSelector } from "@rbxts/roact-reflex";
 import { selectTodos } from "./selectors";
 
 function Todos() {
-    const todos = useSelector(selectTodos, shallowEqual);
-    // ...
+	const todos = useSelector(selectTodos, shallowEqual);
+	// ...
 }
 ```
 
@@ -92,9 +92,9 @@ import { useSelector } from "@rbxts/roact-reflex";
 import { selectTodos } from "./selectors";
 
 function Todos() {
-    // highlight-next-line
-    const todos = useSelector(selectTodos);
-    // ...
+	// highlight-next-line
+	const todos = useSelector(selectTodos);
+	// ...
 }
 ```
 
@@ -104,17 +104,17 @@ You can then render a list of todos from the selected value:
 
 ```tsx
 function Todos() {
-    const todos = useSelector(selectTodos);
+	const todos = useSelector(selectTodos);
 
-    return (
-        <scrollingframe>
-            // highlight-start
-            {todos.map((todo) => (
-                <Todo id={todo.id} />
-            ))}
-            // highlight-end
-        </scrollingframe>
-    );
+	return (
+		<scrollingframe>
+			// highlight-start
+			{todos.map((todo) => (
+				<Todo id={todo.id} />
+			))}
+			// highlight-end
+		</scrollingframe>
+	);
 }
 ```
 
@@ -137,12 +137,12 @@ import { useSelector } from "@rbxts/roact-reflex";
 import { selectValue } from "./selectors";
 
 function isEqualOrUndefined(current: unknown, previous: unknown) {
-    return current === previous || current === undefined;
+	return current === previous || current === undefined;
 }
 
 function Button() {
-    const value = useSelector(selectValue, isEqualOrUndefined);
-    // ...
+	const value = useSelector(selectValue, isEqualOrUndefined);
+	// ...
 }
 ```
 
@@ -172,8 +172,8 @@ import { useSelector } from "@rbxts/roact-reflex";
 import { selectTodo } from "./selectors";
 
 function Todo({ id }: Props) {
-    const todo = useSelector((state) => selectTodo(state, id));
-    // ...
+	const todo = useSelector((state) => selectTodo(state, id));
+	// ...
 }
 ```
 
@@ -191,8 +191,8 @@ This error means that you're trying to use [`useSelector`](#useselectorselector-
 
 ```tsx
 function TodosApp() {
-    const todos = useSelector(selectTodos);
-    // ...
+	const todos = useSelector(selectTodos);
+	// ...
 }
 
 // error-next-line
@@ -207,18 +207,18 @@ If your app or components use Reflex, you should wrap your root elements in a `<
 
 ```tsx
 function TodosApp() {
-    const todos = useSelector(selectTodos);
-    // ...
+	const todos = useSelector(selectTodos);
+	// ...
 }
 
 // ✅ You can use the root producer in your components
 Roact.mount(
-    // highlight-start
-    <ReflexProvider producer={producer}>
-        <TodosApp />
-    </ReflexProvider>,
-    // highlight-end
-    container,
+	// highlight-start
+	<ReflexProvider producer={producer}>
+		<TodosApp />
+	</ReflexProvider>,
+	// highlight-end
+	container,
 );
 ```
 
@@ -232,16 +232,16 @@ Here's an example of a **bad** selector that returns a new object every time it'
 
 ```ts
 const selectTodos = (state: RootState) => {
-    state.todos;
+	state.todos;
 };
 
 // error-next-line
 // 🔴 This selector creates a new array every time it's called
 // error-next-line
 const selectTodosDone = (state: RootState) => {
-    // error-next-line
-    return state.todos.filter((todo) => todo.done);
-    // error-next-line
+	// error-next-line
+	return state.todos.filter((todo) => todo.done);
+	// error-next-line
 };
 ```
 
@@ -253,13 +253,13 @@ To fix this, you can use [`createSelector`](../reflex/create-selector) to memoiz
 import { createSelector } from "@rbxts/roact-reflex";
 
 const selectTodos = (state: RootState) => {
-    state.todos;
+	state.todos;
 };
 
 // highlight-start
 // ✅ This selector is memoized, and won't re-render unless 'todos' changes
 const selectTodosDone = createSelector([selectTodos], (todos) => {
-    return todos.filter((todo) => todo.done);
+	return todos.filter((todo) => todo.done);
 });
 // highlight-end
 ```

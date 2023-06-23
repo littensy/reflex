@@ -30,8 +30,8 @@ import { useProducer } from "@rbxts/roact-reflex";
 import { RootProducer } from "./producer";
 
 function Button() {
-    const producer = useProducer<RootProducer>();
-    // ...
+	const producer = useProducer<RootProducer>();
+	// ...
 }
 ```
 
@@ -66,9 +66,9 @@ import { useProducer } from "@rbxts/roact-reflex";
 import { RootProducer } from "./producer";
 
 function Button() {
-    // highlight-next-line
-    const producer = useProducer<RootProducer>();
-    // ...
+	// highlight-next-line
+	const producer = useProducer<RootProducer>();
+	// ...
 }
 ```
 
@@ -78,10 +78,10 @@ You will mainly use this to dispatch actions to your producer. As a shorthand, y
 
 ```tsx
 function Button() {
-    // highlight-next-line
-    const { increment } = useProducer<RootProducer>();
+	// highlight-next-line
+	const { increment } = useProducer<RootProducer>();
 
-    return <textbutton Event={{ Activated: () => increment(1) }} />;
+	return <textbutton Event={{ Activated: () => increment(1) }} />;
 }
 ```
 
@@ -118,8 +118,8 @@ This error means that you're trying to use [`useProducer`](#useproducert) in a f
 
 ```tsx
 function App() {
-    const producer = useProducer<RootProducer>();
-    // ...
+	const producer = useProducer<RootProducer>();
+	// ...
 }
 
 // error-next-line
@@ -134,18 +134,18 @@ If your app or components use Reflex, you should wrap your root elements in a `<
 
 ```tsx
 function App() {
-    const producer = useProducer<RootProducer>();
-    // ...
+	const producer = useProducer<RootProducer>();
+	// ...
 }
 
 // ✅ You can use the root producer in your components
 Roact.mount(
-    // highlight-start
-    <ReflexProvider producer={producer}>
-        <App />
-    </ReflexProvider>,
-    // highlight-end
-    container,
+	// highlight-start
+	<ReflexProvider producer={producer}>
+		<App />
+	</ReflexProvider>,
+	// highlight-end
+	container,
 );
 ```
 
@@ -155,13 +155,13 @@ If your component is dispatching actions in a loop, it's likely that your action
 
 ```ts
 function Button() {
-    const { increment } = useProducer<RootProducer>();
-    const counter = useSelector((state) => state.counter);
+	const { increment } = useProducer<RootProducer>();
+	const counter = useSelector((state) => state.counter);
 
-    // error-next-line
-    // 🔴 This action updates counter and causes a re-render loop
-    // error-next-line
-    increment(1);
+	// error-next-line
+	// 🔴 This action updates counter and causes a re-render loop
+	// error-next-line
+	increment(1);
 }
 ```
 
@@ -169,14 +169,14 @@ To fix this, you can use [`useEffect`](https://roblox.github.io/roact/advanced/h
 
 ```ts
 function Button() {
-    const { increment } = useProducer<RootProducer>();
-    const counter = useSelector((state) => state.counter);
+	const { increment } = useProducer<RootProducer>();
+	const counter = useSelector((state) => state.counter);
 
-    // highlight-start
-    // ✅ This action is dispatched once when the component mounts
-    useEffect(() => {
-        increment(1);
-    }, []);
-    // highlight-end
+	// highlight-start
+	// ✅ This action is dispatched once when the component mounts
+	useEffect(() => {
+		increment(1);
+	}, []);
+	// highlight-end
 }
 ```

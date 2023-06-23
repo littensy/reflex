@@ -14,7 +14,7 @@ import TOCInline from "@theme/TOCInline";
 
 ```tsx
 <ReflexProvider producer={producer}>
-    <App />
+	<App />
 </ReflexProvider>
 ```
 
@@ -33,10 +33,10 @@ import Roact from "@rbxts/roact";
 import { ReflexProvider } from "@rbxts/roact-reflex";
 
 Roact.mount(
-    <ReflexProvider producer={producer}>
-        <App />
-    </ReflexProvider>,
-    Players.LocalPlayer.WaitForChild("PlayerGui"),
+	<ReflexProvider producer={producer}>
+		<App />
+	</ReflexProvider>,
+	Players.LocalPlayer.WaitForChild("PlayerGui"),
 );
 ```
 
@@ -65,12 +65,12 @@ import Roact from "@rbxts/roact";
 import { ReflexProvider } from "@rbxts/roact-reflex";
 
 Roact.mount(
-    // highlight-next-line
-    <ReflexProvider producer={producer}>
-        <App />
-        // highlight-next-line
-    </ReflexProvider>,
-    Players.LocalPlayer.WaitForChild("PlayerGui"),
+	// highlight-next-line
+	<ReflexProvider producer={producer}>
+		<App />
+		// highlight-next-line
+	</ReflexProvider>,
+	Players.LocalPlayer.WaitForChild("PlayerGui"),
 );
 ```
 
@@ -87,14 +87,14 @@ import Roact from "@rbxts/roact";
 import { ReflexProvider } from "@rbxts/roact-reflex";
 
 Roact.mount(
-    // highlight-next-line
-    <ReflexProvider producer={producer}>
-        <OtherProvider>
-            <App />
-        </OtherProvider>
-        // highlight-next-line
-    </ReflexProvider>,
-    Players.LocalPlayer.WaitForChild("PlayerGui"),
+	// highlight-next-line
+	<ReflexProvider producer={producer}>
+		<OtherProvider>
+			<App />
+		</OtherProvider>
+		// highlight-next-line
+	</ReflexProvider>,
+	Players.LocalPlayer.WaitForChild("PlayerGui"),
 );
 ```
 
@@ -107,11 +107,11 @@ It can also help to create a custom provider that combines all of your providers
 import Roact from "@rbxts/roact";
 
 export function RootProvider(props: Roact.PropsWithChildren) {
-    return (
-        <ReflexProvider producer={producer}>
-            <OtherProvider>{props[Roact.Children]}</OtherProvider>
-        </ReflexProvider>
-    );
+	return (
+		<ReflexProvider producer={producer}>
+			<OtherProvider>{props[Roact.Children]}</OtherProvider>
+		</ReflexProvider>
+	);
 }
 ```
 
@@ -123,10 +123,10 @@ import Roact from "@rbxts/roact";
 import { RootProvider } from "./RootProvider";
 
 Roact.mount(
-    <RootProvider>
-        <App />
-    </RootProvider>,
-    Players.LocalPlayer.WaitForChild("PlayerGui"),
+	<RootProvider>
+		<App />
+	</RootProvider>,
+	Players.LocalPlayer.WaitForChild("PlayerGui"),
 );
 ```
 

@@ -57,16 +57,16 @@ You're now ready to use Reflex! Where Rodux uses stores, reducers, and actions, 
 import { createProducer } from "@rbxts/reflex";
 
 interface State {
-    count: number;
+	count: number;
 }
 
 const initialState: State = {
-    count: 0,
+	count: 0,
 };
 
 const producer = createProducer(initialState, {
-    increment: (state) => ({ ...state, count: state.count + 1 }),
-    reset: () => ({ ...state, count: 0 }),
+	increment: (state) => ({ ...state, count: state.count + 1 }),
+	reset: () => ({ ...state, count: 0 }),
 });
 ```
 
@@ -113,10 +113,10 @@ Reflex was designed to make managing your state simple and straightforward. Disp
 
 ```ts showLineNumbers
 producer.subscribe(
-    (state) => state.count,
-    (count) => {
-        print(`The count is now ${count}`);
-    },
+	(state) => state.count,
+	(count) => {
+		print(`The count is now ${count}`);
+	},
 );
 
 producer.increment(); // The count is now 1

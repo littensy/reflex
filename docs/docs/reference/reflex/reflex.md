@@ -39,9 +39,9 @@ Explore how to use producers to manage your game:
 
 ```ts
 const producer = createProducer(0, {
-    increment: (state, value: number) => state + value,
-    decrement: (state, value: number) => state - value,
-    set: (_, value: number) => value,
+	increment: (state, value: number) => state + value,
+	decrement: (state, value: number) => state - value,
+	set: (_, value: number) => value,
 });
 ```
 
@@ -59,7 +59,7 @@ If your state is a complex object, you can use _selectors_ to extract specific p
 const selectItems = (state: State) => state.items;
 
 const selectInStock = createSelector([selectItems], (items) => {
-    return items.filter((item) => item.stock > 0);
+	return items.filter((item) => item.stock > 0);
 });
 ```
 
@@ -98,18 +98,18 @@ Explore how to use broadcasters and receivers to sync state:
 
 ```ts title="Server snippet"
 const broadcaster = createBroadcaster({
-    producers: sharedProducers,
-    broadcast: (players, actions) => {
-        remotes.Server.Get("broadcast").SendToPlayers(players, actions);
-    },
+	producers: sharedProducers,
+	broadcast: (players, actions) => {
+		remotes.Server.Get("broadcast").SendToPlayers(players, actions);
+	},
 });
 ```
 
 ```ts title="Client snippet"
 const receiver = createBroadcastReceiver({
-    requestState: async () => {
-        const remote = await remotes.Client.WaitFor("requestState");
-        return remote.CallServerAsync();
-    },
+	requestState: async () => {
+		const remote = await remotes.Client.WaitFor("requestState");
+		return remote.CallServerAsync();
+	},
 });
 ```

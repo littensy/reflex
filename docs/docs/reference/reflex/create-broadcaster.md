@@ -32,11 +32,11 @@ Call `createBroadcaster` to create a broadcaster object that syncs shared state 
 import { createBroadcaster } from "@rbxts/reflex";
 
 const broadcaster = createBroadcaster({
-    producers: sharedProducers,
-    broadcast: (players, actions) => {
-        // using @rbxts/net
-        remotes.Server.Get("broadcast").SendToPlayers(players, actions);
-    },
+	producers: sharedProducers,
+	broadcast: (players, actions) => {
+		// using @rbxts/net
+		remotes.Server.Get("broadcast").SendToPlayers(players, actions);
+	},
 });
 ```
 
@@ -65,7 +65,7 @@ After you've created the broadcaster, you will need to **apply the middleware** 
 
 ```ts
 remotes.Server.OnFunction("requestState", (player) => {
-    return broadcaster.playerRequestedState(player);
+	return broadcaster.playerRequestedState(player);
 });
 
 producer.applyMiddleware(broadcaster.middleware);
@@ -153,7 +153,7 @@ Process a player's request for state with `playerRequestedState`.
 
 ```ts
 remotes.Server.OnFunction("requestState", (player) => {
-    return broadcaster.playerRequestedState(player);
+	return broadcaster.playerRequestedState(player);
 });
 ```
 
@@ -218,8 +218,8 @@ import { worldProducer } from "./world";
 export type SharedState = CombineStates<typeof sharedProducers>;
 
 export const sharedProducers = {
-    players: playersProducer,
-    world: worldProducer,
+	players: playersProducer,
+	world: worldProducer,
 };
 ```
 
@@ -278,9 +278,9 @@ import { barSlice } from "./bar";
 export type RootState = InferState<typeof producers>;
 
 export const producer = combineProducers({
-    ...sharedProducers,
-    foo: fooSlice,
-    bar: barSlice,
+	...sharedProducers,
+	foo: fooSlice,
+	bar: barSlice,
 });
 ```
 
@@ -345,14 +345,14 @@ import { remotes } from "shared/remotes";
 import { producer } from "./producer";
 
 const broadcaster = createBroadcaster({
-    producers: sharedProducers,
-    broadcast: (players, actions) => {
-        remotes.Server.Get("broadcast").SendToPlayers(players, actions);
-    },
+	producers: sharedProducers,
+	broadcast: (players, actions) => {
+		remotes.Server.Get("broadcast").SendToPlayers(players, actions);
+	},
 });
 
 remotes.Server.OnFunction("requestState", (player) => {
-    return broadcaster.playerRequestedState(player);
+	return broadcaster.playerRequestedState(player);
 });
 
 producer.applyMiddleware(broadcaster.middleware);

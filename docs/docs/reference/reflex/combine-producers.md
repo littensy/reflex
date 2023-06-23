@@ -13,8 +13,8 @@ import TOCInline from "@theme/TOCInline";
 
 ```ts
 const producer = combineProducers({
-    foo: fooSlice,
-    bar: barSlice,
+	foo: fooSlice,
+	bar: barSlice,
 });
 ```
 
@@ -33,16 +33,16 @@ To combine multiple [producers](producer), pass them into `combineProducers` as 
 
 ```ts
 const fooSlice = createProducer(0, {
-    incrementFoo: (state, value: number) => state + value,
+	incrementFoo: (state, value: number) => state + value,
 });
 
 const barSlice = createProducer(0, {
-    incrementBar: (state, value: number) => state + value,
+	incrementBar: (state, value: number) => state + value,
 });
 
 const producer = combineProducers({
-    foo: fooSlice,
-    bar: barSlice,
+	foo: fooSlice,
+	bar: barSlice,
 });
 ```
 
@@ -132,15 +132,15 @@ In TypeScript, you should use `InferState` or an equivalent type to export the r
 import { createProducer } from "@rbxts/reflex";
 
 export interface RouterState {
-    readonly page: string;
+	readonly page: string;
 }
 
 const initialState: RouterState = {
-    page: "home",
+	page: "home",
 };
 
 export const routerSlice = createProducer(initialState, {
-    setPage: (state, page: string) => ({ ...state, page }),
+	setPage: (state, page: string) => ({ ...state, page }),
 });
 ```
 
@@ -151,23 +151,23 @@ export const routerSlice = createProducer(initialState, {
 import { createProducer } from "@rbxts/reflex";
 
 export interface LeaderboardState {
-    readonly players: readonly number[];
+	readonly players: readonly number[];
 }
 
 const initialState: LeaderboardState = {
-    players: [],
+	players: [],
 };
 
 export const leaderboardSlice = createProducer(initialState, {
-    addPlayer: (state, player: number) => ({
-        ...state,
-        players: [...state.players, player],
-    }),
+	addPlayer: (state, player: number) => ({
+		...state,
+		players: [...state.players, player],
+	}),
 
-    removePlayer: (state, player: number) => ({
-        ...state,
-        players: state.players.filter((p) => p !== player),
-    }),
+	removePlayer: (state, player: number) => ({
+		...state,
+		players: state.players.filter((p) => p !== player),
+	}),
 });
 ```
 
@@ -184,8 +184,8 @@ export type RootProducer = typeof producer;
 export type RootState = InferState<RootProducer>;
 
 export const producer = combineProducers({
-    router: routerSlice,
-    leaderboard: leaderboardSlice,
+	router: routerSlice,
+	leaderboard: leaderboardSlice,
 });
 ```
 
@@ -350,11 +350,11 @@ import { createSelector } from "@rbxts/reflex";
 import { RootState } from "../producer";
 
 export const selectLeaderboardUserIds = (state: RootState) => {
-    return state.leaderboard.players;
+	return state.leaderboard.players;
 };
 
 export const selectLeaderboardPlayers = createSelector([selectLeaderboardUserIds], (userIds) => {
-    return userIds.mapFiltered((userId) => Players.GetPlayerByUserId(userId));
+	return userIds.mapFiltered((userId) => Players.GetPlayerByUserId(userId));
 });
 ```
 
@@ -409,18 +409,18 @@ An interesting caveat of [`combineProducers`](combine-producers) is that combine
 
 ```ts
 const fooSlice = createProducer(0, {
-    // highlight-next-line
-    increment: (state, value: number) => state + value,
+	// highlight-next-line
+	increment: (state, value: number) => state + value,
 });
 
 const barSlice = createProducer(0, {
-    // highlight-next-line
-    increment: (state, value: number) => state + value,
+	// highlight-next-line
+	increment: (state, value: number) => state + value,
 });
 
 const producer = combineProducers({
-    foo: fooSlice,
-    bar: barSlice,
+	foo: fooSlice,
+	bar: barSlice,
 });
 
 // highlight-next-line

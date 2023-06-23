@@ -36,15 +36,15 @@ import { createProducer } from "@rbxts/reflex";
 // ...
 
 export const todos = createProducer(initialState, {
-    addTodo: (state, todo: string) => ({
-        ...state,
-        todos: [...state.todos, todo],
-    }),
+	addTodo: (state, todo: string) => ({
+		...state,
+		todos: [...state.todos, todo],
+	}),
 
-    removeTodo: (state, todo: string) => ({
-        ...state,
-        todos: state.todos.filter((t) => t !== todo),
-    }),
+	removeTodo: (state, todo: string) => ({
+		...state,
+		todos: state.todos.filter((t) => t !== todo),
+	}),
 });
 ```
 
@@ -109,23 +109,23 @@ producer
 import { createProducer } from "@rbxts/reflex";
 
 export interface TodosState {
-    readonly todos: readonly string[];
+	readonly todos: readonly string[];
 }
 
 const initialState: TodosState = {
-    todos: [],
+	todos: [],
 };
 
 export const todosSlice = createProducer(initialState, {
-    addTodo: (state, todo: string) => ({
-        ...state,
-        todos: [...state.todos, todo],
-    }),
+	addTodo: (state, todo: string) => ({
+		...state,
+		todos: [...state.todos, todo],
+	}),
 
-    removeTodo: (state, todo: string) => ({
-        ...state,
-        todos: state.todos.filter((t) => t !== todo),
-    }),
+	removeTodo: (state, todo: string) => ({
+		...state,
+		todos: state.todos.filter((t) => t !== todo),
+	}),
 });
 ```
 
@@ -136,28 +136,28 @@ export const todosSlice = createProducer(initialState, {
 import { createProducer } from "@rbxts/reflex";
 
 export interface CalendarState {
-    readonly events: readonly CalendarEvent[];
+	readonly events: readonly CalendarEvent[];
 }
 
 export interface CalendarEvent {
-    readonly name: string;
-    readonly date: number;
+	readonly name: string;
+	readonly date: number;
 }
 
 const initialState: CalendarState = {
-    events: [],
+	events: [],
 };
 
 export const calendarSlice = createProducer(initialState, {
-    addEvent: (state, event: CalendarEvent) => ({
-        ...state,
-        events: [...state.events, event],
-    }),
+	addEvent: (state, event: CalendarEvent) => ({
+		...state,
+		events: [...state.events, event],
+	}),
 
-    removeEvent: (state, name: string) => ({
-        ...state,
-        events: state.events.filter((e) => e.name !== name),
-    }),
+	removeEvent: (state, name: string) => ({
+		...state,
+		events: state.events.filter((e) => e.name !== name),
+	}),
 });
 ```
 
@@ -310,8 +310,8 @@ export type RootProducer = typeof producer;
 export type RootState = CombineStates<RootProducer>;
 
 export const producer = combineProducers({
-    todos: todosSlice,
-    calendar: calendarSlice,
+	todos: todosSlice,
+	calendar: calendarSlice,
 });
 ```
 
@@ -370,7 +370,7 @@ import { RootState, producer } from "./producer";
 const selectTodos = (state: RootState) => state.todos.todos;
 
 producer.subscribe(selectTodos, (todos) => {
-    print(`TODO: ${todos.join(", ")}`);
+	print(`TODO: ${todos.join(", ")}`);
 });
 
 producer.addTodo("Buy milk");
@@ -413,10 +413,10 @@ import { RootState, producer } from "./producer";
 const selectEvents = (state: RootState) => state.calendar.events;
 
 producer.subscribe(selectEvents, (events) => {
-    print("EVENTS:");
-    for (const event of events) {
-        print(`- ${event.name} (${event.date})`);
-    }
+	print("EVENTS:");
+	for (const event of events) {
+		print(`- ${event.name} (${event.date})`);
+	}
 });
 
 producer.addEvent({ name: "Birthday", date: "2004-12-27" });

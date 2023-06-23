@@ -35,7 +35,7 @@ const selectArray = (state: State) => state.array;
 const selectMap = (state: State) => state.map;
 
 const selectValues = createSelector([selectArray, selectMap] as const, (array, map) => {
-    return [...array, ...Object.values(map)];
+	return [...array, ...Object.values(map)];
 });
 ```
 
@@ -101,24 +101,24 @@ Often, you'll want to sort a list of items, filter out items that don't match a 
 
 ```ts
 interface CartState {
-    readonly items: readonly CartItem[];
+	readonly items: readonly CartItem[];
 }
 
 interface CartItem {
-    readonly name: string;
-    readonly price: number;
-    readonly stock: number;
+	readonly name: string;
+	readonly price: number;
+	readonly stock: number;
 }
 
 const initialState: CartState = {
-    items: [],
+	items: [],
 };
 
 const producer = createProducer(initialState, {
-    addItem: (state, item: CartItem) => ({
-        ...state,
-        items: [...state.items, item],
-    }),
+	addItem: (state, item: CartItem) => ({
+		...state,
+		items: [...state.items, item],
+	}),
 });
 ```
 
@@ -165,12 +165,12 @@ Your first instinct might be to write a simple function that filters items with 
 
 ```ts
 const selectInStock = (state: CartState) => {
-    // error-next-line
-    return state.items.filter((item) => item.stock > 0);
+	// error-next-line
+	return state.items.filter((item) => item.stock > 0);
 };
 
 producer.subscribe(selectInStock, (stock) => {
-    print("Items available:", stock);
+	print("Items available:", stock);
 });
 ```
 
@@ -220,12 +220,12 @@ const selectItems = (state: CartState) => state.items;
 
 // highlight-start
 const selectInStock = createSelector([selectItems] as const, (items) => {
-    return items.filter((item) => item.stock > 0);
+	return items.filter((item) => item.stock > 0);
 });
 // highlight-end
 
 producer.subscribe(selectInStock, (stock) => {
-    print("Items available:", stock);
+	print("Items available:", stock);
 });
 ```
 
@@ -308,9 +308,9 @@ const selectItems = (state: CartState) => state.items;
 
 // highlight-next-line
 const selectItemById = (id: number) => {
-    return createSelector([selectItems] as const, (items) => {
-        return items.find((item) => item.id === id);
-    });
+	return createSelector([selectItems] as const, (items) => {
+		return items.find((item) => item.id === id);
+	});
 };
 
 producer.subscribe(selectItemById(1), print);
@@ -378,13 +378,13 @@ If your parameters can change often, and parameters do not conflict in your app,
 const selectItems = (state: CartState) => state.items.list;
 
 const selectFilteredItems = createSelector(
-    [selectItems, (state: CartState, query: string) => query] as const,
-    (items, query) => {
-        return items.filter((item) => {
-            const [match] = item.name.lower().match(query.lower());
-            return match !== undefined;
-        });
-    },
+	[selectItems, (state: CartState, query: string) => query] as const,
+	(items, query) => {
+		return items.filter((item) => {
+			const [match] = item.name.lower().match(query.lower());
+			return match !== undefined;
+		});
+	},
 );
 
 producer.getState((state) => selectFilteredItems(state, "query"));
@@ -431,9 +431,9 @@ end)
 
 :::danger why not?
 
--   **Avoid conflicting arguments.** Let's say you have two subscriptions to the selector that call it with different parameters. If the state changes, both subscriptions will call the selector with their own different parameters, and the selector will re-compute new values _twice_ in every state change!
+-   **Avoid conflicting arguments for memoized selectors.** Let's say you have two subscriptions to the selector that call it with different parameters. If the state changes, both subscriptions will call the selector with their own different parameters, and the selector will re-compute new values _twice_ in every state change!
 
--   **If you _do_ have conflicting arguments,** [selector factories](#selector-factories) will work better for you.
+-   **If you _do_ have conflicting arguments,** and your selector performs some transformation or expensive computation, [selector factories](#selector-factories) will likely work better for you. You can prefer to use currying if your selector is simple and doesn't need `createSelector`, like indexing a property.
 
 :::
 
@@ -448,7 +448,7 @@ end)
 ```ts
 // highlight-next-line
 createSelector([selectCart, selectUser] as const, (cart, user) => {
-    return cart.items.filter((item) => item.owner === user.id);
+	return cart.items.filter((item) => item.owner === user.id);
 });
 ```
 

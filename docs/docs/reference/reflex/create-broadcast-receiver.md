@@ -32,10 +32,10 @@ Call `createBroadcastReceiver` to create a receiver that can be used to connect 
 import { createBroadcastReceiver } from "@rbxts/reflex";
 
 const receiver = createBroadcastReceiver({
-    requestState: async () => {
-        const remote = await remotes.Client.WaitFor("requestState");
-        return remote.CallServerAsync();
-    },
+	requestState: async () => {
+		const remote = await remotes.Client.WaitFor("requestState");
+		return remote.CallServerAsync();
+	},
 });
 ```
 
@@ -64,7 +64,7 @@ Once you have the receiver, you need to apply the middleware to your producer an
 
 ```ts
 remotes.Client.OnEvent("broadcast", (actions) => {
-    receiver.dispatch(actions);
+	receiver.dispatch(actions);
 });
 
 producer.applyMiddleware(receiver.middleware);
@@ -141,7 +141,7 @@ Connect the receiver's `dispatch` method to a remote to dispatch the actions pas
 
 ```ts
 remotes.Client.OnEvent("broadcast", (actions) => {
-    receiver.dispatch(actions);
+	receiver.dispatch(actions);
 });
 ```
 
@@ -182,14 +182,14 @@ Once you have your broadcaster set up, you can use [`createBroadcastReceiver`](#
 import { createBroadcastReceiver } from "@rbxts/reflex";
 
 const receiver = createBroadcastReceiver({
-    requestState: async () => {
-        const remote = await remotes.Client.WaitFor("requestState");
-        return remote.CallServerAsync();
-    },
+	requestState: async () => {
+		const remote = await remotes.Client.WaitFor("requestState");
+		return remote.CallServerAsync();
+	},
 });
 
 remotes.Client.OnEvent("broadcast", (actions) => {
-    receiver.dispatch(actions);
+	receiver.dispatch(actions);
 });
 
 producer.applyMiddleware(receiver.middleware);
