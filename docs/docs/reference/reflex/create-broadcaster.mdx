@@ -272,15 +272,15 @@ The main benefit of using a _shared producer map_ like this is how simple it is 
 ```ts title="Root producer"
 import { combineProducers } from "@rbxts/reflex";
 import { sharedProducers } from "shared/producers";
-import { fooProducer } from "./foo";
-import { barProducer } from "./bar";
+import { fooSlice } from "./foo";
+import { barSlice } from "./bar";
 
 export type RootState = InferState<typeof producers>;
 
 export const producer = combineProducers({
 	...sharedProducers,
-	foo: fooProducer,
-	bar: barProducer,
+	foo: fooSlice,
+	bar: barSlice,
 });
 ```
 

@@ -296,7 +296,7 @@ const initialState: CounterState = {
 	count: 0,
 };
 
-export const counterProducer = createProducer(initialState, {
+export const counterSlice = createProducer(initialState, {
 	increment: (state, value: number) => ({
 		...state,
 		count: state.count + value,
@@ -307,14 +307,14 @@ export const counterProducer = createProducer(initialState, {
 
 ```ts title="root-producer.ts"
 import { InferState } from "@rbxts/reflex";
-import { counterProducer } from "./counter";
+import { counterSlice } from "./counter";
 
 export type RootProducer = typeof producer;
 
 export type RootState = InferState<RootProducer>;
 
 export const producer = combineProducers({
-	counter: counterProducer,
+	counter: counterSlice,
 	// ...
 });
 ```
@@ -336,7 +336,7 @@ local initialState: CounterState = {
     count = 0,
 }
 
-local counterProducer = Reflex.createProducer(initialState, {
+local counterSlice = Reflex.createProducer(initialState, {
     increment = function(state, value: number): CounterState
         return { count = state.count + value }
     end,
@@ -344,13 +344,15 @@ local counterProducer = Reflex.createProducer(initialState, {
 })
 
 return {
-    producer = counterProducer,
+    slice = counterSlice,
 }
 ```
 
 ```lua title="init.lua"
 local counter = require(script.Parent.counter)
 local other = require(script.Parent.other)
+
+export type RootProducer = Reflex.Producer<RootState, RootActions>
 
 export type RootState = {
     counter: counter.CounterState,
@@ -360,11 +362,9 @@ export type RootState = {
 export type RootActions = counter.CounterActions &
     other.OtherActions
 
-export type RootProducer = Reflex.Producer<RootState, RootActions>
-
 return Reflex.combineProducers({
-    counter = counter.producer,
-    other = other.producer,
+    counter = counter.slice,
+    other = other.slice,
 }) :: RootProducer
 ```
 

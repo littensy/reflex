@@ -173,6 +173,6 @@ This example [subscribes](../reference/reflex/producer#subscribeselector-listene
 
 ### Organizing producers
 
-Reflex is designed to have one root producer be the **single source of truth** for your state. This producer can be composed of smaller sub-producers that handle different parts of your state.
+Reflex is designed to have one root producer be the **single source of truth** for your state. This producer can be composed of smaller slices that handle different parts of your state.
 
 For example, you could have a `calendar` producer that stores important dates, and a `todos` producer that handles the list of todos. You will learn more about this in the [next guide](organizing-producers).

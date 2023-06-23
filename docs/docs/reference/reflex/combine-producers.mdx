@@ -13,9 +13,8 @@ import TOCInline from "@theme/TOCInline";
 
 ```ts
 const producer = combineProducers({
-	foo: fooProducer,
-	bar: barProducer,
-	// ...
+	foo: fooSlice,
+	bar: barSlice,
 });
 ```
 
@@ -33,17 +32,17 @@ To combine multiple [producers](producer), pass them into `combineProducers` as 
 <TabItem value="TypeScript" default>
 
 ```ts
-const fooProducer = createProducer(0, {
+const fooSlice = createProducer(0, {
 	incrementFoo: (state, value: number) => state + value,
 });
 
-const barProducer = createProducer(0, {
+const barSlice = createProducer(0, {
 	incrementBar: (state, value: number) => state + value,
 });
 
 const producer = combineProducers({
-	foo: fooProducer,
-	bar: barProducer,
+	foo: fooSlice,
+	bar: barSlice,
 });
 ```
 
@@ -51,21 +50,21 @@ const producer = combineProducers({
 <TabItem value="Luau">
 
 ```lua
-local fooProducer = createProducer(0, {
+local fooSlice = createProducer(0, {
     incrementFoo = function(state, value: number)
         return state + value
     end,
 })
 
-local barProducer = createProducer(0, {
+local barSlice = createProducer(0, {
     incrementBar = function(state, value: number)
         return state + value
     end,
 })
 
 local producer = Redux.combineProducers({
-    foo = fooProducer,
-    bar = barProducer,
+    foo = fooSlice,
+    bar = barSlice,
 })
 ```
 
@@ -79,7 +78,7 @@ producer.incrementFoo(1); // { foo: 1, bar: 0 }
 producer.incrementBar(1); // { foo: 1, bar: 1 }
 ```
 
-A game managed by Reflex will typically have a single root producer that contains all of the game's state. State can be organized into sub-producers to make it easier to manage and update.
+A game managed by Reflex will typically have a single root producer that contains all of the game's state. State can be organized into producer slices to make it easier to manage and update.
 
 [See more examples below.](#usage)
 
@@ -109,7 +108,7 @@ A new [producer](producer) with the combined initial states and actions of the g
 
 It's good practice to organize state into different producers and then combine them with [`combineProducers`](combine-producers) to use in your game. This makes it easier to manage state and update it in a predictable way.
 
-Let's say we have a game that has a page router and a leaderboard. We can create a file for each sub-producer, and combine them into a single root producer:
+Let's say we have a game that has a page router and a leaderboard. We can create a file for each slice, and combine them into a single root producer:
 
 ```
 producer
@@ -140,7 +139,7 @@ const initialState: RouterState = {
 	page: "home",
 };
 
-export const routerProducer = createProducer(initialState, {
+export const routerSlice = createProducer(initialState, {
 	setPage: (state, page: string) => ({ ...state, page }),
 });
 ```
@@ -159,7 +158,7 @@ const initialState: LeaderboardState = {
 	players: [],
 };
 
-export const leaderboardProducer = createProducer(initialState, {
+export const leaderboardSlice = createProducer(initialState, {
 	addPlayer: (state, player: number) => ({
 		...state,
 		players: [...state.players, player],
@@ -177,16 +176,16 @@ export const leaderboardProducer = createProducer(initialState, {
 
 ```ts
 import { combineProducers, InferState } from "@rbxts/reflex";
-import { routerProducer } from "./router";
-import { leaderboardProducer } from "./leaderboard";
+import { routerSlice } from "./router";
+import { leaderboardSlice } from "./leaderboard";
 
 export type RootProducer = typeof producer;
 
 export type RootState = InferState<RootProducer>;
 
 export const producer = combineProducers({
-	router: routerProducer,
-	leaderboard: leaderboardProducer,
+	router: routerSlice,
+	leaderboard: leaderboardSlice,
 });
 ```
 
@@ -232,14 +231,14 @@ local initialState: RouterState = {
     page = "home",
 }
 
-local routerProducer = Reflex.createProducer(initialState, {
+local routerSlice = Reflex.createProducer(initialState, {
     setPage = function(state, page: string)
         return { page = page }
     end,
 })
 
 return {
-    producer = routerProducer,
+    slice = routerSlice,
 }
 ```
 
@@ -262,7 +261,7 @@ local initialState: LeaderboardState = {
     players = {},
 }
 
-local leaderboardProducer = Reflex.createProducer(initialState, {
+local leaderboardSlice = Reflex.createProducer(initialState, {
     addPlayer = function(state, player: number)
         local nextState = table.clone(state)
         local nextPlayers = table.clone(state.players)
@@ -285,7 +284,7 @@ local leaderboardProducer = Reflex.createProducer(initialState, {
 })
 
 return {
-    producer = leaderboardProducer,
+    slice = leaderboardSlice,
 }
 ```
 
@@ -308,8 +307,8 @@ export type RootActions = router.RouterActions &
     leaderboard.LeaderboardActions
 
 return Reflex.combineProducers({
-    router = router.producer,
-    leaderboard = leaderboard.producer,
+    router = router.slice,
+    leaderboard = leaderboard.slice,
 }) :: RootProducer
 ```
 
@@ -409,19 +408,19 @@ An interesting caveat of [`combineProducers`](combine-producers) is that combine
 <TabItem value="TypeScript" default>
 
 ```ts
-const fooProducer = createProducer(0, {
+const fooSlice = createProducer(0, {
 	// highlight-next-line
 	increment: (state, value: number) => state + value,
 });
 
-const barProducer = createProducer(0, {
+const barSlice = createProducer(0, {
 	// highlight-next-line
 	increment: (state, value: number) => state + value,
 });
 
 const producer = combineProducers({
-	foo: fooProducer,
-	bar: barProducer,
+	foo: fooSlice,
+	bar: barSlice,
 });
 
 // highlight-next-line
@@ -432,14 +431,14 @@ producer.increment(1); // { foo: 1, bar: 1 }
 <TabItem value="Luau">
 
 ```lua
-local fooProducer = Reflex.createProducer(0, {
+local fooSlice = Reflex.createProducer(0, {
     // highlight-next-line
     increment = function(state, value: number)
         return state + value
     end,
 })
 
-local barProducer = Reflex.createProducer(0, {
+local barSlice = Reflex.createProducer(0, {
     // highlight-next-line
     increment = function(state, value: number)
         return state + value
@@ -447,8 +446,8 @@ local barProducer = Reflex.createProducer(0, {
 })
 
 local producer = Reflex.combineProducers({
-    foo = fooProducer,
-    bar = barProducer,
+    foo = fooSlice,
+    bar = barSlice,
 })
 
 // highlight-next-line
