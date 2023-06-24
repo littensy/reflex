@@ -41,7 +41,7 @@ const producer = createProducer(0, {
 
 ```lua
 type Actions = {
-    increment: (value: number) -> CounterState,
+    increment: (value: number) -> (),
 }
 
 local producer = Reflex.createProducer(0, {
@@ -133,7 +133,7 @@ type CounterState = {
 }
 
 type CounterActions = {
-    increment: (value: number) -> CounterState,
+    increment: (value: number) -> (),
     -- ...
 }
 
@@ -225,8 +225,8 @@ type TodoState = {
 }
 
 type TodoActions = {
-    addTodo: (text: string) -> TodoState,
-    toggleTodo: (index: number) -> TodoState,
+    addTodo: (text: string) -> (),
+    toggleTodo: (index: number) -> (),
 }
 
 type Todo = {
@@ -328,7 +328,7 @@ export type CounterState = {
 }
 
 export type CounterActions = {
-    increment: (value: number) -> CounterState,
+    increment: (value: number) -> (),
     -- ...
 }
 
@@ -344,7 +344,7 @@ local counterSlice = Reflex.createProducer(initialState, {
 })
 
 return {
-    slice = counterSlice,
+    counterSlice = counterSlice,
 }
 ```
 
@@ -363,8 +363,8 @@ export type RootActions = counter.CounterActions &
     other.OtherActions
 
 return Reflex.combineProducers({
-    counter = counter.slice,
-    other = other.slice,
+    counter = counter.counterSLice,
+    other = other.otherSlice,
 }) :: RootProducer
 ```
 

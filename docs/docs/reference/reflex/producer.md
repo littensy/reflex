@@ -103,7 +103,7 @@ end) --> 0
 
 ---
 
-### `subscribe(selector?, listener)`
+### `subscribe(selector?, predicate?, listener)`
 
 The `subscribe` method lets you listen for changes to the producer's state. Generally, you should pass a selector function to `subscribe` to only listen for changes to a subset of the state.
 
@@ -140,11 +140,54 @@ producer.increment(1) --> 1, 0
 </TabItem>
 </Tabs>
 
+You may optionally pass a predicate function to `subscribe` to only listen for changes that match a certain condition. If the predicate is provided, the listener will only be called if the predicate returns `true`.
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const selectCount = (state: State) => state.count;
+
+const isEven = (count: number) => count % 2 === 0;
+
+producer.subscribe(selectCount, isEven, (count, prevCount) => {
+	print(count, prevCount);
+});
+
+producer.increment(1);
+producer.increment(1); // 2, 0
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local function selectCount(state)
+    return state.count
+end
+
+local function isEven(count: number)
+    return count % 2 == 0
+end
+
+producer:subscribe(selectCount, isEven, function(count, prevCount)
+    print(count, prevCount)
+end)
+
+producer.increment(1)
+producer.increment(1) --> 2, 0
+```
+
+</TabItem>
+</Tabs>
+
 [See more examples below.](#running-side-effects)
 
 #### Parameters
 
 -   **optional** `selector` - A function that selects a part of the state. If not provided, the entire state is passed to the listener.
+
+-   **optional** `predicate` - A function that determines whether the listener should be called. If not provided, the listener will always be called.
 
 -   `listener` - A function that is called when the state changes. The function receives the state as its first argument, and the previous state as its second argument.
 
@@ -168,7 +211,7 @@ producer.increment(1) --> 1, 0
 
 ### `once(selector, predicate?, listener)`
 
-`once` lets you listen for a single change to the producer's state. It works similarly to [`subscribe`](#subscribeselector-listener), but the listener is automatically unsubscribed after the first call. If the predicate is provided, the listener will only be called if the predicate returns `true`.
+`once` lets you listen for a single change to the producer's state. It works similarly to [`subscribe`](#subscribeselector-predicate-listener), but the listener is automatically unsubscribed after the first call. If the predicate is provided, the listener will only be called if the predicate returns `true`.
 
 To unsubscribe from a listener, call the function returned by `once`.
 
@@ -221,7 +264,7 @@ end)
 
 :::info Caveats
 
--   `once` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
+-   `once` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-predicate-listener).
 
 -   If the predicate returns `true` at the time of subscription, the listener **will not** be called immediately. It will only be called once the selected state changes, and only if the predicate returns `true` at that time. This behavior is analogous to `Promise.fromEvent` and how it waits for the _next_ event.
 
@@ -282,7 +325,7 @@ end)
 
 :::info Caveats
 
--   `wait` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-listener).
+-   `wait` has the [same caveats](#caveats) as [`subscribe`](#subscribeselector-predicate-listener).
 
 -   If the predicate returns `true` at the time `wait` is called, the Promise **will not** resolve immediately. It will only be resolve once the selected state changes, and only if the predicate returns `true` at that time. This behavior is analogous to `Promise.fromEvent` and how it waits for the _next_ event.
 
@@ -475,7 +518,7 @@ producer:applyMiddleware(loggerMiddleware)
 
 Games have a lot of state that changes over time, and you often need to perform _side effects_ for certain state updates. Let's first look at how to subscribe to state changes, and then we'll cover some use cases.
 
-You can use [`subscribe`](#subscribeselector-listener) to connect a listener function that runs whenever a certain part of the state changes:
+You can use [`subscribe`](#subscribeselector-predicate-listener) to connect a listener function that runs whenever a certain part of the state changes:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -548,7 +591,7 @@ type RootState = {
 }
 
 type RootActions = {
-    takeDamage: (health: number) -> void,
+    takeDamage: (health: number) -> (),
 }
 
 local initialState = {

@@ -82,7 +82,7 @@ Both the `combiner` and the `dependencies` are memoized. This means that the dep
 
 -   **Dependencies are compared by reference (`===`).** Even if a function returns an object that's shallowly equal to the previous result, it will still be seen as an update, and the selector will still re-compute.
 
--   **If you're writing a selector returns a new object or array** (i.e. filtering, sorting, etc.), you should **always** use `createSelector`. Otherwise, the selector will return a new object/array every time it's called, and listeners will run excessively. [See the `subscribe` function for other caveats.](producer#subscribeselector-listener)
+-   **If you're writing a selector returns a new object or array** (i.e. filtering, sorting, etc.), you should **always** use `createSelector`. Otherwise, the selector will return a new object/array every time it's called, and listeners will run excessively. [See the `subscribe` function for other caveats.](producer#subscribeselector-predicate-listener)
 
 :::
 
@@ -204,7 +204,7 @@ end)
 
 By [subscribing to state](producer#running-side-effects) with a selector, you essentially tell Reflex to run your selector **every time the state changes.** This is to compare the result with the previous value to detect a change, which is fine for simple selectors, but it can be inefficient if your selector returns new tables and functions, or is expensive to compute.
 
-In this case, every time the selector is called, it creates an **entirely new list** of in-stock items. This is bad because [`subscribe`](producer#subscribeselector-listener) compares the new value to the previous value by reference (`===`), and since the selector only returns new arrays, Reflex will consider every unrelated state change to be an update. **Your listener will be called excessively, even if the items haven't changed!**
+In this case, every time the selector is called, it creates an **entirely new list** of in-stock items. This is bad because [`subscribe`](producer#subscribeselector-predicate-listener) compares the new value to the previous value by reference (`===`), and since the selector only returns new arrays, Reflex will consider every unrelated state change to be an update. **Your listener will be called excessively, even if the items haven't changed!**
 
 :::
 
@@ -326,7 +326,7 @@ local function selectItems(state: CartState)
 end
 
 // highlight-next-line
-local function selectItemById(id: number)
+local function createSelectItemById(id: number)
     return createSelector({ selectItems }, function(items)
         for _, item in items do
             if item.id == id then
@@ -336,8 +336,8 @@ local function selectItemById(id: number)
     end)
 end
 
-producer:subscribe(selectItemById(1), print)
-producer:subscribe(selectItemById(2), print)
+producer:subscribe(createSelectItemById(1), print)
+producer:subscribe(createSelectItemById(2), print)
 ```
 
 </TabItem>

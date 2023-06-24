@@ -70,8 +70,8 @@ export type TodosState = {
 }
 
 export type TodosActions = {
-    addTodo: (todo: string) -> TodosState,
-    removeTodo: (todo: string) -> TodosState,
+    addTodo: (todo: string) -> (),
+    removeTodo: (todo: string) -> (),
 }
 
 export type TodosProducer = Reflex.Producer<TodosState, TodosActions>
@@ -169,10 +169,20 @@ todos.addTodo("Buy eggs")
 --> TODO: Buy milk, Buy eggs
 ```
 
-This example [subscribes](../reference/reflex/producer#subscribeselector-listener) to changes in `state.todos` and prints the list of todos whenever it changes. After adding `Buy milk` and `Buy eggs` to the list, it prints the updated list.
+This example [subscribes](../reference/reflex/producer#subscribeselector-predicate-listener) to changes in `state.todos` and prints the list of todos whenever it changes. After adding `Buy milk` and `Buy eggs` to the list, it prints the updated list.
 
 ### Organizing producers
 
 Reflex is designed to have one root producer be the **single source of truth** for your state. This producer can be composed of smaller slices that handle different parts of your state.
 
 For example, you could have a `calendar` producer that stores important dates, and a `todos` producer that handles the list of todos. You will learn more about this in the [next guide](organizing-producers).
+
+---
+
+## Summary
+
+-   **Producers** are state containers that hold your state and actions.
+-   **Actions** are functions that modify your state.
+-   **State** is the immutable data that your producer holds.
+-   You can **subscribe** to changes in your state using `subscribe`.
+-   The producer exposes your actions as callbacks, which you can call to change the state.

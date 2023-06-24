@@ -81,8 +81,8 @@ type State = {
 }
 
 type Actions = {
-    increment: () -> State,
-    reset: () -> State,
+    increment: () -> (),
+    reset: () -> (),
 }
 
 type Producer = Reflex.Producer<State, Actions>

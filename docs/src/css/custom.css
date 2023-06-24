@@ -59,6 +59,11 @@ code {
 		rgba(0, 0, 0, 0.2) 0px 10px 26px 0px;
 }
 
+[data-theme="dark"] .theme-admonition-note {
+	background-color: rgb(30, 30, 32);
+	border-color: rgb(40, 40, 42);
+}
+
 .code-block-error-line {
 	background-color: #ff000020;
 	display: block;

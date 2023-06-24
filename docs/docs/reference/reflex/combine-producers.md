@@ -26,7 +26,7 @@ const producer = combineProducers({
 
 ### `combineProducers(producers)`
 
-To combine multiple [producers](producer), pass them into `combineProducers` as a map of names to producers.
+To combine multiple [producers](producer), pass them into `combineProducers` as a map of slices by name.
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -71,7 +71,7 @@ local producer = Redux.combineProducers({
 </TabItem>
 </Tabs>
 
-`combineProducers` will return a new [producer](producer) with state organized under the keys passed in `producers`. Actions are inherited from the original producers and will update the state of their corresponding sub-states.
+`combineProducers` will return a new [producer](producer) with state organized under the keys passed in `producers`. Actions are inherited from the original slices and will update the state of their corresponding state slices.
 
 ```ts
 producer.incrementFoo(1); // { foo: 1, bar: 0 }
@@ -84,19 +84,19 @@ A game managed by Reflex will typically have a single root producer that contain
 
 #### Parameters
 
--   `producers` - An object containing the [producers](producer) to combine. The combined producer's state will organize the state by the keys of this object. Actions will be inherited from the original producers.
+-   `producers` - An object containing the [producer](producer) slices to combine. The combined producer's state will organize the state by the keys of this object. Actions will be inherited from the original slices.
 
 #### Returns
 
-A new [producer](producer) with the combined initial states and actions of the given producers.
+A new [producer](producer) with the combined initial states and actions of the given slices.
 
 :::info Caveats
 
--   The producer returned by `combineProducers` is **decoupled** from the original producers. Updating the state of the combined producer will not update the state of the original producers.
+-   The producer returned by `combineProducers` is **decoupled** from the slices. Updating the state of the combined producer will not update the state of the slices.
 
 -   **Actions can be stacked.** If two actions with the same name are dispatched, they will both be called and update their respective sub-states. This can be useful for [batching updates](#dispatching-one-action-to-multiple-producers), but make sure the functions have identical signatures.
 
--   **[Middleware](middleware) is not inherited from the original producers.** If you want to use middleware, you should apply it to the combined producer.
+-   **[Middleware](middleware) is not inherited from the slices.** If you want to use middleware, you should apply it to the combined producer.
 
 :::
 
@@ -106,7 +106,7 @@ A new [producer](producer) with the combined initial states and actions of the g
 
 ### Using multiple producers
 
-It's good practice to organize state into different producers and then combine them with [`combineProducers`](combine-producers) to use in your game. This makes it easier to manage state and update it in a predictable way.
+It's good practice to organize state into different _producer slices_ and then combine them with [`combineProducers`](combine-producers) to use in your game. This makes it easier to manage state and update it in a predictable way.
 
 Let's say we have a game that has a page router and a leaderboard. We can create a file for each slice, and combine them into a single root producer:
 
@@ -224,7 +224,7 @@ export type RouterState = {
 }
 
 export type RouterActions = {
-    setPage: (page: string) -> RouterState,
+    setPage: (page: string) -> (),
 }
 
 local initialState: RouterState = {
@@ -238,7 +238,7 @@ local routerSlice = Reflex.createProducer(initialState, {
 })
 
 return {
-    slice = routerSlice,
+    routerSlice = routerSlice,
 }
 ```
 
@@ -253,8 +253,8 @@ export type LeaderboardState = {
 }
 
 export type LeaderboardActions = {
-    addPlayer: (player: number) -> LeaderboardState,
-    removePlayer: (player: number) -> LeaderboardState,
+    addPlayer: (player: number) -> (),
+    removePlayer: (player: number) -> (),
 }
 
 local initialState: LeaderboardState = {
@@ -284,7 +284,7 @@ local leaderboardSlice = Reflex.createProducer(initialState, {
 })
 
 return {
-    slice = leaderboardSlice,
+    leaderboardSlice = leaderboardSlice,
 }
 ```
 
@@ -307,8 +307,8 @@ export type RootActions = router.RouterActions &
     leaderboard.LeaderboardActions
 
 return Reflex.combineProducers({
-    router = router.slice,
-    leaderboard = leaderboard.slice,
+    router = router.routerSlice,
+    leaderboard = leaderboard.leaderboardSlice,
 }) :: RootProducer
 ```
 
@@ -331,7 +331,7 @@ producer.addPlayer(123)
 </TabItem>
 </Tabs>
 
-Remember that the combined producer is decoupled from the original producers. Updating the state of the combined producer will not update the state of the original producers, and vice versa.
+Remember that the combined producer is decoupled from the producer slices. Updating the state of the combined producer will not update the state of the original slices, and vice versa.
 
 ---
 
@@ -398,11 +398,11 @@ See [`createSelector`](create-selector) for more information on how to create se
 
 ### Dispatching one action to multiple producers
 
-An interesting caveat of [`combineProducers`](combine-producers) is that combined actions are not scoped to their respective producers. Any name collisions will result in actions stacking and being called together.
+An interesting caveat of [`combineProducers`](combine-producers) is that combined actions are not scoped to their respective slices. Any name collisions will result in actions stacking and being called together.
 
 **But you can use this to your advantage!** If you want an action to update the state of multiple sub-states at once, it's as simple as using the same name.
 
-**Here's a simple example of dispatching one action to multiple producers:**
+**Here's a simple example of dispatching one action to update multiple state slices:**
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -457,12 +457,110 @@ producer.increment(1) --> { foo = 1, bar = 1 }
 </TabItem>
 </Tabs>
 
-Here, `increment` is dispatched once, but it updates the state of both `foo` and `bar`, which originate from different producers. By allowing a name collision, we can dispatch to multiple producers at once.
+Here, `increment` is dispatched once, but it updates the state of both `foo` and `bar`, which originate from different slices. By allowing a name collision, we can dispatch to multiple slices of state at once.
 
 Some use cases for this include:
 
--   **Resetting state:** A `reset` action can reset the state of multiple producers at once.
+-   **Resetting state:** A `reset` action can reset the state of multiple slices at once.
 
--   **Global events:** A script can dispatch a `playerAdded` action to multiple producers to notify them of a new player.
+-   **Global events:** A script can dispatch a `playerAdded` action to multiple slices to notify them of a new player.
 
--   **Modular save data:** A `playerDataLoaded` and `playerDataClosing` action can be dispatched to multiple producers to initialize and clear player data.
+-   **Modular save data:** A `playerDataLoaded` and `playerDataClosing` action can be dispatched to multiple slices to initialize and clear player data.
+
+---
+
+## Troubleshooting
+
+### My actions aren't updating the state
+
+If your actions aren't updating the state of your root producer, make sure you're calling them on the **root producer**, and not a producer slice.
+
+Here's an example of what **not** to do:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+import { todosSlice } from "./producer/todos";
+
+// error-next-line
+// 🔴 This will not update the root state
+// error-next-line
+todosSlice.add("Hello world!");
+```
+
+```ts
+import { producer } from "./producer";
+
+// ⚠️ This will not fire when the previous example runs
+producer.subscribe(selectTodos, (todos) => {
+	print(state.todos);
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local todos = require(script.Parent.producer.todos)
+
+// error-next-line
+-- 🔴 This will not update the root state
+// error-next-line
+todos.todosSlice.add("Hello world!")
+```
+
+```lua
+local producer = require(script.Parent.producer)
+
+-- ⚠️ This will not fire when the previous example runs
+producer.subscribe(selectTodos, function(todos)
+    print(state.todos)
+end)
+```
+
+</TabItem>
+</Tabs>
+
+Instead, you should call the action on the **root producer**:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+import { producer } from "./producer";
+
+// ✅ This will update the root state
+producer.add("Hello world!");
+```
+
+```ts
+import { producer } from "./producer";
+
+// ✅ This will fire when the previous example runs
+producer.subscribe(selectTodos, (todos) => {
+	print(state.todos);
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local producer = require(script.Parent.producer)
+
+-- ✅ This will update the root state
+producer.add("Hello world!")
+```
+
+```lua
+local producer = require(script.Parent.producer)
+
+-- ✅ This will fire when the previous example runs
+producer.subscribe(selectTodos, function(todos)
+    print(state.todos)
+end)
+```
+
+</TabItem>
+</Tabs>

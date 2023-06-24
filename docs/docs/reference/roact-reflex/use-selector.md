@@ -98,7 +98,7 @@ function Todos() {
 }
 ```
 
-`Todos` will re-render whenever `selectTodos` returns a new value. Functionally, `useSelector` [subscribes](../reflex/producer#subscribeselector-listener) to the producer's state, and re-renders when the selected value changes.
+`Todos` will re-render whenever `selectTodos` returns a new value. Functionally, `useSelector` [subscribes](../reflex/producer#subscribeselector-predicate-listener) to the producer's state, and re-renders when the selected value changes.
 
 You can then render a list of todos from the selected value:
 

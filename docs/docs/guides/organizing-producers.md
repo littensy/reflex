@@ -52,7 +52,7 @@ export const todos = createProducer(initialState, {
 <TabItem value="Luau">
 
 ```lua title="todos.lua"
-local Reflex = require(ReplicatedStorage.Reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 -- ...
 
@@ -88,7 +88,7 @@ local todos = Reflex.createProducer(initialState, {
 
 ## Defining slices
 
-A _producer slice_ is a subset of your root producer's state and actions. By splitting up your producers into slices, you can keep your code organized and easy to maintain.
+A _producer slice_ is a subset of your root producer's state and actions. They're not supposed to be read from or updated, but they are used to [define your root producer](#defining-a-root-producer). By splitting up your producers into slices, you can keep your code organized and easy to maintain.
 
 Here, both `todos` and `calendar` have been made into producer slices:
 
@@ -178,15 +178,15 @@ producer
 <TabItem value="Todos">
 
 ```lua title="todos.lua" showLineNumbers
-local Reflex = require(ReplicatedStorage.Reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 export type TodosState = {
     todos: { string }
 }
 
 export type TodosActions = {
-    addTodo: (todo: string) -> TodosState,
-    removeTodo: (todo: string) -> TodosState,
+    addTodo: (todo: string) -> (),
+    removeTodo: (todo: string) -> (),
 }
 
 local initialState: TodosState = {
@@ -215,14 +215,14 @@ local todosSlice = Reflex.createProducer(initialState, {
     end,
 })
 
-return { slice = todosSlice }
+return { todosSlice = todosSlice }
 ```
 
 </TabItem>
 <TabItem value="Calendar">
 
 ```lua title="calendar.lua" showLineNumbers
-local Reflex = require(ReplicatedStorage.Reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 export type CalendarState = {
     events: { CalendarEvent }
@@ -234,8 +234,8 @@ export type CalendarEvent = {
 }
 
 export type CalendarActions = {
-    addEvent: (event: CalendarEvent) -> CalendarState,
-    removeEvent: (event: CalendarEvent) -> CalendarState,
+    addEvent: (event: CalendarEvent) -> (),
+    removeEvent: (event: CalendarEvent) -> (),
 }
 
 local initialState: CalendarState = {
@@ -269,7 +269,7 @@ local calendarSlice = Reflex.createProducer(initialState, {
     end,
 })
 
-return { slice = calendarSlice }
+return { calendarSlice = calendarSlice }
 ```
 
 </TabItem>
@@ -286,8 +286,8 @@ We export `TodosState` and `TodosActions` to make it easier to type our root pro
 
 Our state has been broken into two slices:
 
-1.  `todosSlice` manages a list of todos
-2.  `calendarSlice` tracks events on a calendar
+1.  `todosSlice` manages a list of todos.
+2.  `calendarSlice` tracks events on a calendar.
 
 These slices can then be **combined** into a root producer.
 
@@ -295,7 +295,7 @@ These slices can then be **combined** into a root producer.
 
 ## Defining a root producer
 
-The root producer file is where you'll combine all of your slices into a single producer. This file is the entry point for accessing your game's state, and also exports some utility types to help us later. You can combine your slices with [`combineProducers`](../reference/reflex/combine-producers):
+The root producer file is where you'll combine all of your slices into a single producer. This file is the entry point for managing your game's state, and also exports some utility types to help us later. You can combine your slices with [`combineProducers`](../reference/reflex/combine-producers):
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -319,7 +319,7 @@ export const producer = combineProducers({
 <TabItem value="Luau">
 
 ```lua title="init.lua" showLineNumbers
-local Reflex = require(ReplicatedStorage.Reflex)
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
 local todos = require(script.todos)
 local calendar = require(script.calendar)
 
@@ -333,8 +333,8 @@ export type RootState = {
 type RootActions = todos.TodosActions & calendar.CalendarActions
 
 return Reflex.combineProducers({
-    todos = todos.slice,
-    calendar = calendar.slice,
+    todos = todos.todosSlice,
+    calendar = calendar.calendarSlice,
 }) :: RootProducer
 ```
 
@@ -354,8 +354,6 @@ Now that we have a root producer, we can use the state and actions from our slic
 3.  **Merge** any actions that have the same name.
 
 With this, we can now access all of our state and actions from the root producer.
-
----
 
 ### Using the root producer
 
@@ -452,3 +450,17 @@ producer.addEvent({ name = "Learn Reflex", date = "2023-03-17" })
 # - Birthday (2004-12-27)
 # - Learn Reflex (2023-03-17)
 ```
+
+:::caution
+
+**You should only call actions from the root producer.** Calling actions from a slice will not update the state of the root producer, and vice versa.
+
+:::
+
+---
+
+## Summary
+
+-   The root producer is the **entry point** for your game's state; you should only work with the root producer.
+-   You can use **slices** to break up your state into smaller pieces.
+-   You can **combine slices** into a root producer with [`combineProducers`](../reference/reflex/combine-producers).

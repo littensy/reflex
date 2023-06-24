@@ -40,7 +40,7 @@ const receiver = createBroadcastReceiver({
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
@@ -71,7 +71,7 @@ producer.applyMiddleware(receiver.middleware);
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 remotes.Client:OnEvent("broadcast", function(actions)
@@ -121,7 +121,7 @@ producer.applyMiddleware(receiver.middleware);
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 producer:applyMiddleware(receiver.middleware)
@@ -146,7 +146,7 @@ remotes.Client.OnEvent("broadcast", (actions) => {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 remotes.Client:OnEvent("broadcast", function(actions)
@@ -196,7 +196,7 @@ producer.applyMiddleware(receiver.middleware);
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
