@@ -5,7 +5,7 @@ description: Learn how to use the 'observe' method to bind logic to entities
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-# Entities and Observers
+# Observers and Entities
 
 Often, you'll want to run code over the lifetime of an entity. You can use [`observe`](../reference/reflex/producer#observeselector-discriminator-observer) for all kinds of lists and records of entities, from players to in-game matches.
 

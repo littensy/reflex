@@ -95,7 +95,7 @@ const config = {
               },
               {
                 label: 'Guides',
-                to: '/docs/category/guides',
+                to: '/docs/guides',
               },
             ],
           },

@@ -22,8 +22,8 @@ const sidebars = {
       items: [
         'guides/your-first-producer',
         'guides/organizing-producers',
-        'guides/subscribing-to-state',
         'guides/using-selectors',
+        'guides/subscribing-to-state',
         'guides/entities-and-observers',
       ],
     },
