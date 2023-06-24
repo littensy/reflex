@@ -15,6 +15,8 @@ Reflex provides these top-level exports:
 -   [`createBroadcastReceiver(options)`](create-broadcast-receiver)
 -   [`loggerMiddleware`](middleware#loggermiddleware)
 
+[See the source code on GitHub →](https://github.com/littensy/reflex)
+
 ---
 
 ## Producers

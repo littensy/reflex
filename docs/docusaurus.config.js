@@ -61,9 +61,9 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'docsSidebar',
+            sidebarId: 'learnSidebar',
             position: 'left',
-            label: 'Docs',
+            label: 'Learn',
           },
           {
             type: 'docSidebar',
@@ -73,8 +73,9 @@ const config = {
           },
           {
             href: 'https://github.com/littensy/reflex',
-            label: 'GitHub',
             position: 'right',
+            className: 'header-github-link',
+            'aria-label': 'GitHub repository',
           },
         ],
       },
@@ -82,12 +83,25 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Learn',
             items: [
               {
-                label: 'Docs',
+                label: 'Quick Start',
                 to: '/docs',
               },
+              {
+                label: 'Installation',
+                to: '/docs/quick-start/installation',
+              },
+              {
+                label: 'Guides',
+                to: '/docs/category/guides',
+              },
+            ],
+          },
+          {
+            title: 'API Reference',
+            items: [
               {
                 label: 'Reflex API',
                 to: '/docs/reference/reflex',

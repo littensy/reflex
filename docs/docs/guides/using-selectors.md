@@ -1,5 +1,4 @@
 ---
-sidebar_position: 3
 description: Learn how to dispatch actions and run side effects in Reflex.
 ---
 
@@ -350,7 +349,7 @@ producer.addEvent({ name = "Birthday", date = "2004-12-27" })
 
 Now, we can subscribe to an automatically-sorted list of events efficiently!
 
-Using selectors this way allows you to [derive new information](../reference/reflex/create-selector#transforming-state) from state while keeping your producers and slices simple. This is a common pattern in Rodux applications, and it's a good idea to use it in Reflex too.
+Using selectors this way allows you to [derive new information](../reference/reflex/create-selector#transforming-state) from state while keeping your producers and slices simple. This is a common pattern when using Rodux, and it's a good idea to use it in Reflex too.
 
 :::tip
 

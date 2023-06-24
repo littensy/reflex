@@ -1,5 +1,4 @@
 ---
-sidebar_position: 2
 description: Learn how to structure your Reflex project.
 ---
 
@@ -8,7 +7,7 @@ import TabItem from "@theme/TabItem";
 
 # Organizing Producers
 
-Part of the convenience of Reflex is that almost everything you need to do is contained within a single producer. However, as your game scales, you might prefer to split up your code into multiple files.
+Everything you need to read and update your state can be contained within a single producer. However, as your game scales, you might prefer to split up your code into multiple files.
 
 :::note we discuss:
 
@@ -88,7 +87,7 @@ local todos = Reflex.createProducer(initialState, {
 
 ## Defining slices
 
-A _producer slice_ is a subset of your root producer's state and actions. They're not supposed to be read from or updated, but they are used to [define your root producer](#defining-a-root-producer). By splitting up your producers into slices, you can keep your code organized and easy to maintain.
+A _producer slice_ is a subset of your root producer's state and actions. Instead of being used on their own, they are used to [define your root producer](#defining-a-root-producer). By splitting up your producers into slices, you can keep your code organized and easy to maintain.
 
 Here, both `todos` and `calendar` have been made into producer slices:
 
@@ -341,12 +340,6 @@ return Reflex.combineProducers({
 </TabItem>
 </Tabs>
 
-:::tip
-
-Exporting the `RootProducer` and `RootState` types will help you write selectors & hooks and enforce type safety.
-
-:::
-
 Now that we have a root producer, we can use the state and actions from our slices. Calling [`combineProducers`](../reference/reflex/combine-producers) does three things:
 
 1.  **Combine** the state from each slice using the shape you provided.
@@ -461,6 +454,7 @@ producer.addEvent({ name = "Learn Reflex", date = "2023-03-17" })
 
 ## Summary
 
--   The root producer is the **entry point** for your game's state; you should only work with the root producer.
+-   The root producer is the **entry point** for your game's state.
+-   Your actions and state are exposed under the root producer.
 -   You can use **slices** to break up your state into smaller pieces.
 -   You can **combine slices** into a root producer with [`combineProducers`](../reference/reflex/combine-producers).

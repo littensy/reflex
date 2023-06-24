@@ -1,5 +1,4 @@
 ---
-sidebar_position: 5
 description: Learn how to use the 'observe' method to bind logic to entities
 ---
 
@@ -64,7 +63,7 @@ export const selectPlayersById = (state: RootState) => {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 local producer = require(script.Parent.producer)
@@ -100,7 +99,7 @@ producer.subscribe(selectPlayersById, (current, previous) => {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 local function entityAdded(entity: players.PlayerEntity)
@@ -128,11 +127,11 @@ To track when an entity is removed from the record, you can use [`once`](../refe
 <TabItem value="TypeScript" default>
 
 ```ts
-const doesNotHaveEntity = (entities: PlayerEntityRecord) => {
-	return entities[entity.id] === undefined;
-};
-
 function entityAdded(entity: PlayerEntity) {
+	const doesNotHaveEntity = (entities: PlayerEntityRecord) => {
+		return entities[entity.id] === undefined;
+	};
+
 	// highlight-start
 	producer.once(selectPlayersById, doesNotHaveEntity, () => {
 		// Player was removed
@@ -142,14 +141,14 @@ function entityAdded(entity: PlayerEntity) {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
-local function doesNotHaveEntity(entities: players.PlayerEntityRecord)
-    return entities[entity.id] == nil
-end
-
 local function entityAdded(entity: players.PlayerEntity)
+    local function doesNotHaveEntity(entities: players.PlayerEntityRecord)
+        return entities[entity.id] == nil
+    end
+
     // highlight-start
     producer:once(selectPlayersById, doesNotHaveEntity, function()
         -- Player was removed
@@ -179,11 +178,11 @@ function playerObserver(player: PlayerEntity) {
 ```
 
 ```ts title="Observer handler"
-const doesNotHaveEntity = (entities: PlayerEntityRecord) => {
-	return entities[entity.id] === undefined;
-};
-
 function entityAdded(entity: PlayerEntity) {
+	const doesNotHaveEntity = (entities: PlayerEntityRecord) => {
+		return entities[entity.id] === undefined;
+	};
+
 	// highlight-next-line
 	const cleanup = playerObserver(entity);
 
@@ -203,7 +202,7 @@ producer.subscribe(selectPlayersById, (current, previous) => {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua title="Observer"
 local function playerObserver(player: players.PlayerEntity)
@@ -216,11 +215,11 @@ end
 ```
 
 ```lua title="Observer handler"
-local function doesNotHaveEntity(entities: players.PlayerEntityRecord)
-    return entities[entity.id] == nil
-end
-
 local function entityAdded(entity: players.PlayerEntity)
+    local function doesNotHaveEntity(entities: players.PlayerEntityRecord)
+        return entities[entity.id] == nil
+    end
+
     // highlight-next-line
     local cleanup = playerObserver(entity)
 
@@ -252,9 +251,9 @@ While this works, it's a lot of code to write for something that should be simpl
 
 The [`observe`](../reference/reflex/producer#observeselector-discriminator-observer) method is a shorthand for creating Observers. It takes a _selector_, a _discriminator_, and an _Observer_ function.
 
-1. The **selector** is used to select the entities to track. We will use the [`selectPlayersById`](#selecting-entities) selector from earlier.
+1. The **selector** is used to select a record of entities to track, and it can return an array or a dictionary. We will use the [`selectPlayersById`](#selecting-entities) selector from earlier.
 2. The **discriminator** is a function that takes the current state and returns a value that uniquely identifies the entity. We will use the `id` property of the entity.
-3. The **Observer** function runs when an entity is added, and returns an _optional_ cleanup function that runs when the entity is removed.
+3. The **Observer** function runs when an entity is added, and returns an optional cleanup function that runs when the entity is removed.
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -274,7 +273,7 @@ producer.observe(selectPlayersById, getPlayerId, (player) => {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 local function getPlayerId(player: players.PlayerEntity)
@@ -297,9 +296,9 @@ end)
 
 :::info
 
--   **If the record is already populated with entities** when you call `observe`, the Observer function will run for each entity.
+-   **If the record is already populated with entities,** the Observer function will be initialized for each entity in the record when you call `observe`.
 
--   **The discriminator function is optional.** If you don't provide one, the entity itself will be used as the discriminator.
+-   **The discriminator function is optional.** If you don't provide one, the entity itself will be used as the discriminator. This is only recommended if the entity is a primitive value, like a string or number.
 
 :::
 
@@ -331,7 +330,7 @@ producer.subscribe(selectHealth, didDecrease, () => {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 local function selectPlayerHealthById(id: string)
@@ -374,7 +373,7 @@ producer.observe(selectPlayersById, getPlayerId, (player) => {
 ```
 
 </TabItem>
-<TabItem value="Lua">
+<TabItem value="Luau">
 
 ```lua
 producer:observe(selectPlayersById, getPlayerId, function(player)
@@ -400,6 +399,10 @@ The [`subscribe`](../reference/reflex/producer#subscribeselector-predicate-handl
 ---
 
 ## Summary
+
+**You're now ready to use Reflex in your games!** The guides from here on out will focus on more advanced topics, but you can always refer back to the earlier guides if you need a refresher.
+
+Let's recap what we've learned about Observers:
 
 -   **Entities** are unique objects that can be added and removed from the state.
 -   **Observers** are functions that run over the lifetime of an entity.

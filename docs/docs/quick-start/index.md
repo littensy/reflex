@@ -48,7 +48,7 @@ Reflex = "littensy/reflex@3.1.0"
 
 ## Start using Reflex
 
-You're now ready to use Reflex! Where Rodux uses stores, reducers, and actions, Reflex has only **actions** and [**producers**](./reference/reflex/producer). Create a producer with an initial state and a set of actions, and you're ready to go.
+You're now ready to use Reflex! Where Rodux uses stores, reducers, and actions, Reflex revolves around **actions** and [**producers**](./reference/reflex/producer). Create a producer with an initial state and a set of actions, and you're ready to go.
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>

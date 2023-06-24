@@ -1,5 +1,4 @@
 ---
-sidebar_position: 2
 description: Install Reflex for your Roblox project.
 ---
 
@@ -73,7 +72,3 @@ pnpm add @rbxts/roact-reflex
 
 </TabItem>
 </Tabs>
-
-### Next steps
-
-You're now ready to use Reflex! See the [Quick Start](/docs/) guide to get started.

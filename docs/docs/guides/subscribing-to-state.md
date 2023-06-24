@@ -1,5 +1,4 @@
 ---
-sidebar_position: 4
 description: Learn the different ways to subscribe to state changes with Reflex
 ---
 

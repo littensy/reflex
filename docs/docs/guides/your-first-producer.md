@@ -1,5 +1,4 @@
 ---
-sidebar_position: 1
 description: Learn how to write a producer in Reflex.
 ---
 
@@ -24,13 +23,13 @@ _Producers_ are the building blocks of Reflex. They are the state containers tha
 
 A [producer](../reference/reflex/producer) is a state container that you can use to dispatch actions or observe state changes. They're designed to be used as a single source of truth for your state, and provide an all-in-one interface for managing your game's state.
 
-Unlike [Rodux](https://roblox.github.io/), which delegates state management to reducers, Reflex skips this step and allows actions to set your state. Reflex aims to be quick to set up and easy to use, and producers are the core of that philosophy.
+Where [Rodux](https://roblox.github.io/) uses a reducer to return the next state of a store, Reflex has actions that return the next state of the producer. Reflex aims to be quick to set up and easy to use, so creating a producer is simple and straightforward.
 
 ---
 
 ## Creating a producer
 
-Traditionally, state management libraries like [Rodux](https://roblox.github.io/rodux) require you to create a reducer function that takes in an action and returns a new state. Reflex takes a different approach and allows the actions themselves to update the state. Here's what a producer might look like:
+Traditionally, [Rodux](https://roblox.github.io/rodux) uses a reducer function that takes in an action and returns a new state. Reflex takes a slightly different approach and allows the actions themselves to update the state. Here's what a producer might look like:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>

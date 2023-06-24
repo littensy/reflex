@@ -97,7 +97,7 @@ const theme = {
     {
       types: ['comment'],
       style: {
-        color: '#6B6B6B',
+        color: '#808080',
         fontStyle: 'normal',
       },
     },
