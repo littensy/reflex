@@ -251,7 +251,7 @@ end
 </TabItem>
 </Tabs>
 
-If an error is thrown by an action, the middleware will catch it and report it, then return the current state. This prevents the error from propagating to the rest of the game.
+If an error is thrown by an action or a later middleware, the crash reporter will catch it and log it, then return the current state. This prevents the error from propagating to the rest of the game.
 
 ### Cancelling actions
 

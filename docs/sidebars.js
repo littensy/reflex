@@ -24,7 +24,7 @@ const sidebars = {
         'guides/organizing-producers',
         'guides/using-selectors',
         'guides/subscribing-to-state',
-        'guides/entities-and-observers',
+        'guides/observers-and-entities',
       ],
     },
     {
