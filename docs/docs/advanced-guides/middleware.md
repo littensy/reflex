@@ -269,6 +269,7 @@ const cancelMiddleware: ProducerMiddleware = (producer) => {
 
 		return (...args) => {
 			print("cancelled increment!");
+			// highlight-next-line
 			return producer.getState();
 		};
 	};
@@ -287,6 +288,7 @@ local cancelMiddleware: Reflex.Middleware = function(producer)
 
         return function(...)
             print("cancelled increment!")
+            // highlight-next-line
             return producer:getState()
         end
     end
@@ -410,7 +412,7 @@ In the last section, we applied a cancel middleware and a logger middleware to o
 ```ts
 counter.increment(1)
 // error-next-line
-=> cancel(1) 🔴 Cancelled
+=> cancel(1) // 🔴 Cancelled
 => logger(1)
 => increment(1)
 ```
@@ -440,7 +442,7 @@ counter.increment(1)
 counter.increment(1)
 => logger(1)
 // error-next-line
-=> cancel(1) 🔴 Cancelled
+=> cancel(1) // 🔴 Cancelled
 => increment(1)
 ```
 
@@ -464,6 +466,7 @@ const doubleMiddleware: ProducerMiddleware = (producer) => {
 		}
 
 		return (amount: number) => {
+			// highlight-next-line
 			return nextAction(amount * 2);
 		};
 	};
@@ -481,6 +484,7 @@ local doubleMiddleware: Reflex.Middleware = function(producer)
         end
 
         return function(amount: number)
+            // highlight-next-line
             return nextAction(amount * 2)
         end
     end
