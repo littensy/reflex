@@ -89,7 +89,7 @@ function Button() {
 
 ---
 
-### Pre-typed `useProducer` hook
+### Typed `useProducer` hook
 
 On its own, [`useProducer`](#useproducert) doesn't know what type of producer you're using. It receives a generic type parameter that lets you specify the type of the producer, but that can be repetitive.
 

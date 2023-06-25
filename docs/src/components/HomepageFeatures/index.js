@@ -1,41 +1,49 @@
 import React from 'react';
+import { useColorMode } from '@docusaurus/theme-common';
 import clsx from 'clsx';
 import styles from './styles.module.css';
 
 const FeatureList = [
   {
     title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    SvgDark: require('@site/static/img/hero_package_dark.svg').default,
+    SvgLight: require('@site/static/img/hero_package_light.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Save time and focus on writing your game's state and logic. Simply
+        create a <b>producer</b> and you're ready to go.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Adaptable to Your Needs',
+    SvgDark: require('@site/static/img/hero_plug_dark.svg').default,
+    SvgLight: require('@site/static/img/hero_plug_light.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Reflex was designed to be adaptable to a wide range of use cases, from
+        client-side apps to server-side game logic.
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'Convenient Features',
+    SvgDark: require('@site/static/img/hero_folder_dark.svg').default,
+    SvgLight: require('@site/static/img/hero_folder_light.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Features like server-to-client state sync, creating Observers, and
+        memoizing selectors come out-of-the-box with Reflex.
       </>
     ),
-  },
+  }
 ];
 
-function Feature({Svg, title, description}) {
+function Feature({SvgDark, SvgLight, title, description}) {
+  const { isDarkTheme } = useColorMode();
+
+  const Svg = isDarkTheme ? SvgDark : SvgLight;
+
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center">

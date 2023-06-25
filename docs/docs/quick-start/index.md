@@ -76,6 +76,8 @@ const producer = createProducer(initialState, {
 ```lua showLineNumbers
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
+type Producer = Reflex.Producer<State, Actions>
+
 type State = {
     count: number,
 }
@@ -84,8 +86,6 @@ type Actions = {
     increment: () -> (),
     reset: () -> (),
 }
-
-type Producer = Reflex.Producer<State, Actions>
 
 local initialState: State = {
     count = 0,

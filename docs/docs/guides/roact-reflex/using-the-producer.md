@@ -10,7 +10,7 @@ Roact Reflex provides useful hooks similar to [React Redux](https://react-redux.
 
 -   📂 How to set up Roact Reflex in your app
 -   ⚡️ How to dispatch actions
--   📦 How to use a pre-typed `useProducer` hook
+-   📦 How to use a typed `useProducer` hook
 
 :::
 
@@ -98,9 +98,9 @@ function Button() {
 
 ---
 
-## Pre-typed `useProducer` hook
+## Typed `useProducer` hook
 
-If you want to use the [`useProducer`](../../reference/roact-reflex/use-producer) hook without passing the type of your root producer, you can use the `UseProducerHook` type to create a pre-typed hook:
+If you want to use the [`useProducer`](../../reference/roact-reflex/use-producer) hook without passing the type of your root producer, you can use the `UseProducerHook` type to create a typed hook:
 
 ```ts
 import { UseProducerHook, useProducer } from "@rbxts/roact-reflex";

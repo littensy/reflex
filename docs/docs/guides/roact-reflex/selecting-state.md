@@ -10,7 +10,7 @@ Similar to the [`subscribe`](../../reference/reflex/producer#subscribeselector-p
 
 -   🍰 How to select a value from the producer
 -   ⚙️ How to select state with a selector factory
--   📦 How to write a pre-typed `useSelector` hook
+-   📦 How to write a typed `useSelector` hook
 
 :::
 
@@ -146,7 +146,7 @@ This is also exactly what the [`useSelectorCreator`](../../reference/roact-refle
 ```tsx title="TodoList.tsx"
 function TodoList({ sortDirection }: Props) {
 	// highlight-start
-	// ✨ Best: use the useSelectorCreator hook
+	// ✅ Good: use the useSelectorCreator hook
 	const todos = useSelectorCreator(selectSortedTodos, sortDirection);
 	// highlight-end
 	// ...
@@ -184,7 +184,7 @@ function TodoList() {
 
 ---
 
-## Pre-typed `useSelector` hook
+## Typed `useSelector` hook
 
 You might want to create a selector and pass it to `useSelector` manually:
 
@@ -195,7 +195,7 @@ function Button() {
 }
 ```
 
-But this can get repetitive if you have to write the same `state` type for every selector. You can create a pre-typed `useSelector` hook to avoid this:
+But this can get repetitive if you have to write the same `state` type for every selector. You can create a typed `useSelector` hook to avoid this:
 
 ```tsx
 import { UseProducerHook, UseSelectorHook, useProducer, useSelector } from "@rbxts/roact-reflex";
@@ -206,9 +206,9 @@ export const useRootProducer: UseProducerHook<RootProducer> = useProducer;
 export const useRootSelector: UseSelectorHook<RootProducer> = useSelector;
 ```
 
-Now, you can use the pre-typed `useSelector` hook in your components:
+Now, you can use the typed `useSelector` hook in your components:
 
-```tsx title="Button.tsx"
+```tsx
 function Button() {
 	// highlight-next-line
 	const todos = useRootSelector((state) => state.todos.list);
@@ -218,7 +218,7 @@ function Button() {
 
 :::caution
 
-You shouldn't create a pre-typed `useSelectorCreator` hook because the `state` types should be manually defined by the selector factory _outside_ of the component.
+You shouldn't create a typed `useSelectorCreator` hook because the `state` types should be manually defined by the selector factory _outside_ of the component.
 
 :::
 
@@ -228,4 +228,4 @@ You shouldn't create a pre-typed `useSelectorCreator` hook because the `state` t
 
 -   You can call [`useSelector`](../../reference/roact-reflex/use-selector) to select a value from the producer.
 -   Use the [`useSelectorCreator`](../../reference/roact-reflex/use-selector-creator) hook to create a memoized selector factory that takes arguments.
--   You can create a pre-typed `useSelector` hook to avoid writing the same `state` type if you create selectors manually.
+-   You can create a typed `useSelector` hook to avoid writing the same `state` type if you create selectors manually.

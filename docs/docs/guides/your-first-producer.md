@@ -64,6 +64,8 @@ export const todos = createProducer(initialState, {
 ```lua title="todos.lua" showLineNumbers
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
+export type TodosProducer = Reflex.Producer<TodosState, TodosActions>
+
 export type TodosState = {
     todos: { string },
 }
@@ -72,8 +74,6 @@ export type TodosActions = {
     addTodo: (todo: string) -> (),
     removeTodo: (todo: string) -> (),
 }
-
-export type TodosProducer = Reflex.Producer<TodosState, TodosActions>
 
 local initialState: TodosState = {
     todos = {},

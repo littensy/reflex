@@ -607,7 +607,7 @@ const doubleWrapper = doubleMiddleware(counter);
 const cancelWrapper = cancelMiddleware(counter);
 const loggerWrapper = loggerMiddleware(counter);
 
-// The action wrapper is called with 'nextAction' being the next
+// The action wrapper is called, where 'nextAction' is the next
 // action or middleware in the chain
 counter.increment = doubleWrapper(counter.increment, "increment");
 counter.increment = cancelWrapper(counter.increment, "increment");

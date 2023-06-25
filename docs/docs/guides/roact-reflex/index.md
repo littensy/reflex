@@ -72,7 +72,7 @@ Use these Hooks to access the root producer and dispatch actions:
 
 -   [`useProducer`](../../reference/roact-reflex/use-producer) lets components read and dispatch actions to the root producer.
     -   [Dispatching actions](../../reference/roact-reflex/use-producer#dispatching-actions)
-    -   [Pre-typed `useProducer` hook](../../reference/roact-reflex/use-producer#pre-typed-useproducer-hook)
+    -   [Typed `useProducer` hook](../../reference/roact-reflex/use-producer#typed-useproducer-hook)
 
 ```tsx
 function Button() {

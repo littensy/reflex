@@ -41,7 +41,7 @@ Use these Hooks to access the root producer and dispatch actions:
 
 -   [`useProducer`](use-producer) lets components read and dispatch actions to the root producer.
     -   [Dispatching actions](use-producer#dispatching-actions)
-    -   [Pre-typed `useProducer` hook](use-producer#pre-typed-useproducer-hook)
+    -   [Typed `useProducer` hook](use-producer#typed-useproducer-hook)
 
 ```tsx
 function Button() {
