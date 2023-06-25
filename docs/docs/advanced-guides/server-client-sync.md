@@ -13,8 +13,8 @@ Reflex provides a quick way to sync the server's shared state with clients using
 
 -   🌎 What shared producer slices are
 -   🔗 How to integrate shared slices into your state
--   📡 How to create broadcasters
--   🛰️ How to create receivers
+-   🛰️ How to create broadcasters
+-   📡 How to create receivers
 
 :::
 

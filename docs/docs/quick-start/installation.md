@@ -7,9 +7,7 @@ import TabItem from "@theme/TabItem";
 
 # Installation
 
-Install Reflex for your Roblox project.
-
-### Reflex
+## Reflex
 
 Reflex is available on [npm](https://www.npmjs.com/package/@rbxts/reflex) and [Wally](https://wally.run/package/littensy/reflex):
 
@@ -45,7 +43,7 @@ Reflex = "littensy/reflex@3.1.0"
 </TabItem>
 </Tabs>
 
-### Roact Reflex
+## Roact Reflex
 
 Roact Reflex is available on [npm](https://www.npmjs.com/package/@rbxts/roact-reflex) and requires [roact-hooked](https://www.npmjs.com/package/@rbxts/roact-hooked). It is not currently available for Luau projects.
 

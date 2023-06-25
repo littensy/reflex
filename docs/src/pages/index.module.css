@@ -4,20 +4,39 @@
  */
 
 .heroBanner {
-  padding: 4rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+	padding: 5rem 0;
+	text-align: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.heroLogo {
+	width: 100px;
+	height: 100px;
+}
+
+[data-theme="dark"] .heroBanner {
+	--ifm-heading-color: #ffffff;
+	--ifm-hero-text-color: #ffffff;
+	--ifm-color-primary: var(--ifm-color-primary-dark);
+}
+
+.hero--primary {
+	background-color: --ifm-color-primary;
 }
 
 @media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+	.heroBanner {
+		padding: 3rem;
+	}
 }
 
 .buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.buttons > * {
+	margin: 0 0.5rem;
 }

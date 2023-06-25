@@ -96,3 +96,13 @@ function Counter() {
     const count = useSelector((state) => state.count);
     // ...
 ```
+
+---
+
+## Guides
+
+```mdx-code-block
+import DocCardList from '@theme/DocCardList';
+
+<DocCardList />
+```
