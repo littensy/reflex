@@ -9,7 +9,7 @@ import TabItem from "@theme/TabItem";
 
 Games often have complex interactions between different parts of the state. Producers let you subscribe to state changes with _selectors_.
 
-:::note we discuss:
+:::note what you'll learn
 
 -   ⚡️ How to write actions
 -   🔭 How to run side effects

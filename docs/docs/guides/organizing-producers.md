@@ -9,7 +9,7 @@ import TabItem from "@theme/TabItem";
 
 Everything you need to read and update your state can be contained within a single producer. However, as your game scales, you might prefer to split up your code into multiple files.
 
-:::note we discuss:
+:::note what you'll learn
 
 -   🎂 What a root producer is
 -   🍰 How to split producers into multiple slices

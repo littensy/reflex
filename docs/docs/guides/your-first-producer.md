@@ -9,7 +9,7 @@ import TabItem from "@theme/TabItem";
 
 _Producers_ are the building blocks of Reflex. They are the state containers that hold your state and actions, and you can use them to read and subscribe to your state.
 
-:::note we discuss:
+:::note what you'll learn
 
 -   🔍 What a producer is
 -   ✨ How to create a producer

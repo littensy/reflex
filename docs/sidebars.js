@@ -25,6 +25,19 @@ const sidebars = {
         'guides/using-selectors',
         'guides/subscribing-to-state',
         'guides/observers-and-entities',
+        {
+          type: 'category',
+          label: 'Roact Reflex',
+          description: 'Use Roact Hooked with Reflex.',
+          link: {
+            type: 'doc',
+            id: 'guides/roact-reflex/index',
+          },
+          items: [
+            'guides/roact-reflex/using-the-producer',
+            'guides/roact-reflex/selecting-state',
+          ],
+        },
       ],
     },
     {
@@ -36,6 +49,7 @@ const sidebars = {
       },
       items: [
         'advanced-guides/middleware',
+        'advanced-guides/server-client-sync',
       ],
     },
   ],

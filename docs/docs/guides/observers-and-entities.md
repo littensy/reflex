@@ -9,7 +9,7 @@ import TabItem from "@theme/TabItem";
 
 Often, you'll want to run code over the lifetime of an entity. You can use [`observe`](../reference/reflex/producer#observeselector-discriminator-observer) for all kinds of lists and records of entities, from players to in-game matches.
 
-:::note we discuss:
+:::note what you'll learn
 
 -   📚 What entities and observers are
 -   🔍 How to track an entity manually

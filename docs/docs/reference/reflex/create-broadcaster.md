@@ -212,14 +212,14 @@ Your shared `producers` module should look something like this:
 
 ```ts title="shared/producers/index.ts"
 import { CombineStates } from "@rbxts/reflex";
-import { playersProducer } from "./players";
-import { worldProducer } from "./world";
+import { playersSlice } from "./players";
+import { worldSlice } from "./world";
 
 export type SharedState = CombineStates<typeof sharedProducers>;
 
 export const sharedProducers = {
-	players: playersProducer,
-	world: worldProducer,
+	players: playersSlice,
+	world: worldSlice,
 };
 ```
 
@@ -248,8 +248,8 @@ export type SharedState = players.PlayersState & world.WorldState
 export type SharedActions = players.PlayersActions & world.WorldActions
 
 return {
-    players = players.producer,
-    world = world.producer,
+    players = players.playersSlice,
+    world = world.worldSlice,
 }
 ```
 
@@ -302,8 +302,8 @@ export type RootActions = producers.SharedActions &
     bar.BarActions
 
 local map = {
-    foo = foo.producer,
-    bar = bar.producer,
+    foo = foo.fooSlice,
+    bar = bar.barSlice,
 }
 
 for key, value in producers do

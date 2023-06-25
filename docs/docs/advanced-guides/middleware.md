@@ -9,7 +9,7 @@ import TabItem from "@theme/TabItem";
 
 [Middleware](../reference/reflex/middleware) is a powerful concept in Reflex that allows you to enhance your producer and actions with additional functionality.
 
-:::note we discuss:
+:::note what you'll learn
 
 -   🧩 What middleware is
 -   🔍 The structure of middleware

@@ -9,7 +9,7 @@ import TabItem from "@theme/TabItem";
 
 On [Using Selectors](using-selectors), we learned how to use selectors to read and subscribe to state from the store. Reflex provides a few more useful ways to subscribe to state changes with selectors.
 
-:::note we discuss:
+:::note what you'll learn
 
 -   🌎 Common use cases for subscribing to state
 -   🔌 Different ways to subscribe to state
