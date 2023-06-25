@@ -129,7 +129,7 @@ Using a hook also makes your components more reusable. If you import the produce
 
 ## Subscribing to state
 
-To learn how to subscribe to state, we'll learn about the [`useSelector`](../roact-reflex/use-selector) hook on the next page.
+To learn how to subscribe to state, we'll learn about the [`useSelector`](../../reference/roact-reflex/use-selector) hook on the next page.
 
 ---
 
