@@ -181,8 +181,7 @@ export declare const loggerMiddleware: ProducerMiddleware;
  * be used to modify the state. The state is immmutable, so dispatchers return
  * a new state object.
  */
-export type Producer<State = any, Actions = any> = ProducerDispatchers<State, Actions> &
-	ProducerImpl<DeepReadonly<State>, Actions>;
+export type Producer<State = any, Actions = any> = ProducerDispatchers<State, Actions> & ProducerImpl<State, Actions>;
 
 /**
  * An implementation of the Producer interface. This is used internally and
@@ -399,7 +398,7 @@ export type InferDispatchers<T> = T extends Producer<infer State, infer Actions>
  * @template State The state type of the producer.
  */
 export interface ProducerActions<State> {
-	readonly [name: string]: (state: DeepReadonly<State>, ...args: any[]) => DeepReadonly<State>;
+	readonly [name: string]: (state: State, ...args: any[]) => State;
 }
 
 /**
@@ -410,7 +409,7 @@ export interface ProducerActions<State> {
  */
 export type ProducerDispatchers<State, Actions> = {
 	readonly [K in keyof Actions]: Actions[K] extends (state: State, ...args: infer Args) => State
-		? (...args: Args) => DeepReadonly<State>
+		? (...args: Args) => State
 		: never;
 };
 
