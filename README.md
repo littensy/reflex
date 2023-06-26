@@ -60,7 +60,7 @@ const initialState: State = {
 
 const producer = createProducer(initialState, {
 	increment: (state) => ({ ...state, count: state.count + 1 }),
-	reset: () => ({ ...state, count: 0 }),
+	reset: (state) => ({ ...state, count: 0 }),
 });
 ```
 
