@@ -18,7 +18,7 @@ Roact Reflex provides useful hooks similar to [React Redux](https://react-redux.
 
 ## Setting up Roact Reflex
 
-To use Roact Reflex, you must first pass your [root producer](../organizing-producers#the-root-producer) to the [`<ReflexProvider>`](../../reference/roact-reflex/reflex-provider) component. By doing this, you enable Reflex Hooks for your Roact app.
+To use Roact Reflex, you must first pass your [root producer](../organizing-producers#the-root-producer) to the [`<ReflexProvider>`](docs/reference/roact-reflex/reflex-provider) component. By doing this, you enable Reflex Hooks for your Roact app.
 
 You can render the `<ReflexProvider>` component anywhere in your app, but it must be rendered above any components that use the Hooks. We recommend putting it at the top-level of your app, wrapping your root components.
 
@@ -37,7 +37,7 @@ Roact.mount(
 
 ## Dispatching actions
 
-The [`useProducer`](../../reference/roact-reflex/use-producer) hook lets you access the producer and dispatch actions to the root producer. You can use this hook to dispatch actions from any component that is wrapped in a [`<ReflexProvider>`](../../reference/roact-reflex/reflex-provider).
+The [`useProducer`](docs/reference/roact-reflex/use-producer) hook lets you access the producer and dispatch actions to the root producer. You can use this hook to dispatch actions from any component that is wrapped in a [`<ReflexProvider>`](docs/reference/roact-reflex/reflex-provider).
 
 Say our root producer has a `todos` slice that contains actions to add a todo:
 
@@ -100,7 +100,7 @@ function Button() {
 
 ## Typed `useProducer` hook
 
-If you want to use the [`useProducer`](../../reference/roact-reflex/use-producer) hook without passing the type of your root producer, you can use the `UseProducerHook` type to create a typed hook:
+If you want to use the [`useProducer`](docs/reference/roact-reflex/use-producer) hook without passing the type of your root producer, you can use the `UseProducerHook` type to create a typed hook:
 
 ```ts
 import { UseProducerHook, useProducer } from "@rbxts/roact-reflex";
@@ -119,7 +119,7 @@ You may be wondering why we use a hook to access the producer instead of just im
 2.  It allows you more **flexibility** in testing
 3.  Your components are easier to test in **isolation**
 
-If you use a [`ReflexProvider`](../../reference/roact-reflex/reflex-provider) to pass the root producer, you can create a mock producer and pass it to your components in tests. Your components can be easier to isolate and run tests on.
+If you use a [`ReflexProvider`](docs/reference/roact-reflex/reflex-provider) to pass the root producer, you can create a mock producer and pass it to your components in tests. Your components can be easier to isolate and run tests on.
 
 Using a hook also makes your components more reusable. If you import the producer directly, you might need to refactor your component when moving it to a different app that has a different producer set up.
 
@@ -129,12 +129,12 @@ Using a hook also makes your components more reusable. If you import the produce
 
 ## Subscribing to state
 
-To learn how to subscribe to state, we'll learn about the [`useSelector`](../../reference/roact-reflex/use-selector) hook on the next page.
+To learn how to subscribe to state, we'll learn about the [`useSelector`](docs/reference/roact-reflex/use-selector) hook on the next page.
 
 ---
 
 ## Summary
 
--   Make sure to pass your root producer to the [`<ReflexProvider>`](../../reference/roact-reflex/reflex-provider) component
--   You can use the [`useProducer`](../../reference/roact-reflex/use-producer) hook to access the root producer and dispatch actions
+-   Make sure to pass your root producer to the [`<ReflexProvider>`](docs/reference/roact-reflex/reflex-provider) component
+-   You can use the [`useProducer`](docs/reference/roact-reflex/use-producer) hook to access the root producer and dispatch actions
 -   Using a hook to access the producer makes your components more reusable and easier to test

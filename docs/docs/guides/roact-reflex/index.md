@@ -47,9 +47,9 @@ pnpm add @rbxts/roact-reflex
 
 Roact Reflex allows you to use your root producer from Roact function components. It exposes a component that you can use to specify the producer for Hooks to use:
 
--   [`<ReflexProvider>`](../../reference/roact-reflex/reflex-provider) enables Reflex Hooks for a producer.
-    -   [Setting up Roact Reflex](../../reference/roact-reflex/reflex-provider#setting-up-roact-reflex)
-    -   [Using other providers with `ReflexProvider`](../../reference/roact-reflex/reflex-provider#using-other-providers-with-reflexprovider)
+-   [`<ReflexProvider>`](docs/reference/roact-reflex/reflex-provider) enables Reflex Hooks for a producer.
+    -   [Setting up Roact Reflex](docs/reference/roact-reflex/reflex-provider#setting-up-roact-reflex)
+    -   [Using other providers with `ReflexProvider`](docs/reference/roact-reflex/reflex-provider#using-other-providers-with-reflexprovider)
 
 ```tsx
 Roact.mount(
@@ -64,15 +64,15 @@ Roact.mount(
 
 ## Hooks
 
-You can use Hooks to read and subscribe to state, or to dispatch actions. Use these Hooks in function components that are wrapped in a [`<ReflexProvider>`](../../reference/roact-reflex/reflex-provider).
+You can use Hooks to read and subscribe to state, or to dispatch actions. Use these Hooks in function components that are wrapped in a [`<ReflexProvider>`](docs/reference/roact-reflex/reflex-provider).
 
 ### Context Hooks
 
 Use these Hooks to access the root producer and dispatch actions:
 
--   [`useProducer`](../../reference/roact-reflex/use-producer) lets components read and dispatch actions to the root producer.
-    -   [Dispatching actions](../../reference/roact-reflex/use-producer#dispatching-actions)
-    -   [Typed `useProducer` hook](../../reference/roact-reflex/use-producer#typed-useproducer-hook)
+-   [`useProducer`](docs/reference/roact-reflex/use-producer) lets components read and dispatch actions to the root producer.
+    -   [Dispatching actions](docs/reference/roact-reflex/use-producer#dispatching-actions)
+    -   [Typed `useProducer` hook](docs/reference/roact-reflex/use-producer#typed-useproducer-hook)
 
 ```tsx
 function Button() {
@@ -84,12 +84,12 @@ function Button() {
 
 Use these Hooks to read and subscribe to state:
 
--   [`useSelector`](../../reference/roact-reflex/use-selector) lets a component subscribe to a Reflex producer.
-    -   [Subscribing to a producer's state](../../reference/roact-reflex/use-selector#subscribing-to-a-producers-state)
-    -   [Custom equality comparison](../../reference/roact-reflex/use-selector#custom-equality-comparison)
-    -   [Using selectors with curried arguments](../../reference/roact-reflex/use-selector#using-selectors-with-curried-arguments)
--   [`useSelectorCreator`](../../reference/roact-reflex/use-selector-creator) lets you call `useSelector` with a [selector factory](../../reference/reflex/create-selector#selector-factories).
-    -   [Subscribing to state with selector factories](../../reference/roact-reflex/use-selector-creator#subscribing-to-state-with-selector-factories)
+-   [`useSelector`](docs/reference/roact-reflex/use-selector) lets a component subscribe to a Reflex producer.
+    -   [Subscribing to a producer's state](docs/reference/roact-reflex/use-selector#subscribing-to-a-producers-state)
+    -   [Custom equality comparison](docs/reference/roact-reflex/use-selector#custom-equality-comparison)
+    -   [Using selectors with curried arguments](docs/reference/roact-reflex/use-selector#using-selectors-with-curried-arguments)
+-   [`useSelectorCreator`](docs/reference/roact-reflex/use-selector-creator) lets you call `useSelector` with a [selector factory](docs/reference/reflex/create-selector#selector-factories).
+    -   [Subscribing to state with selector factories](docs/reference/roact-reflex/use-selector-creator#subscribing-to-state-with-selector-factories)
 
 ```tsx
 function Counter() {

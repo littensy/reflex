@@ -4,7 +4,7 @@ description: Learn how to use the useSelector and useSelectorCreator hook to sub
 
 # Selecting State
 
-Similar to the [`subscribe`](../../reference/reflex/producer#subscribeselector-predicate-listener) method, the [`useSelector`](../../reference/roact-reflex/use-selector) hook lets you select a value from the producer's state.
+Similar to the [`subscribe`](docs/reference/reflex/producer#subscribeselector-predicate-listener) method, the [`useSelector`](docs/reference/roact-reflex/use-selector) hook lets you select a value from the producer's state.
 
 :::note what you'll learn
 
@@ -63,11 +63,11 @@ function TodoList() {
 }
 ```
 
-The [`useSelector`](../../reference/roact-reflex/use-selector) hook automatically subscribes to the producer you passed to the [`<ReflexProvider>`](../../reference/roact-reflex/reflex-provider) and updates the component whenever the selected value changes!
+The [`useSelector`](docs/reference/roact-reflex/use-selector) hook automatically subscribes to the producer you passed to the [`<ReflexProvider>`](docs/reference/roact-reflex/reflex-provider) and updates the component whenever the selected value changes!
 
 :::caution
 
-**The same rules apply to the `useSelector` hook as the [`subscribe`](../../reference/reflex/producer#subscribeselector-predicate-listener) method.** If you pass a selector that creates a new object or array every time it's called, your component can re-render more often than you expect.
+**The same rules apply to the `useSelector` hook as the [`subscribe`](docs/reference/reflex/producer#subscribeselector-predicate-listener) method.** If you pass a selector that creates a new object or array every time it's called, your component can re-render more often than you expect.
 
 [Read more about writing good selectors →](../using-selectors)
 
@@ -141,7 +141,7 @@ function TodoList({ sortDirection }: Props) {
 
 Now, the selector will only be created when the `sortDirection` prop changes, allowing the selector to properly memoize its value.
 
-This is also exactly what the [`useSelectorCreator`](../../reference/roact-reflex/use-selector-creator) hook does!
+This is also exactly what the [`useSelectorCreator`](docs/reference/roact-reflex/use-selector-creator) hook does!
 
 ```tsx title="TodoList.tsx"
 function TodoList({ sortDirection }: Props) {
@@ -226,6 +226,6 @@ You shouldn't create a typed `useSelectorCreator` hook because the `state` types
 
 ## Summary
 
--   You can call [`useSelector`](../../reference/roact-reflex/use-selector) to select a value from the producer.
--   Use the [`useSelectorCreator`](../../reference/roact-reflex/use-selector-creator) hook to create a memoized selector factory that takes arguments.
+-   You can call [`useSelector`](docs/reference/roact-reflex/use-selector) to select a value from the producer.
+-   Use the [`useSelectorCreator`](docs/reference/roact-reflex/use-selector-creator) hook to create a memoized selector factory that takes arguments.
 -   You can create a typed `useSelector` hook to avoid writing the same `state` type if you create selectors manually.
