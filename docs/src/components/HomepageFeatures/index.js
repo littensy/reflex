@@ -40,9 +40,9 @@ const FeatureList = [
 ];
 
 function Feature({SvgDark, SvgLight, title, description}) {
-  const { isDarkTheme } = useColorMode();
+  const { colorMode } = useColorMode();
 
-  const Svg = isDarkTheme ? SvgDark : SvgLight;
+  const Svg = colorMode === "dark" ? SvgDark : SvgLight;
 
   return (
     <div className={clsx('col col--4')}>
