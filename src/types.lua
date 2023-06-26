@@ -149,10 +149,7 @@ export type Producer<State = {}, Dispatchers = { [string]: (...any) -> State }> 
 		@param enhancer A function that mutates the producer.
 		@return The enhanced producer.
 	]=]
-	enhance: <Enhanced>(
-		self: Producer<State, Dispatchers>,
-		enhancer: (producer: Producer<State, Dispatchers>) -> Enhanced
-	) -> Enhanced,
+	enhance: <Enhanced>(self: Producer<State, Dispatchers>, enhancer: (producer: any) -> Enhanced) -> Enhanced,
 
 	--[=[
 		Applies the given middlewares to the producer and its dispatchers. Returns
@@ -181,7 +178,7 @@ export type Producer<State = {}, Dispatchers = { [string]: (...any) -> State }> 
 	]=]
 	applyMiddleware: (
 		self: Producer<State, Dispatchers>,
-		...(producer: Producer<State, Dispatchers>) -> (dispatch: (...any) -> any, name: string) -> (...any) -> any
+		...(producer: any) -> (dispatch: (...any) -> any, name: string) -> (...any) -> any
 	) -> Producer<State, Dispatchers>,
 }
 
