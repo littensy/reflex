@@ -11,8 +11,6 @@ Games often have complex interactions between different parts of the state. Prod
 
 :::note what you'll learn
 
--   ⚡️ How to write actions
--   🔭 How to run side effects
 -   🍰 How to write selectors
 -   🔐 When to memoize selectors
 -   🔥 How to write more powerful selectors
@@ -131,6 +129,65 @@ We've been using selectors like `selectEvents` and the [`subscribe`](../referenc
 ## Selecting state
 
 _Selectors_ are functions that take the root state and return a subset of it. They can be as simple as indexing a property, or as complex as filtering and transforming data. Selectors are used to subscribe to state changes, and to read state in side effects.
+
+When you subscribe to a selector, Reflex will run it on every state change and compare the result to the previous value. If the result has changed, the listener will fire with the new value.
+
+So, if we wanted to subscribe to the `events` property of the calendar slice, we could write a selector like this:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const selectEvents = (state: RootState) => {
+	return state.calendar.events;
+};
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local function selectEvents(state: producer.RootState)
+    return state.calendar.events
+end
+```
+
+</TabItem>
+</Tabs>
+
+Then, we can subscribe to the selector and log the events whenever they change:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+producer.subscribe(selectEvents, (events) => {
+	for (const event of events) {
+		print(`- ${event.name} (${event.date})`);
+	}
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+producer:subscribe(selectEvents, function(events)
+    for _, event in events do
+        print("- " .. event.name .. " (" .. event.date .. ")")
+    end
+end)
+```
+
+</TabItem>
+</Tabs>
+
+```bash
+# - Birthday (2004-12-27)
+# - Learn Reflex (2023-03-17)
+```
+
+### Pitfall: creating objects in selectors
 
 In the previous examples, the `selectEvents` selector is simple and returns the `events` property of the calendar slice. But what if you want to get the events sorted by date? You could move that logic to a reusable selector:
 
@@ -452,120 +509,9 @@ Selector factories are a nice and simple way to create selectors specialized for
 
 [Selector factories](#passing-arguments-to-selectors) are great for creating selectors that depend on external arguments, but they have the added benefit that the selectors you create are **unique**. You can add variables and logic that are only accessible to a specific selector, which can be used for a variety of cases:
 
--   Memoizing results with a custom equality function, like shallow equality
+-   Memoizing results with a custom equality function
 -   Storing a cache of previous results
 -   Tracking the addition and removal of entities
-
-Let's create a selector that further memoizes the combiner of `selectEventsByTime` with a custom equality function:
-
-<Tabs groupId="languages">
-<TabItem value="TypeScript" default>
-
-```ts
-const selectEventsByTime = () => {
-	let lastEvents: CalendarEvent[] = [];
-	let lastResult: CalendarEvent[] = [];
-
-	return createSelector([selectEvents] as const, (events) => {
-		// highlight-start
-		if (shallowEqual(events, lastEvents)) {
-			return lastResult;
-		}
-		// highlight-end
-
-		lastEvents = events;
-
-		lastResult = [...events].sort((a, b) => {
-			const timeA = DateTime.fromIsoDate(a.date);
-			const timeB = DateTime.fromIsoDate(b.date);
-			return timeA.UnixTimestamp < timeB.UnixTimestamp;
-		});
-
-		return lastResult;
-	});
-};
-```
-
-</TabItem>
-<TabItem value="Luau">
-
-```lua
-local function selectEventsByTime()
-    local lastEvents: { calendar.CalendarEvent } = {}
-    local lastResult: { calendar.CalendarEvent } = {}
-
-    return Reflex.createSelector({ selectEvents }, function(events)
-        // highlight-start
-        if shallowEqual(events, lastEvents) then
-            return lastResult
-        end
-        // highlight-end
-
-        lastEvents = events
-        lastResult = table.create(events)
-
-        table.sort(lastResult, function(a, b)
-            local timeA = DateTime.fromIsoDate(a.date)
-            local timeB = DateTime.fromIsoDate(b.date)
-            return timeA.UnixTimestamp < timeB.UnixTimestamp
-        end)
-
-        return lastResult
-    end)
-end
-```
-
-</TabItem>
-</Tabs>
-
-Now, using this selector will only call the listener when the events change **and** the events are not shallowly equal to the previous events:
-
-<Tabs groupId="languages">
-<TabItem value="TypeScript" default>
-
-```ts
-producer.addEvent({ name: "Learn Reflex", date: "2023-03-17" });
-producer.addEvent({ name: "Birthday", date: "2004-12-27" });
-
-producer.subscribe(selectEventsByTime(), (events) => {
-	print("EVENTS:");
-	for (const event of events) {
-		print(`- ${event.name} (${event.date})`);
-	}
-});
-
-// highlight-next-line
-producer.removeEvent("This event doesn't exist");
-```
-
-</TabItem>
-<TabItem value="Luau">
-
-```lua
-producer.addEvent({ name = "Learn Reflex", date = "2023-03-17" })
-producer.addEvent({ name = "Birthday", date = "2004-12-27" })
-
-producer:subscribe(selectEventsByTime(), function(events)
-    print("EVENTS:")
-    for _, event in events do
-        print("- " .. event.name .. " (" .. event.date .. ")")
-    end
-end)
-
-// highlight-next-line
-producer.removeEvent("This event doesn't exist")
-```
-
-</TabItem>
-</Tabs>
-
-```bash
-# ✅ No output
-```
-
-Normally, the listener would be called when removing an event that doesn't exist. This makes sense if you check the [implementation of `removeEvent`](#immutable-state-and-actions), as the `events` property is updated to a new array regardless of whether an event was removed.
-
-Because we're using a custom `shallowEquality` function to filter out these false triggers, the listener is not called. You can also write your own utility functions to apply custom logic like this to your selectors.
 
 ---
 
