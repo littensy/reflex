@@ -4,6 +4,7 @@ local Promise = require(script.Parent.Promise)
 local types = require(script.Parent.types)
 local applyMiddleware = require(script.Parent.applyMiddleware)
 local createSelectArrayDiffs = require(script.Parent.utils.createSelectArrayDiffs)
+local testSelector = require(script.Parent.utils.testSelector)
 
 --[=[
 	Creates a producer that can be used to manage state.
@@ -105,41 +106,56 @@ local function createProducer<State>(
 		end
 	end
 
-	function producer:subscribe(selectorOrListener, listenerOrNil)
-		local selector, listener = selectorOrListener, listenerOrNil
+	function producer:subscribe(...)
+		local arguments = select("#", ...)
+		local selector, predicate, listener
 
-		if not listener then
-			selector = nil
-			listener = selectorOrListener
+		if arguments >= 3 then
+			selector, predicate, listener = ...
+		elseif arguments == 2 then
+			selector, listener = ...
+		else
+			listener = ...
 		end
 
-		local state = self:getState(selector)
+		local selection = self:getState(selector)
 
-		return subscribe(function(current)
-			local nextState = if selector then selector(current) else current
-
-			if state ~= nextState then
-				local prevState = state
-				state = nextState
-				listener(state, prevState)
-			end
-		end)
-	end
-
-	function producer:once(selector, predicateOrListener, listenerOrNil)
-		local predicate, listener = predicateOrListener, listenerOrNil
-
-		if not listener then
-			predicate = nil
-			listener = predicateOrListener
+		if selector then
+			testSelector(selector, selection, state)
 		end
 
-		local unsubscribe
-		unsubscribe = self:subscribe(selector, function(state, prevState)
-			if predicate and not predicate(state, prevState) then
+		return subscribe(function(nextState)
+			local nextSelection = if selector then selector(nextState) else nextState
+
+			if selection == nextSelection then
 				return
 			end
 
+			local prevSelection = selection
+			selection = nextSelection
+
+			if predicate and not predicate(nextSelection, prevSelection) then
+				return
+			end
+
+			listener(nextSelection, prevSelection)
+		end)
+	end
+
+	function producer:once(...)
+		local arguments = select("#", ...)
+		local selector, predicate, listener
+
+		if arguments >= 3 then
+			selector, predicate, listener = ...
+		elseif arguments == 2 then
+			selector, listener = ...
+		else
+			listener = ...
+		end
+
+		local unsubscribe
+		unsubscribe = self:subscribe(selector, predicate, function(state, prevState)
 			unsubscribe()
 			listener(state, prevState)
 		end)
@@ -157,16 +173,14 @@ local function createProducer<State>(
 		end)
 	end
 
-	function producer:observe(selector, discriminatorOrObserver, observerOrNil)
-		local discriminator, observer = discriminatorOrObserver, observerOrNil
+	function producer:observe(...)
+		local arguments = select("#", ...)
+		local selector, discriminator, observer
 
-		if not observer then
-			discriminator = nil
-			observer = discriminatorOrObserver
-		end
-
-		discriminator = discriminator or function(item)
-			return item
+		if arguments >= 3 then
+			selector, discriminator, observer = ...
+		else
+			selector, observer = ...
 		end
 
 		local tracked = {}
@@ -174,7 +188,7 @@ local function createProducer<State>(
 
 		local function checkDiffs(diffs)
 			for _, item in diffs.deletions do
-				local id = discriminator(item)
+				local id = if discriminator then discriminator(item) else item
 				local cleanup = tracked[id]
 
 				if cleanup then
@@ -184,7 +198,7 @@ local function createProducer<State>(
 			end
 
 			for _, item in diffs.additions do
-				local id = discriminator(item)
+				local id = if discriminator then discriminator(item) else item
 
 				if not tracked[id] then
 					tracked[id] = observer(item)

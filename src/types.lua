@@ -47,14 +47,22 @@ export type Producer<State = {}, Dispatchers = { [string]: (...any) -> State }> 
 		processed.
 		@param selector A selector function that can be used to select a subset
 		of the state.
+		@param predicate An optional predicate function that must return `true`
+		for the listener to be called.
 		@param listener A callback that is called when the selected part of the
 		state changes.
 		@return A function that can be used to unsubscribe from the listener.
 	]=]
 	subscribe: ((self: Producer<State, Dispatchers>, listener: (state: State, prevState: State) -> ()) -> () -> ())
+		& (<Selection>(
+			self: Producer<State, Dispatchers>,
+			selector: (state: State) -> Selection,
+			listener: (state: Selection, prevState: Selection) -> ()
+		) -> () -> ())
 		& <Selection>(
 			self: Producer<State, Dispatchers>,
 			selector: (state: State) -> Selection,
+			predicate: (state: Selection, prevState: Selection) -> boolean,
 			listener: (state: Selection, prevState: Selection) -> ()
 		) -> () -> (),
 

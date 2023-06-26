@@ -227,12 +227,20 @@ interface ProducerImpl<State, Actions> {
 	 * are deferred until the next frame after all state updates have been
 	 * processed.
 	 * @param selector An optional function that returns a subset of the state.
+	 * @param predicate An optional predicate function that must return `true`
+	 * for the listener to be called.
 	 * @param listener Called when the selected part of the state changes.
 	 * @return A function that unsubscribes from the listener.
 	 */
 	subscribe(listener: (state: State, previousState: State) => void): () => void;
 
 	subscribe<T>(selector: (state: State) => T, listener: (state: T, previousState: T) => void): () => void;
+
+	subscribe<T>(
+		selector: (state: State) => T,
+		predicate: ((state: T, previousState: T) => boolean) | undefined,
+		listener: (state: T, previousState: T) => void,
+	): () => void;
 
 	/**
 	 * Similar to `subscribe`, but the listener is disconnected after the first
