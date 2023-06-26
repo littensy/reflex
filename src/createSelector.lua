@@ -1,6 +1,6 @@
-type CreateSelectorFunction = <Result, Input, Argument...>(
-	dependencies: { (Argument...) -> Input },
-	resultFunc: (...Input) -> Result
+type CreateSelectorFunction = <Result, Argument...>(
+	dependencies: { (Argument...) -> any },
+	resultFunc: (...any) -> Result
 ) -> (Argument...) -> Result
 
 --[=[
