@@ -197,4 +197,35 @@ return function()
 		producer:flush()
 		expect(calls).to.equal(2)
 	end)
+
+	it("should receive a predicate", function()
+		local calls = 0
+
+		local function isGreaterThan(current, previous)
+			return current > previous
+		end
+
+		producer:subscribe(selectCount, isGreaterThan, function(current, previous)
+			calls += 1
+		end)
+
+		producer:flush()
+		expect(calls).to.equal(0)
+
+		producer.decrement(1)
+		producer:flush()
+		expect(calls).to.equal(0)
+
+		producer.increment(1)
+		producer:flush()
+		expect(calls).to.equal(1)
+
+		producer.increment(1)
+		producer:flush()
+		expect(calls).to.equal(2)
+
+		producer.decrement(1)
+		producer:flush()
+		expect(calls).to.equal(2)
+	end)
 end
