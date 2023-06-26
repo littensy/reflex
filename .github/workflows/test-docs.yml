@@ -22,7 +22,9 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          cd docs
+          pnpm install
 
       - name: Test build website
         run: pnpm build
