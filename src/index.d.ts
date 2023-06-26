@@ -372,7 +372,7 @@ interface ProducerImpl<State, Actions> {
 /**
  * Makes a type deeply immutable.
  */
-export type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
+export type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
 
 /**
  * Infers the state type from a producer.
