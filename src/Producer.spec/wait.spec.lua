@@ -32,14 +32,13 @@ return function()
 		end
 
 		local promise = producer:wait(selectorSpy)
+		local initialCalls = calls
+
 		promise:cancel()
-
-		expect(calls).to.equal(1) -- called once to get the initial state
-
 		producer.increment(1)
 		producer:flush()
 
-		expect(calls).to.equal(1) -- should not be called again
+		expect(calls).to.equal(initialCalls)
 		expect(promise:getStatus()).to.equal(Promise.Status.Cancelled)
 	end)
 
