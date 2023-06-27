@@ -3,7 +3,7 @@
 	be used to modify the state. The state is immmutable, so dispatchers return
 	a new state object.
 ]=]
-export type Producer<State = {}, Dispatchers = { [string]: (...any) -> State }> = Dispatchers & {
+export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }> = Dispatchers & {
 	--[=[
 		Returns the current state of the producer. Receives an optional selector
 		function that can be used to select a subset of the state.
