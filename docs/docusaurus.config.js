@@ -153,6 +153,11 @@ const config = {
           },
         ],
       },
+      algolia: {
+        appId: 'RB6KJ1M85Y',
+        apiKey: 'ee0cf615f12733999ea3a36e1ee9e2ec',
+        indexName: 'reflex',
+      },
     }),
 };
 
