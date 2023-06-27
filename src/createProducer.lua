@@ -78,6 +78,11 @@ local function createProducer<State>(
 		scheduleFlush()
 	end
 
+	function producer:resetState()
+		state = initialState
+		scheduleFlush()
+	end
+
 	function producer:getDispatchers()
 		return dispatchers
 	end

@@ -18,9 +18,14 @@ export type Producer<State = {}, Dispatchers = { [string]: (...any) -> State }> 
 		Sets the state of the producer to a shallow copy of the given state.
 		Fires listeners on the next frame.
 		@param state The new state of the producer.
-		@return The new state of the producer.
 	]=]
 	setState: (self: Producer<State, Dispatchers>, state: State) -> (),
+
+	--[=[
+		Resets the state of the producer to the initial state. Fires listeners
+		on the next frame if the state has changed.
+	]=]
+	resetState: (self: Producer<State, Dispatchers>) -> (),
 
 	--[=[
 		Returns the dispatchers for the actions passed to `createProducer`.

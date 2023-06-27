@@ -203,6 +203,11 @@ interface ProducerImpl<State, Actions> {
 	setState(state: State): void;
 
 	/**
+	 * Resets the state to the initial state.
+	 */
+	resetState(): void;
+
+	/**
 	 * Returns a list of the dispatcher functions derived from the action
 	 * functions. These functions omit the first argument (the state) and
 	 * return the new state.
