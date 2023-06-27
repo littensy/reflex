@@ -10,7 +10,10 @@ const sidebars = {
         type: 'doc',
         id: 'quick-start/index',
       },
-      items: ['quick-start/installation'],
+      items: [
+        'quick-start/installation',
+        'quick-start/examples',
+      ],
     },
     {
       type: 'category',
