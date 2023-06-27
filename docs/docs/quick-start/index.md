@@ -40,7 +40,7 @@ pnpm add @rbxts/reflex
 
 ```json title="wally.toml"
 [dependencies]
-Reflex = "littensy/reflex@3.1.0"
+Reflex = "littensy/reflex@3.2.1"
 ```
 
 </TabItem>
