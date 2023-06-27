@@ -103,6 +103,64 @@ end) --> 0
 
 ---
 
+### `setState(newState)`
+
+`setState` lets you manually update the state of the producer. It is generally recommended to use actions instead of `setState` to update state.
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+producer.setState({ count: 1 });
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+producer:setState({ count = 1 })
+```
+
+</TabItem>
+</Tabs>
+
+#### Parameters
+
+-   `newState` - The new state of the producer.
+
+#### Returns
+
+`setState` does not return anything.
+
+---
+
+### `resetState()`
+
+`resetState` lets you reset the state of the producer to the initial value passed to [`createProducer`](create-producer). It's useful for debugging and resetting state between tests.
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+producer.resetState();
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+producer:resetState()
+```
+
+</TabItem>
+</Tabs>
+
+#### Returns
+
+`resetState` does not return anything.
+
+---
+
 ### `subscribe(selector?, predicate?, listener)`
 
 The `subscribe` method lets you listen for changes to the producer's state. Generally, you should pass a selector function to `subscribe` to only listen for changes to a subset of the state.
