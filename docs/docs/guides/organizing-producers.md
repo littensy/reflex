@@ -300,13 +300,13 @@ The root producer file is where you'll combine all of your slices into a single 
 <TabItem value="TypeScript" default>
 
 ```ts title="index.ts" showLineNumbers
-import { CombineStates, combineProducers } from "@rbxts/reflex";
+import { InferState, combineProducers } from "@rbxts/reflex";
 import { todosSlice } from "./todos";
 import { calendarSlice } from "./calendar";
 
 export type RootProducer = typeof producer;
 
-export type RootState = CombineStates<RootProducer>;
+export type RootState = InferState<RootProducer>;
 
 export const producer = combineProducers({
 	todos: todosSlice,
