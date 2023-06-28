@@ -1,3 +1,4 @@
+local Promise = require(script.Parent.Parent.Promise)
 local types = require(script.Parent.Parent.types)
 
 --[=[
@@ -10,6 +11,18 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 	local requestState = options.requestState
 	local receiver = {} :: types.BroadcastReceiver
 	local rootProducer: types.Producer?
+
+	local function merge(state)
+		assert(rootProducer, "Failed to apply receiver middleware")
+
+		local nextState = table.clone(rootProducer:getState())
+
+		for key, value in state do
+			nextState[key] = value
+		end
+
+		rootProducer:setState(nextState)
+	end
 
 	function receiver:dispatch(actions: { types.BroadcastAction })
 		assert(rootProducer, "Cannot dispatch actions before the middleware is applied")
@@ -26,15 +39,13 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 	function receiver.middleware(producer)
 		rootProducer = producer
 
-		requestState():andThen(function(serverState)
-			local nextState = table.clone(producer:getState())
+		local value = requestState()
 
-			for key, value in serverState do
-				nextState[key] = value
-			end
-
-			producer:setState(nextState)
-		end)
+		if Promise.is(value) then
+			value:andThen(merge)
+		else
+			merge(value)
+		end
 
 		return function(dispatch)
 			return dispatch

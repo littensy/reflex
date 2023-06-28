@@ -165,4 +165,19 @@ return function()
 
 		expect(requestStateCount).to.equal(1)
 	end)
+
+	it("should allow a non-Promise value from requestState", function()
+		local receiver = createBroadcastReceiver({
+			producers = producers,
+			requestState = function()
+				return { foo = { count = 1 } }
+			end,
+		})
+
+		producer:applyMiddleware(receiver.middleware)
+
+		local state = producer:getState()
+		expect(state.foo.count).to.equal(1)
+		expect(state.bar.count).to.equal(0)
+	end)
 end
