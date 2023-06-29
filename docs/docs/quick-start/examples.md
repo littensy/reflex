@@ -4,7 +4,9 @@ description: See Reflex in example projects.
 
 # Examples
 
-Reflex has a couple of example projects that you can use to get started.
+Reflex has a couple of example projects that you can use to get started. 
+
+If you have an open-source project that uses Reflex, feel free to let me know so I can add it to this list!
 
 ## TypeScript
 
@@ -15,6 +17,8 @@ Currently, this example has:
 -   🍰 Shared producer slices
 -   💾 Player data with Lapis
 -   🛰️ Server-to-client data syncing
+
+[Take me to the example →](https://github.com/littensy/reflex-example-ts)
 
 ### Usage
 
@@ -48,6 +52,8 @@ Currently, this example has:
 -   🍰 Shared producer slices
 -   💾 Player data with Lapis
 -   🛰️ Server-to-client data syncing
+
+[Take me to the example →](https://github.com/littensy/reflex-example-luau)
 
 ### Usage
 
