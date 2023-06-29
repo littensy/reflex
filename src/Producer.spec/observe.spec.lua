@@ -11,6 +11,10 @@ return function()
 		return item.id
 	end
 
+	local function create(id)
+		return { id = id }
+	end
+
 	local function hasId(items, id)
 		for _, item in items do
 			if item.id == id then
@@ -22,31 +26,7 @@ return function()
 	end
 
 	beforeEach(function()
-		producer = createProducer({}, {
-			add = function(state, id)
-				local nextState = table.clone(state)
-				nextState[`item-{id}`] = { id = id }
-				return nextState
-			end,
-
-			remove = function(state, id)
-				local nextState = {}
-				for key, item in state do
-					if item.id ~= id then
-						nextState[key] = item
-					end
-				end
-				return nextState
-			end,
-
-			move = function(state)
-				local nextState = {}
-				for key, item in state do
-					nextState[`{key}-up`] = { id = item.id }
-				end
-				return nextState
-			end,
-		})
+		producer = createProducer({}, {})
 	end)
 
 	afterEach(function()
@@ -56,8 +36,7 @@ return function()
 	it("should observe the initial items", function()
 		local items = {}
 
-		producer.add(1)
-		producer.add(2)
+		producer:setState({ create(1), create(2) })
 		producer:flush()
 
 		producer:observe(selector, discriminator, function(item)
@@ -78,8 +57,7 @@ return function()
 
 		expect(#items).to.equal(0)
 
-		producer.add(1)
-		producer.add(2)
+		producer:setState({ create(1), create(2) })
 		producer:flush()
 
 		expect(#items).to.equal(2)
@@ -90,9 +68,7 @@ return function()
 	it("should call the cleanup function when an item is deleted", function()
 		local items = {}
 
-		for i = 1, 3 do
-			producer.add(i)
-		end
+		producer:setState({ create(1), create(2), create(3) })
 		producer:flush()
 
 		producer:observe(selector, discriminator, function(item)
@@ -107,7 +83,7 @@ return function()
 		expect(hasId(items, 2)).to.equal(true)
 		expect(hasId(items, 3)).to.equal(true)
 
-		producer.remove(2)
+		producer:setState({ create(1), create(3) })
 		producer:flush()
 
 		expect(#items).to.equal(2)
@@ -115,7 +91,7 @@ return function()
 		expect(hasId(items, 2)).to.equal(false)
 		expect(hasId(items, 3)).to.equal(true)
 
-		producer.remove(1)
+		producer:setState({ create(3) })
 		producer:flush()
 
 		expect(#items).to.equal(1)
@@ -123,7 +99,7 @@ return function()
 		expect(hasId(items, 2)).to.equal(false)
 		expect(hasId(items, 3)).to.equal(true)
 
-		producer.remove(3)
+		producer:setState({})
 		producer:flush()
 
 		expect(#items).to.equal(0)
@@ -132,9 +108,7 @@ return function()
 	it("should call the cleanup function when the observer is destroyed", function()
 		local items = {}
 
-		for i = 1, 3 do
-			producer.add(i)
-		end
+		producer:setState({ create(1), create(2), create(3) })
 		producer:flush()
 
 		local unsubscribe = producer:observe(selector, discriminator, function(item)
@@ -170,16 +144,14 @@ return function()
 		expect(additions).to.equal(0)
 		expect(deletions).to.equal(0)
 
-		for i = 1, 5 do
-			producer.add(i)
-		end
+		producer:setState({ create(1), create(2), create(3), create(4), create(5) })
 		producer:flush()
 
 		expect(#items).to.equal(5)
 		expect(additions).to.equal(5)
 		expect(deletions).to.equal(0)
 
-		producer.move()
+		producer:setState({ create(5), create(4), create(3), create(2), create(1) })
 		producer:flush()
 
 		expect(#items).to.equal(5)
@@ -204,20 +176,79 @@ return function()
 		expect(additions).to.equal(0)
 		expect(deletions).to.equal(0)
 
-		for i = 1, 5 do
-			producer.add(i)
-		end
+		producer:setState({ create(1), create(2), create(3), create(4), create(5) })
 		producer:flush()
 
 		expect(#items).to.equal(5)
 		expect(additions).to.equal(5)
 		expect(deletions).to.equal(0)
 
-		producer.move()
+		producer:setState({ create(5), create(4), create(3), create(2), create(1) })
 		producer:flush()
 
 		expect(#items).to.equal(5)
 		expect(additions).to.equal(10)
 		expect(deletions).to.equal(5)
+	end)
+
+	it("should allow tracking objects by index", function()
+		local items = {}
+		local additions, deletions = 0, 0
+
+		local function discriminator(item, index)
+			return index
+		end
+
+		producer:observe(selector, discriminator, function(item, index)
+			table.insert(items, item)
+			additions += 1
+			return function()
+				table.remove(items, table.find(items, item) or 0)
+				deletions += 1
+			end
+		end)
+
+		producer:setState({ a = create(1), b = create(2), c = create(3) })
+		producer:flush()
+
+		expect(#items).to.equal(3)
+		expect(additions).to.equal(3)
+		expect(deletions).to.equal(0)
+
+		producer:setState({ a = create(1), b = create(2), c = create(3), d = create(4) })
+		producer:flush()
+
+		expect(#items).to.equal(4)
+		expect(additions).to.equal(4)
+		expect(deletions).to.equal(0)
+
+		producer:setState({ b = create(2), c = create(3), d = create(4) })
+		producer:flush()
+
+		expect(#items).to.equal(3)
+		expect(additions).to.equal(4)
+		expect(deletions).to.equal(1)
+		expect(hasId(items, 1)).to.equal(false)
+	end)
+
+	it("should pass the index to the observer", function()
+		local keys = {}
+
+		producer:observe(selector, function(item, index)
+			table.insert(keys, index)
+		end)
+
+		producer:setState({ a = 1, b = 2, c = 3 })
+		producer:flush()
+
+		expect(#keys).to.equal(3)
+
+		expect(table.find(keys, "a")).to.be.ok()
+		expect(table.find(keys, "b")).to.be.ok()
+		expect(table.find(keys, "c")).to.be.ok()
+
+		expect(table.find(keys, 1)).to.never.be.ok()
+		expect(table.find(keys, 2)).to.never.be.ok()
+		expect(table.find(keys, 3)).to.never.be.ok()
 	end)
 end

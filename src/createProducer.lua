@@ -193,7 +193,8 @@ local function createProducer<State>(
 
 		local function checkDiffs(diffs)
 			for _, item in diffs.deletions do
-				local id = if discriminator then discriminator(item) else item
+				local index = diffs.keys[item]
+				local id = if discriminator then discriminator(item, index) else item
 				local cleanup = tracked[id]
 
 				if cleanup then
@@ -203,10 +204,11 @@ local function createProducer<State>(
 			end
 
 			for _, item in diffs.additions do
-				local id = if discriminator then discriminator(item) else item
+				local index = diffs.keys[item]
+				local id = if discriminator then discriminator(item, index) else item
 
 				if not tracked[id] then
-					tracked[id] = observer(item)
+					tracked[id] = observer(item, index)
 				end
 			end
 		end

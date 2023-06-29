@@ -1,8 +1,15 @@
+--!strict
 local createSelector = require(script.Parent.Parent.createSelector)
 
-type ArrayDiffs<T> = {
-	additions: { T },
-	deletions: { T },
+type ArrayDiffs<K, V> = {
+	additions: { V },
+	deletions: { V },
+	keys: { [V]: K },
+}
+
+type Entry<K, V> = {
+	key: K,
+	value: V,
 }
 
 --[=[
@@ -19,44 +26,45 @@ type ArrayDiffs<T> = {
 	@returns A selector that returns an object containing the additions and
 	deletions since the last update.
 ]=]
-local function createSelectArrayDiffs<State, Item>(
-	selector: (state: State) -> Item,
-	discriminator: ((item: Item) -> unknown)?
-): (state: State) -> ArrayDiffs<Item>
-	local lastIds = {}
+local function createSelectArrayDiffs<State, K, V>(
+	selector: (state: State) -> { [K]: V },
+	discriminator: ((item: V, index: K) -> unknown)?
+): (state: State) -> ArrayDiffs<K, V>
+	local lastEntries: { [unknown]: Entry<K, V> } = {}
 
-	local selectItemMap = createSelector({ selector }, function(items)
-		local map = {}
-
-		for _, item in items do
-			local key = if discriminator then discriminator(item) else item
-			map[key] = item
-		end
-
-		return map
-	end)
-
-	return createSelector({ selectItemMap }, function(items)
-		local additions = {}
-		local deletions = {}
+	return createSelector(selector, function(items)
+		local additions: { V } = {}
+		local deletions: { V } = {}
+		local keys: { [V]: K } = {}
+		local entries: { [unknown]: Entry<K, V> } = {}
 
 		for key, item in items do
-			if lastIds[key] == nil then
+			local id = if discriminator then discriminator(item, key) else item
+
+			assert(id ~= nil, "Discriminator returned a nil value")
+
+			if not lastEntries[id] then
+				keys[item] = key
 				table.insert(additions, item)
 			end
+
+			entries[id] = { key = key, value = item }
 		end
 
-		for key, item in lastIds do
-			if items[key] == nil then
-				table.insert(deletions, item)
+		for id, item in lastEntries do
+			if not entries[id] then
+				local entry = lastEntries[id]
+				keys[entry.value] = entry.key
+				table.insert(deletions, entry.value)
 			end
 		end
 
-		lastIds = items
+		lastEntries = entries
 
 		return {
 			additions = additions,
 			deletions = deletions,
+			keys = keys,
 		}
 	end)
 end

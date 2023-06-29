@@ -130,15 +130,15 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 		@returns An observer that calls the given observer for each added item and
 		unsubscribes when the item is removed.
 	]=]
-	observe: (<T>(
+	observe: (<K, V>(
 		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> { [any]: T },
-		discriminator: ((item: T) -> unknown)?,
-		observer: (item: T) -> (() -> ())?
-	) -> () -> ()) & (<T>(
+		selector: (state: State) -> { [K]: V },
+		discriminator: ((item: V, index: K) -> unknown)?,
+		observer: (item: V, index: K) -> (() -> ())?
+	) -> () -> ()) & (<K, V>(
 		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> { [any]: T },
-		observer: (item: T) -> (() -> ())?
+		selector: (state: State) -> { [K]: V },
+		observer: (item: V, index: K) -> (() -> ())?
 	) -> () -> ()),
 
 	--[=[

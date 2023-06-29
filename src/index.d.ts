@@ -333,21 +333,15 @@ interface ProducerImpl<State, Actions> {
 	 * @returns An observer that calls the given observer for each added item and
 	 * unsubscribes when the item is removed.
 	 */
-	observe<T extends object>(
-		selector: (state: State) => { readonly [K in any]: T } | readonly T[],
-		discriminator: (item: T) => any,
-		observer: (item: T) => (() => void) | void,
+	observe<T>(
+		selector: (state: State) => T,
+		observer: (item: Values<T>, index: Keys<T>) => (() => void) | void,
 	): () => void;
 
 	observe<T>(
-		selector: (state: State) => { readonly [K in any]: T } | readonly T[],
-		discriminator: ((item: T) => any) | undefined,
-		observer: (item: T) => (() => void) | void,
-	): () => void;
-
-	observe<T>(
-		selector: (state: State) => { readonly [K in any]: T } | readonly T[],
-		observer: (item: T) => (() => void) | void,
+		selector: (state: State) => T,
+		discriminator: ((item: Values<T>, index: Keys<T>) => defined) | undefined,
+		observer: (item: Values<T>, index: Keys<T>) => (() => void) | void,
 	): () => void;
 
 	/**
@@ -463,6 +457,10 @@ export type CombineProducers<Producers extends ProducerMap> = Producer<
 >;
 
 type ProducerMap = { readonly [name: string]: Producer };
+
+type Keys<T> = T extends readonly any[] ? number : T extends ReadonlyMap<infer K, any> ? K : keyof T;
+
+type Values<T> = T extends readonly any[] ? T[number] : T extends ReadonlyMap<any, infer V> ? V : T[keyof T];
 
 type CombineStates<Producers extends ProducerMap> = {
 	readonly [K in keyof Producers]: Producers[K] extends Producer<infer State, infer Actions> ? State : never;
