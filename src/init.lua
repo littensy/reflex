@@ -5,6 +5,7 @@ local combineProducers = require(script.combineProducers)
 local createSelector = require(script.createSelector)
 local applyMiddleware = require(script.applyMiddleware)
 local loggerMiddleware = require(script.middleware.loggerMiddleware)
+local shallowEqual = require(script.utils.shallowEqual)
 
 export type Broadcaster = types.Broadcaster
 export type BroadcastAction = types.BroadcastAction
@@ -24,4 +25,5 @@ return {
 	loggerMiddleware = loggerMiddleware,
 	createBroadcaster = broadcast.createBroadcaster,
 	createBroadcastReceiver = broadcast.createBroadcastReceiver,
+	shallowEqual = shallowEqual,
 }
