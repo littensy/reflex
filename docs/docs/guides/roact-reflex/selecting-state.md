@@ -87,7 +87,7 @@ First, let's write a selector factory that takes the `sortDirection` argument:
 const selectTodos = (state: RootState) => state.todos.list;
 
 const selectSortedTodos = (sortDirection: "asc" | "desc") => {
-	return createSelector([selectTodos] as const, (todos) => {
+	return createSelector(selectTodos, (todos) => {
 		return [...todos].sort((a, b) => {
 			return sortDirection === "asc" ? a < b : a > b;
 		});

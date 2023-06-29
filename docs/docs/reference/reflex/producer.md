@@ -839,7 +839,7 @@ Say your game's state contains a list of players, and each player has a `health`
 ```ts
 const selectPlayers = (state: RootState) => state.players;
 
-const selectAlivePlayers = createSelector([selectPlayers] as const, (players) => {
+const selectAlivePlayers = createSelector(selectPlayers, (players) => {
 	return players.filter((player) => player.health > 0);
 });
 ```
@@ -852,7 +852,7 @@ local function selectPlayers(state)
     return state.players
 end
 
-local selectAlivePlayers = Reflex.createSelector({ selectPlayers }, function(players)
+local selectAlivePlayers = Reflex.createSelector(selectPlayers, function(players)
     local alivePlayers = {}
 
     for _, player in players do
@@ -946,14 +946,14 @@ Let's say your state has a list of players, and each player has a `health` and `
 const selectPlayers = (state: RootState) => state.players;
 
 const selectPlayerById = (id: number) => {
-	return createSelector([selectPlayers] as const, (players) => {
+	return createSelector(selectPlayers, (players) => {
 		return players.find((player) => player.id === id);
 	});
 };
 
 // highlight-start
 const selectPlayerHealth = (id: number) => {
-	return createSelector([selectPlayerById(id)] as const, (player) => {
+	return createSelector(selectPlayerById(id), (player) => {
 		return player?.health;
 	});
 };
@@ -973,7 +973,7 @@ local function selectPlayers(state)
 end
 
 local function selectPlayerById(id)
-    return Reflex.createSelector({ selectPlayers }, function(players)
+    return Reflex.createSelector(selectPlayers, function(players)
         for _, player in players do
             if player.id == id then
                 return player
@@ -984,7 +984,7 @@ end
 
 // highlight-start
 local function selectPlayerHealth(id)
-    return Reflex.createSelector({ selectPlayerById(id) }, function(player)
+    return Reflex.createSelector(selectPlayerById(id), function(player)
         return player and player.health
     end)
 end
@@ -1078,7 +1078,7 @@ The discriminator is optional in the case that your list contains primitives lik
 
 ```ts
 // highlight-start
-const selectPlayerIds = createSelector([selectPlayers] as const, (players) => {
+const selectPlayerIds = createSelector(selectPlayers, (players) => {
 	return players.map((player) => player.id);
 });
 // highlight-end
@@ -1096,7 +1096,7 @@ producer.observe(selectPlayerIds, (id: number) => {
 
 ```lua
 // highlight-start
-local selectPlayerIds = Reflex.createSelector({ selectPlayers }, function(players)
+local selectPlayerIds = Reflex.createSelector(selectPlayers, function(players)
     local ids = {}
     for index, player in players do
         ids[index] = player.id

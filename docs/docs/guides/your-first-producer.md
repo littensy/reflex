@@ -121,6 +121,12 @@ You've probably noticed that the state is marked as `readonly`. This is because 
 
 To add a todo to the list, you would simply run `todos.addTodo(name)`. Note that these are not methods, so you shouldn't use the `:` operator to call them in Luau.
 
+### Selectors
+
+Coming up are **selectors**, functions that receive the state and return a subset of it. They're useful for reading and subscribing to your state, and you'll learn more about them in the next guides.
+
+You can get the state with a selector by running `todos.getState(selectTodos)`, or you can use a `producer.subscribe` to listen for changes in the selector's results.
+
 ---
 
 ## Using a producer

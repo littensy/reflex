@@ -12,7 +12,7 @@ import TOCInline from "@theme/TOCInline";
 `createSelector` lets you skip re-computing a value if the inputs/dependencies haven't changed.
 
 ```ts
-const selector = createSelector(dependencies, combiner);
+const selector = createSelector(...dependencies, combiner, options?);
 ```
 
 <TOCInline toc={toc} />
@@ -21,7 +21,7 @@ const selector = createSelector(dependencies, combiner);
 
 ## Reference
 
-### `createSelector(dependencies, combiner)`
+### `createSelector(...dependencies, combiner, options?)`
 
 `createSelector` returns a _memoized_ selector. This memoized selector will not call the combiner unless the arguments or the results of `dependencies` have changed. Calling this selector will pass the input arguments to each dependency, and then pass the results of those dependencies to the `combiner`.
 
@@ -34,7 +34,7 @@ The `combiner` function is called with the results of the dependencies as argume
 const selectArray = (state: State) => state.array;
 const selectMap = (state: State) => state.map;
 
-const selectValues = createSelector([selectArray, selectMap] as const, (array, map) => {
+const selectValues = createSelector(selectArray, selectMap, (array, map) => {
 	return [...array, ...Object.values(map)];
 });
 ```
@@ -51,7 +51,7 @@ local function selectMap(state: State)
     return state.map
 end
 
-local selectValues = createSelector({ selectArray, selectMap }, function(array, map)
+local selectValues = createSelector(selectArray, selectMap, function(array, map)
     local values = table.clone(array)
     for _, value in map do
         table.insert(values, value)
@@ -69,8 +69,9 @@ Both the `combiner` and the `dependencies` are memoized. This means that the dep
 
 #### Parameters
 
--   `dependencies` - An array of selectors, the results of which will be passed to the combiner.
+-   `...dependencies` - The selectors whose results will be passed to the combiner.
 -   `combiner` - A function that takes the results of the dependencies and returns a value.
+-   [`options`](#options-argument) - Optional settings to customize the behavior of the selector.
 
 #### Returns
 
@@ -83,6 +84,54 @@ Both the `combiner` and the `dependencies` are memoized. This means that the dep
 -   **Dependencies are compared by reference (`===`).** Even if a function returns an object that's shallowly equal to the previous result, it will still be seen as an update, and the selector will still re-compute.
 
 -   **If you're writing a selector returns a new object or array** (i.e. filtering, sorting, etc.), you should **always** use `createSelector`. Otherwise, the selector will return a new object/array every time it's called, and listeners will run excessively. [See the `subscribe` function for other caveats.](producer#subscribeselector-predicate-listener)
+
+:::
+
+---
+
+### `options` argument
+
+The `options` argument is an object that can be passed as the last argument to `createSelector` to customize its behavior.
+
+-   `options.equalityCheck?` - A function that compares the current and previous values of a dependency. If `false`, the `combiner` will re-compute. By default, this is a strict equality check (`===`).
+-   `options.resultEqualityCheck?` - Similar to `options.equalityCheck`, but it compares the current and previous results of the selector. If `false`, the selector will return the new result.
+
+---
+
+### `dependencies` array
+
+`createSelector` can also receive an array of dependencies instead of variadic arguments.
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const selectValues = createSelector([selectArray, selectMap] as const, (array, map) => {
+	return [...array, ...Object.values(map)];
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local selectValues = createSelector({ selectArray, selectMap }, function(array, map)
+    local values = table.clone(array)
+    for _, value in map do
+        table.insert(values, value)
+    end
+    return values
+end)
+```
+
+</TabItem>
+</Tabs>
+
+:::info Caveats
+
+-   In TypeScript, you need the `as const` modifier to ensure that the types of the dependencies are preserved.
+
+-   In Luau, using a dependency array may have worse type inference than using variadic arguments.
 
 :::
 
@@ -219,7 +268,7 @@ We can wrap the selector in [`createSelector`](#createselectordependencies-combi
 const selectItems = (state: CartState) => state.items;
 
 // highlight-start
-const selectInStock = createSelector([selectItems] as const, (items) => {
+const selectInStock = createSelector(selectItems, (items) => {
 	return items.filter((item) => item.stock > 0);
 });
 // highlight-end
@@ -238,7 +287,7 @@ local function selectItems(state: CartState)
 end
 
 // highlight-start
-local selectInStock = createSelector({ selectItems }, function(items)
+local selectInStock = createSelector(selectItems, function(items)
     local stock = {}
     for _, item in items do
         if item.stock == 0 then
@@ -308,7 +357,7 @@ const selectItems = (state: CartState) => state.items;
 
 // highlight-next-line
 const selectItemById = (id: number) => {
-	return createSelector([selectItems] as const, (items) => {
+	return createSelector(selectItems, (items) => {
 		return items.find((item) => item.id === id);
 	});
 };
@@ -327,7 +376,7 @@ end
 
 // highlight-next-line
 local function createSelectItemById(id: number)
-    return createSelector({ selectItems }, function(items)
+    return createSelector(selectItems, function(items)
         for _, item in items do
             if item.id == id then
                 return item
@@ -378,7 +427,8 @@ If your parameters can change often, and parameters do not conflict in your app,
 const selectItems = (state: CartState) => state.items.list;
 
 const selectFilteredItems = createSelector(
-	[selectItems, (state: CartState, query: string) => query] as const,
+	selectItems,
+	(state: CartState, query: string) => query,
 	(items, query) => {
 		return items.filter((item) => {
 			const [match] = item.name.lower().match(query.lower());
@@ -441,7 +491,7 @@ end)
 
 ## Troubleshooting
 
-### My combiner's types are incorrect
+### My types are incorrect when using a dependency array
 
 **If you have more than one dependency,** you may find that your combiner's types are incorrect. You can fix this by using the `as const` assertion on your dependencies:
 

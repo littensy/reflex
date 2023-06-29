@@ -17,11 +17,11 @@ Games often have complex interactions between different parts of the state. Prod
 
 :::
 
----
+## Selecting state
 
-## Immutable state and actions
+_Selectors_ are functions that take the root state and return a subset of it. They can be as simple as indexing a property, or as complex as filtering and transforming data. We'll go over some examples of selectors, and different ways to use them.
 
-You learned that producers are **immutable** state containers, so state changes are made by dispatching _actions_ that output a new state object. When you want an action to update the state, you apply the changes to new objects instead of mutating the existing state:
+Let's say we had this `calendar` slice in our root state, and we wanted to print out all the events in the calendar:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -31,11 +31,6 @@ const calendarSlice = createProducer(initialState, {
 	addEvent: (state, event: CalendarEvent) => ({
 		...state,
 		events: [...state.events, event],
-	}),
-
-	removeEvent: (state, name: string) => ({
-		...state,
-		events: state.events.filter((e) => e.name !== name),
 	}),
 });
 ```
@@ -54,85 +49,13 @@ local calendarSlice = Reflex.createProducer(initialState, {
 
         return nextState
     end,
-
-    removeEvent = function(state: CalendarState, name: string): CalendarState
-        local nextState = table.clone(state)
-        local nextEvents: { CalendarEvent } = {}
-
-        for _, event in state.events do
-            if event.name ~= name then
-                table.insert(nextEvents, event)
-            end
-        end
-
-        nextState.events = nextEvents
-
-        return nextState
-    end,
 })
 ```
 
 </TabItem>
 </Tabs>
 
-Actions can then be dispatched through the root producer to update the state:
-
-<Tabs groupId="languages">
-<TabItem value="TypeScript" default>
-
-```ts
-const selectEvents = (state: RootState) => state.calendar.events;
-
-producer.subscribe(selectEvents, (events) => {
-	print("EVENTS:");
-	for (const event of events) {
-		print(`- ${event.name} (${event.date})`);
-	}
-});
-
-producer.addEvent({ name: "Birthday", date: "2004-12-27" });
-producer.addEvent({ name: "Learn Reflex", date: "2023-03-17" });
-```
-
-</TabItem>
-<TabItem value="Luau">
-
-```lua
-local function selectEvents(state: producer.RootState)
-    return state.calendar.events
-end
-
-producer:subscribe(selectEvents, function(events)
-    print("EVENTS:")
-    for _, event in events do
-        print("- " .. event.name .. " (" .. event.date .. ")")
-    end
-end)
-
-producer.addEvent({ name = "Birthday", date = "2004-12-27" })
-producer.addEvent({ name = "Learn Reflex", date = "2023-03-17" })
-```
-
-</TabItem>
-</Tabs>
-
-```bash
-# EVENTS:
-# - Birthday (2004-12-27)
-# - Learn Reflex (2023-03-17)
-```
-
-We've been using selectors like `selectEvents` and the [`subscribe`](../reference/reflex/producer#subscribeselector-predicate-listener) method, but we haven't talked about how they work yet. Let's take a look at how selectors work in Reflex.
-
----
-
-## Selecting state
-
-_Selectors_ are functions that take the root state and return a subset of it. They can be as simple as indexing a property, or as complex as filtering and transforming data. Selectors are used to subscribe to state changes, and to read state in side effects.
-
-When you subscribe to a selector, Reflex will run it on every state change and compare the result to the previous value. If the result has changed, the listener will fire with the new value.
-
-So, if we wanted to subscribe to the `events` property of the calendar slice, we could write a selector like this:
+With **selectors**, we can write a function that returns the events from the calendar, and use it to get the events from the root state:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -141,6 +64,10 @@ So, if we wanted to subscribe to the `events` property of the calendar slice, we
 const selectEvents = (state: RootState) => {
 	return state.calendar.events;
 };
+
+for (const event of producer.getState(selectEvents)) {
+	print(`${event.name} (${event.date})`);
+}
 ```
 
 </TabItem>
@@ -150,12 +77,21 @@ const selectEvents = (state: RootState) => {
 local function selectEvents(state: producer.RootState)
     return state.calendar.events
 end
+
+for _, event in producer:getState(selectEvents) do
+    print("- " .. event.name .. " (" .. event.date .. ")")
+end
 ```
 
 </TabItem>
 </Tabs>
 
-Then, we can subscribe to the selector and log the events whenever they change:
+```bash
+# Birthday (2004-12-27)
+# Learn Reflex (2023-03-17)
+```
+
+Or, if you want to run code when the selector's value changes, you can [`subscribe`](../reference/reflex/producer#subscribeselector-predicate-listener) to it:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -163,7 +99,7 @@ Then, we can subscribe to the selector and log the events whenever they change:
 ```ts
 producer.subscribe(selectEvents, (events) => {
 	for (const event of events) {
-		print(`- ${event.name} (${event.date})`);
+		print(`${event.name} (${event.date})`);
 	}
 });
 ```
@@ -182,14 +118,9 @@ end)
 </TabItem>
 </Tabs>
 
-```bash
-# - Birthday (2004-12-27)
-# - Learn Reflex (2023-03-17)
-```
-
 ### Pitfall: creating objects in selectors
 
-In the previous examples, the `selectEvents` selector is simple and returns the `events` property of the calendar slice. But what if you want to get the events sorted by date? You could move that logic to a reusable selector:
+In the previous examples, the `selectEvents` selector is simple and returns the `events` property of the calendar slice. But what if you want to get the events sorted by date? Your first thought might be to write a selector like this:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -197,15 +128,14 @@ In the previous examples, the `selectEvents` selector is simple and returns the 
 ```ts
 const selectEventsByTime = (state: RootState) => {
 	// error-next-line
-	return [...state.calendar.events].sort((a, b) => {
+	// 🔴 This creates a new array every time the selector is called
+	// error-next-line
+	return table.clone(state.calendar.events).sort((a, b) => {
 		const timeA = DateTime.fromIsoDate(a.date);
 		const timeB = DateTime.fromIsoDate(b.date);
 		return timeA.UnixTimestamp < timeB.UnixTimestamp;
 	});
 };
-
-producer.addEvent({ name: "Birthday", date: "2004-12-27" });
-producer.addEvent({ name: "Learn Reflex", date: "2023-03-17" });
 
 for (const date of producer.getState(selectEventsByTime)) {
 	print(`${date.date} - ${date.name}`);
@@ -218,6 +148,8 @@ for (const date of producer.getState(selectEventsByTime)) {
 ```lua
 local function selectEventsByTime(state: producer.RootState)
     // error-next-line
+    -- 🔴 This creates a new array every time the selector is called
+    // error-next-line
     local events = table.clone(state.calendar.events)
 
     table.sort(events, function(a, b)
@@ -228,9 +160,6 @@ local function selectEventsByTime(state: producer.RootState)
 
     return events
 end
-
-producer.addEvent({ name = "Birthday", date = "2004-12-27" })
-producer.addEvent({ name = "Learn Reflex", date = "2023-03-17" })
 
 for _, date in producer:getState(selectEventsByTime) do
     print(date.date .. " - " .. date.name)
@@ -245,19 +174,14 @@ end
 # 2023-03-17 - Learn Reflex
 ```
 
-This works, and you now have a selector that returns the events sorted by date!
-
-**But there's a catch**: every time you call `selectEventsByTime`, it will create a new array. This can cause problems when you try to [`subscribe`](../reference/reflex/producer#subscribeselector-predicate-listener) to the selector:
+**This code works, but there's a catch.** Every time you call `selectEventsByTime`, it will create a new array! And by returning a new value that isn't equal to the last one, you're telling Reflex that the value changed, even if it has the same contents. This can cause problems when you try to [`subscribe`](../reference/reflex/producer#subscribeselector-predicate-listener) to the selector:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
 producer.subscribe(selectEventsByTime, (events) => {
-	print("EVENTS:");
-	for (const event of events) {
-		print(`- ${event.name} (${event.date})`);
-	}
+	print("events changed!");
 });
 
 // highlight-next-line
@@ -269,10 +193,7 @@ producer.addTodo("Unrelated todo");
 
 ```lua
 producer:subscribe(selectEventsByTime, function(events)
-    print("EVENTS:")
-    for _, event in events do
-        print("- " .. event.name .. " (" .. event.date .. ")")
-    end
+    print("events changed!")
 end)
 
 // highlight-next-line
@@ -284,18 +205,26 @@ producer.addTodo("Unrelated todo")
 
 ```bash
 # error-next-line
-# EVENTS:
+# events changed!
 ```
 
-Oh no! We added a **todo item**, which is in a different slice of the state, but the listener still ran and tried to print the events. Normally, this listener **shouldn't run** because the events did not change. This is because of how Reflex detects state updates.
+Oh no! We added a **todo item**, which is in an unrelated part of the state, but it still thinks that our sorted events changed! We'll go over how to fix this in the [next section](#transforming-state).
 
-### Transforming state
+---
 
-When you create a subscription, Reflex will call the selector function and store the result. Then, when the state changes, Reflex will call the selector again and compare the result to the previous result. If the results are not **equal (`===`)**, the listener will be called with the new result.
+## Transforming state
 
-Right now, our `selectEventsByTime` creates a new array **every time** it is called. This means that the result will never be equal to the previous result, and the listener will always be called. But if we also can't sort the original array because [state is immutable](#immutable-state-and-actions), what can we do to transform state?
+Right now, our `selectEventsByTime` selector creates a new array **every time** it is called. This is a problem because Reflex runs our selector on _every_ state change, and detects state updates by **strict equality** (`===`). If the selector's new value is different from what it returned last time, it will call the listener.
 
-_Memoization_ is a technique that can be used to **cache** the result of a function. If the function is called with the same arguments, the cached result can be returned instead of recalculating it. Reflex exports the [`createSelector`](../reference/reflex/create-selector) function to create memoized selectors:
+But if we also can't sort the original array because [state is immutable](#immutable-state-and-actions), what can we do to transform state?
+
+### Memoization
+
+_Memoization_ is a technique that can be used to **cache** the result of a function. If the function is called with the same arguments, the cached result can be returned instead of recalculating it.
+
+If we memoize our `selectEventsByTime` selector, it will only create a new array when the `events` property changes, fixing the problem we had before.
+
+Reflex exports the [`createSelector`](../reference/reflex/create-selector) function to create memoized selectors:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -306,7 +235,7 @@ import { createSelector } from "@rbxts/reflex";
 const selectEvents = (state: RootState) => state.calendar.events;
 
 // highlight-next-line
-const selectEventsByTime = createSelector([selectEvents] as const, (events) => {
+const selectEventsByTime = createSelector(selectEvents, (events) => {
 	return [...events].sort((a, b) => {
 		const timeA = DateTime.fromIsoDate(a.date);
 		const timeB = DateTime.fromIsoDate(b.date);
@@ -326,7 +255,7 @@ local function selectEvents(state: producer.RootState)
 end
 
 // highlight-next-line
-local selectEventsByTime = Reflex.createSelector({ selectEvents }, function(events)
+local selectEventsByTime = Reflex.createSelector(selectEvents, function(events)
     local events = table.clone(events)
 
     table.sort(events, function(a, b)
@@ -344,12 +273,12 @@ end)
 
 :::tip
 
-**You'd call [`createSelector`](../reference/reflex/create-selector) with two arguments:**
+**You'd pass two type of values to [`createSelector`](../reference/reflex/create-selector):**
 
-1. `dependencies`, an array of selectors that the `combiner` depends on
+1. `dependencies`, the selectors whose results will be passed to the `combiner`
 2. `combiner`, a function that takes the results of the `dependencies` and returns a new state
 
-The `combiner` won't run unless the dependencies or arguments change, so it's safer to do expensive operations and return new objects in it.
+The `combiner` won't run unless the dependencies and arguments change, so it's safer to do expensive operations and return new objects in it.
 
 [Read more about `createSelector` →](../reference/reflex/create-selector)
 
@@ -362,18 +291,15 @@ With our new **memoized** selector, the listener will only be called when the `e
 
 ```ts
 producer.subscribe(selectEventsByTime, (events) => {
-	print("EVENTS:");
-	for (const event of events) {
-		print(`- ${event.name} (${event.date})`);
-	}
+	print("events changed!");
 });
 
+// ✅ Will not call the listener
 producer.addTodo("Unrelated todo");
 
 task.wait(1);
 
 producer.addEvent({ name: "Learn Reflex", date: "2023-03-17" });
-producer.addEvent({ name: "Birthday", date: "2004-12-27" });
 ```
 
 </TabItem>
@@ -381,27 +307,22 @@ producer.addEvent({ name: "Birthday", date: "2004-12-27" });
 
 ```lua
 producer:subscribe(selectEventsByTime, function(events)
-    print("EVENTS:")
-    for _, event in events do
-        print("- " .. event.name .. " (" .. event.date .. ")")
-    end
+    print("events changed!")
 end)
 
+-- ✅ Will not call the listener
 producer.addTodo("Unrelated todo")
 
 task.wait(1)
 
 producer.addEvent({ name = "Learn Reflex", date = "2023-03-17" })
-producer.addEvent({ name = "Birthday", date = "2004-12-27" })
 ```
 
 </TabItem>
 </Tabs>
 
 ```bash
-# EVENTS:
-# - Birthday (2004-12-27)
-# - Learn Reflex (2023-03-17)
+# events changed!
 ```
 
 Now, we can subscribe to an automatically-sorted list of events efficiently!
@@ -413,6 +334,10 @@ Using selectors this way allows you to [derive new information](../reference/ref
 **Memoizing selectors is a good idea, but it's not always necessary.** You should prefer to memoize selectors that are expensive or return new objects; indexing a table or returning a primitive value is cheap and doesn't need to be memoized.
 
 :::
+
+---
+
+## Recipes
 
 ### Passing arguments to selectors
 
@@ -435,7 +360,7 @@ const selectEvents = (state: RootState) => state.calendar.events;
 
 // highlight-next-line
 const selectEventByName = (name: string) => {
-	return createSelector([selectEvents] as const, (events) => {
+	return createSelector(selectEvents, (events) => {
 		return events.find((event) => event.name === name);
 	});
 };
@@ -453,7 +378,7 @@ end
 
 // highlight-next-line
 local function selectEventByName(name: string)
-    return Reflex.createSelector({ selectEvents }, function(events)
+    return Reflex.createSelector(selectEvents, function(events)
         for _, event in events do
             if event.name == name then
                 return event
@@ -505,13 +430,105 @@ producer.addEvent({ name = "Birthday", date = "2004-12-27" })
 
 Selector factories are a nice and simple way to create selectors specialized for a given set of arguments. This pattern can be used to create selectors for a specific user, apply a sort filter, or any other transformation that depends on external arguments.
 
-### Stateful selectors
+### Custom equality checks
 
-[Selector factories](#passing-arguments-to-selectors) are great for creating selectors that depend on external arguments, but they have the added benefit that the selectors you create are **unique**. You can add variables and logic that are only accessible to a specific selector, which can be used for a variety of cases:
+By default, [`createSelector`](../reference/reflex/create-selector) uses a strict equality check to compare the results of the dependencies and determine whether to call the `combiner`. This is usually fine, but sometimes you may want to use a custom equality check.
 
--   Memoizing results with a custom equality function
--   Storing a cache of previous results
--   Tracking the addition and removal of entities
+#### Equality of dependencies
+
+[`createSelector`](../reference/reflex/create-selector) accepts an optional third argument, `options`, which can be used to customize the behavior of the selector. One of the options is `equalityCheck`, which can be used to specify a custom equality check.
+
+For example, if you want to only run the `combiner` if the dependencies are not shallowly equal, you can use `shallowEqual` as the `equalityCheck`:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+import { createSelector, shallowEqual } from "@rbxts/reflex";
+
+const selectTodos = createSelector(
+	selectTodoIds,
+	(ids) => {
+		for (const _ of $range(0, 10000)) {
+			// some expensive operation
+		}
+	},
+	// highlight-next-line
+	{ equalityCheck: shallowEqual },
+);
+
+selectTodos(table.clone(state)) === selectTodos(table.clone(state)); // true
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
+
+local selectTodos = Reflex.createSelector(selectTodoIds, function(ids)
+    for i = 1, 10000 do
+        -- some expensive operation
+    end
+end, {
+    // highlight-next-line
+    equalityCheck = Reflex.shallowEqual,
+})
+
+selectTodos(table.clone(state)) == selectTodos(table.clone(state)) -- true
+```
+
+</TabItem>
+</Tabs>
+
+#### Equality of results
+
+[`createSelector`](../reference/reflex/create-selector)'s `options` argument also accepts a `resultEqualityCheck` option, which is used to prevent returning a new value unless the result is not "equal" to the previous value. This is useful when the `combiner` returns a new object every time it's called, but the result is actually the same.
+
+For example, if you want to only return a new object if the `todos` array has changed, you can use `shallowEqual` as the `resultEqualityCheck`:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+import { createSelector, shallowEqual } from "@rbxts/reflex";
+
+const selectTodoIds = createSelector(
+	selectTodos,
+	(todos) => {
+		return todos.map((todo) => todo.id);
+	},
+	// highlight-next-line
+	{ resultEqualityCheck: shallowEqual },
+);
+
+selectTodos(table.clone(state)) === selectTodos(table.clone(state)); // true
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local Reflex = require(ReplicatedStorage.Packages.Reflex)
+
+local selectTodoIds = Reflex.createSelector(selectTodos, function(todos)
+    local ids = {}
+
+    for _, todo in todos do
+        table.insert(ids, todo.id)
+    end
+
+    return ids
+end, {
+    // highlight-next-line
+    resultEqualityCheck = Reflex.shallowEqual,
+})
+
+selectTodos(table.clone(state)) == selectTodos(table.clone(state)) -- true
+```
+
+</TabItem>
+</Tabs>
 
 ---
 

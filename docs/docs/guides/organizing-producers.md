@@ -404,9 +404,8 @@ import { RootState, producer } from "./producer";
 const selectEvents = (state: RootState) => state.calendar.events;
 
 producer.subscribe(selectEvents, (events) => {
-	print("EVENTS:");
 	for (const event of events) {
-		print(`- ${event.name} (${event.date})`);
+		print(`${event.name} (${event.date})`);
 	}
 });
 
@@ -425,7 +424,6 @@ local function selectEvents(state: producer.RootState)
 end
 
 producer:subscribe(selectEvents, function(events)
-    print("EVENTS:")
     for _, event in events do
         print("- " .. event.name .. " (" .. event.date .. ")")
     end
@@ -439,9 +437,8 @@ producer.addEvent({ name = "Learn Reflex", date = "2023-03-17" })
 </Tabs>
 
 ```bash
-# EVENTS:
-# - Birthday (2004-12-27)
-# - Learn Reflex (2023-03-17)
+# Birthday (2004-12-27)
+# Learn Reflex (2023-03-17)
 ```
 
 :::caution
