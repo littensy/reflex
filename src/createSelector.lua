@@ -55,35 +55,35 @@ type EqualityCheck<T = any> = (current: T, previous: T) -> boolean
 
 type MemoizeOptions<Result> = {
 	--[=[
-		The equality function used when comparing selector arguments or
-		combiner arguments. By default, this is a strict equality check.
-		@default (current: any, previous: any) -> boolean
+		The equality function used when comparing dependencies before calling
+		the combiner. By default, a strict equality check is used.
 	]=]
-	paramEqualityCheck: EqualityCheck?,
+	equalityCheck: EqualityCheck?,
 
 	--[=[
-		An optional equality function to use when comparing the result of the
-		combiner function. By default, the latest result is always returned.
+		The equality function used when comparing the result of the combiner
+		to the previous value. If `true`, it will return the previous value
+		of the combiner. By default, the latest result is always returned.
 	]=]
-	equalityCheck: EqualityCheck<Result>?,
+	resultEqualityCheck: EqualityCheck<Result>?,
 }
 
 --[=[
 	Memoizes a function by caching the result of the last call. Recomputes the
 	result if any of the arguments have changed.
 	@param callback The function to memoize.
-	@param equalityCheck An optional equality function to use when comparing
-	the result of the callback. By default, the latest result is always
-	returned.
-	@param paramEqualityCheck An optional equality function to use when
+	@param equalityCheck An optional equality function to use when
 	comparing the arguments of the callback. By default, a strict equality
 	check is used.
+	@param resultEqualityCheck An optional equality function to use when comparing
+	the result of the callback. By default, the latest result is always
+	returned.
 	@return A memoized function.
 ]=]
 local function memoize(
 	callback: (...any) -> any,
 	equalityCheck: EqualityCheck?,
-	paramEqualityCheck: EqualityCheck?
+	resultEqualityCheck: EqualityCheck?
 ): (...any) -> any
 	local lastArguments = {}
 	local lastArgumentCount = -1
@@ -103,7 +103,7 @@ local function memoize(
 				local current = select(index, ...)
 				local previous = lastArguments[index]
 
-				if current ~= previous and (not paramEqualityCheck or not paramEqualityCheck(current, previous)) then
+				if current ~= previous and (not equalityCheck or not equalityCheck(current, previous)) then
 					result = callback(...)
 					lastArguments = { ... }
 					break
@@ -111,12 +111,12 @@ local function memoize(
 			end
 		end
 
-		if not equalityCheck then
+		if not resultEqualityCheck then
 			lastResult = result
 			return result
 		end
 
-		if firstRun or (lastResult ~= result and not equalityCheck(result, lastResult)) then
+		if firstRun or (lastResult ~= result and not resultEqualityCheck(result, lastResult)) then
 			firstRun = false
 			lastResult = result
 		end
@@ -159,18 +159,16 @@ local function createSelectorImpl(...: ((...any) -> any) | MemoizeOptions<any>):
 		combiner = arguments[arguments.n]
 	end
 
-	print(dependencies, combiner, equalityOrOptions)
-
 	local options = if type(equalityOrOptions) == "function"
 		then { equalityCheck = equalityOrOptions }
 		else equalityOrOptions
 
+	local resultEqualityCheck = options and options.resultEqualityCheck
 	local equalityCheck = options and options.equalityCheck
-	local paramEqualityCheck = options and options.paramEqualityCheck
 
 	local dependencyCount = #dependencies
 	local inputs = table.create(dependencyCount)
-	local memoizedCombiner = memoize(combiner, nil, paramEqualityCheck)
+	local memoizedCombiner = memoize(combiner, equalityCheck, resultEqualityCheck)
 
 	return memoize(function(...)
 		for index = 1, dependencyCount do
@@ -178,7 +176,7 @@ local function createSelectorImpl(...: ((...any) -> any) | MemoizeOptions<any>):
 		end
 
 		return memoizedCombiner(table.unpack(inputs, 1, dependencyCount))
-	end, equalityCheck, paramEqualityCheck)
+	end)
 end
 
 local createSelector: CreateSelectorFunction = createSelectorImpl :: any

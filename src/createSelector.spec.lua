@@ -135,60 +135,6 @@ return function()
 		expect(calls).to.equal(5)
 	end)
 
-	it("should receive a paramEqualityCheck option for dependencies", function()
-		local current, previous
-
-		local selector = createSelector({ selectFoo }, function(foo)
-			return { value = foo.value }
-		end, {
-			paramEqualityCheck = function(a, b)
-				-- this 'value' check runs on dependencies only
-				return a.value ~= nil and a.value == b.value
-			end,
-		})
-
-		current, previous = selector({ foo = { value = 1 } }), nil
-		expect(current).to.be.a("table")
-		expect(current.value).to.equal(1)
-
-		current, previous = selector({ foo = { value = 1 } }), current
-		expect(current).to.equal(previous)
-
-		current, previous = selector({ foo = { value = 2 } }), current
-		expect(current).to.never.equal(previous)
-		expect(current.value).to.equal(2)
-
-		current, previous = selector({ foo = { value = 2 } }), current
-		expect(current).to.equal(previous)
-	end)
-
-	it("should receive a paramEqualityCheck option for arguments", function()
-		local current, previous
-
-		local selector = createSelector({ selectFoo }, function(foo)
-			return { value = foo.value }
-		end, {
-			paramEqualityCheck = function(a, b)
-				-- this 'value' check runs on the state passed to the selector
-				return a.foo and a.foo.value and a.foo.value == b.foo.value
-			end,
-		})
-
-		current, previous = selector({ foo = { value = 1 } }), nil
-		expect(current).to.be.a("table")
-		expect(current.value).to.equal(1)
-
-		current, previous = selector({ foo = { value = 1 } }), current
-		expect(current).to.equal(previous)
-
-		current, previous = selector({ foo = { value = 2 } }), current
-		expect(current).to.never.equal(previous)
-		expect(current.value).to.equal(2)
-
-		current, previous = selector({ foo = { value = 2 } }), current
-		expect(current).to.equal(previous)
-	end)
-
 	it("should receive an equalityCheck option", function()
 		local current, previous
 
@@ -196,6 +142,32 @@ return function()
 			return { value = foo.value }
 		end, {
 			equalityCheck = function(a, b)
+				return a.value == b.value
+			end,
+		})
+
+		current, previous = selector({ foo = { value = 1 } }), nil
+		expect(current).to.be.a("table")
+		expect(current.value).to.equal(1)
+
+		current, previous = selector({ foo = { value = 1 } }), current
+		expect(current).to.equal(previous)
+
+		current, previous = selector({ foo = { value = 2 } }), current
+		expect(current).to.never.equal(previous)
+		expect(current.value).to.equal(2)
+
+		current, previous = selector({ foo = { value = 2 } }), current
+		expect(current).to.equal(previous)
+	end)
+
+	it("should receive a resultEqualityCheck option", function()
+		local current, previous
+
+		local selector = createSelector({ selectFoo }, function(foo)
+			return { value = foo.value }
+		end, {
+			resultEqualityCheck = function(a, b)
 				return a.value == b.value
 			end,
 		})
@@ -271,7 +243,7 @@ return function()
 		local selector = createSelector(selectFoo, selectBar, function(foo, bar)
 			return { value = foo.value }
 		end, {
-			equalityCheck = function(a, b)
+			resultEqualityCheck = function(a, b)
 				return a.value == b.value
 			end,
 		})

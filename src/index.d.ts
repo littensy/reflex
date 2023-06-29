@@ -191,6 +191,14 @@ export declare function createBroadcastReceiver<Producers extends ProducerMap>(
 export declare const loggerMiddleware: ProducerMiddleware;
 
 /**
+ * Returns whether the two given values are shallowly equal.
+ * @param a The first value.
+ * @param b The second value.
+ * @return Whether the two values are shallowly equal.
+ */
+export declare function shallowEqual(a: unknown, b: unknown): boolean;
+
+/**
  * A Producer is a state container that exposes a set of dispatchers that can
  * be used to modify the state. The state is immmutable, so dispatchers return
  * a new state object.
@@ -487,17 +495,18 @@ export interface MemoizeOptions<Result> {
 	 * @param previous The previous value.
 	 * @return `true` if the values are equal.
 	 */
-	readonly equalityCheck?: EqualityCheck<Result>;
+	readonly resultEqualityCheck?: EqualityCheck<Result>;
 
 	/**
 	 * An equality check function that is used to compare the previous and
-	 * current arguments to the selector and combiner. If the function returns
-	 * `true`, the argument will be considered equal to the previous argument.
+	 * current arguments to the combiner. If the function returns `true`, the
+	 * combiner will not be called and the previous result will be returned
+	 * instead.
 	 * @param current The new argument.
 	 * @param previous The previous argument.
 	 * @return `true` if the arguments are equal.
 	 */
-	readonly paramEqualityCheck?: EqualityCheck;
+	readonly equalityCheck?: EqualityCheck;
 }
 
 /**
