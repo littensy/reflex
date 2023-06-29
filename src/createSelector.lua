@@ -125,21 +125,6 @@ local function memoize(
 	end
 end
 
---[=[
-	Creates a memoized selector function. The selector is only called if the
-	outputs of the dependencies have changed.
-
-	This function is only necessary if your selector is expensive to compute,
-	or returns a new object (i.e. mapping an array). This is because selectors
-	are called every state change, and if the selector returns a new object,
-	the component will re-render even if the inputs haven't changed.
-
-	@param dependencies A list of dependencies that the selector depends on.
-	@param combiner A function that takes the dependencies as arguments and
-	returns the result of the selector.
-	@param options Options for memoizing the selector.
-	@return A memoized selector function.
-]=]
 local function createSelectorImpl(...: ((...any) -> any) | MemoizeOptions<any>): (...any) -> any
 	local arguments = table.pack(...)
 	local dependencies, combiner, equalityOrOptions
@@ -179,6 +164,21 @@ local function createSelectorImpl(...: ((...any) -> any) | MemoizeOptions<any>):
 	end)
 end
 
+--[=[
+	Creates a memoized selector function. The selector is only called if the
+	outputs of the dependencies have changed.
+
+	This function is only necessary if your selector is expensive to compute,
+	or returns a new object (i.e. mapping an array). This is because selectors
+	are called every state change, and if the selector returns a new object,
+	the component will re-render even if the inputs haven't changed.
+
+	@param dependencies A list of dependencies that the selector depends on.
+	@param combiner A function that takes the dependencies as arguments and
+	returns the result of the selector.
+	@param options Options for memoizing the selector.
+	@return A memoized selector function.
+]=]
 local createSelector: CreateSelectorFunction = createSelectorImpl :: any
 
 return createSelector
