@@ -1,34 +1,124 @@
-type CreateSelectorFunction = <Result, Argument...>(
-	dependencies: { (Argument...) -> any },
-	resultFunc: (...any) -> Result
-) -> (Argument...) -> Result
+type CreateSelectorFunction =
+	(<Result, Arguments...>(
+		dependencies: { (Arguments...) -> any },
+		combiner: (...any) -> Result,
+		equalityOrOptions: (MemoizeOptions<Result> | EqualityCheck<Result>)?
+	) -> (Arguments...) -> Result)
+	& (<Result, A, Arguments...>(
+		a: (Arguments...) -> A,
+		combiner: (A) -> Result,
+		options: MemoizeOptions<Result>?
+	) -> (Arguments...) -> Result)
+	& (<Result, A, B, Arguments...>(
+		a: (Arguments...) -> A,
+		b: (Arguments...) -> B,
+		combiner: (A, B) -> Result,
+		options: MemoizeOptions<Result>?
+	) -> (Arguments...) -> Result)
+	& (<Result, A, B, C, Arguments...>(
+		a: (Arguments...) -> A,
+		b: (Arguments...) -> B,
+		c: (Arguments...) -> C,
+		combiner: (A, B, C) -> Result,
+		options: MemoizeOptions<Result>?
+	) -> (Arguments...) -> Result)
+	& (<Result, A, B, C, D, Arguments...>(
+		a: (Arguments...) -> A,
+		b: (Arguments...) -> B,
+		c: (Arguments...) -> C,
+		d: (Arguments...) -> D,
+		combiner: (A, B, C, D) -> Result,
+		options: MemoizeOptions<Result>?
+	) -> (Arguments...) -> Result)
+	& (<Result, A, B, C, D, E, Arguments...>(
+		a: (Arguments...) -> A,
+		b: (Arguments...) -> B,
+		c: (Arguments...) -> C,
+		d: (Arguments...) -> D,
+		e: (Arguments...) -> E,
+		combiner: (A, B, C, D, E) -> Result,
+		options: MemoizeOptions<Result>?
+	) -> (Arguments...) -> Result)
+	& (<Result, A, B, C, D, E, F, Arguments...>(
+		a: (Arguments...) -> A,
+		b: (Arguments...) -> B,
+		c: (Arguments...) -> C,
+		d: (Arguments...) -> D,
+		e: (Arguments...) -> E,
+		f: (Arguments...) -> F,
+		combiner: (A, B, C, D, E, F) -> Result,
+		options: MemoizeOptions<Result>?
+	) -> (Arguments...) -> Result)
+	& (...(((...any) -> any) | MemoizeOptions<any>)) -> (...any) -> any
+
+type EqualityCheck<T = any> = (current: T, previous: T) -> boolean
+
+type MemoizeOptions<Result> = {
+	--[=[
+		The equality function used when comparing selector arguments or
+		combiner arguments. By default, this is a strict equality check.
+		@default (current: any, previous: any) -> boolean
+	]=]
+	paramEqualityCheck: EqualityCheck?,
+
+	--[=[
+		An optional equality function to use when comparing the result of the
+		combiner function. By default, the latest result is always returned.
+	]=]
+	equalityCheck: EqualityCheck<Result>?,
+}
 
 --[=[
 	Memoizes a function by caching the result of the last call. Recomputes the
 	result if any of the arguments have changed.
 	@param callback The function to memoize.
+	@param equalityCheck An optional equality function to use when comparing
+	the result of the callback. By default, the latest result is always
+	returned.
+	@param paramEqualityCheck An optional equality function to use when
+	comparing the arguments of the callback. By default, a strict equality
+	check is used.
 	@return A memoized function.
 ]=]
-local function memoize(callback: (...any) -> any): (...any) -> any
+local function memoize(
+	callback: (...any) -> any,
+	equalityCheck: EqualityCheck?,
+	paramEqualityCheck: EqualityCheck?
+): (...any) -> any
 	local lastArguments = {}
 	local lastArgumentCount = -1
 	local lastResult
+	local firstRun = true
 
 	return function(...)
 		local argumentCount = select("#", ...)
+		local result = lastResult
 
 		if argumentCount ~= lastArgumentCount then
-			lastResult = callback(...)
+			result = callback(...)
 			lastArgumentCount = argumentCount
 			lastArguments = { ... }
 		else
 			for index = 1, argumentCount do
-				if select(index, ...) ~= lastArguments[index] then
-					lastResult = callback(...)
+				local current = select(index, ...)
+				local previous = lastArguments[index]
+
+				if current ~= previous and (not paramEqualityCheck or not paramEqualityCheck(current, previous)) then
+					result = callback(...)
 					lastArguments = { ... }
 					break
 				end
 			end
+		end
+
+		if not equalityCheck then
+			lastResult = result
+			return result
+		end
+
+		if firstRun or (lastResult ~= result and not equalityCheck(result, lastResult)) then
+			firstRun = false
+			lastResult = result
 		end
 
 		return lastResult
@@ -47,12 +137,40 @@ end
 	@param dependencies A list of dependencies that the selector depends on.
 	@param combiner A function that takes the dependencies as arguments and
 	returns the result of the selector.
+	@param options Options for memoizing the selector.
 	@return A memoized selector function.
 ]=]
-local function createSelector(dependencies: { (...any) -> any }, combiner: (...any) -> any)
+local function createSelectorImpl(...: ((...any) -> any) | MemoizeOptions<any>): (...any) -> any
+	local arguments = table.pack(...)
+	local dependencies, combiner, equalityOrOptions
+
+	if type(...) == "table" then
+		-- { ... }, combiner, equalityOrOptions
+		dependencies, combiner, equalityOrOptions = ...
+	elseif type(arguments[arguments.n]) == "table" then
+		-- ..., combiner, options
+		dependencies = table.create(arguments.n - 2)
+		table.move(arguments, 1, arguments.n - 2, 1, dependencies)
+		combiner, equalityOrOptions = arguments[arguments.n - 1], arguments[arguments.n]
+	else
+		-- ..., combiner
+		dependencies = table.create(arguments.n - 1)
+		table.move(arguments, 1, arguments.n - 1, 1, dependencies)
+		combiner = arguments[arguments.n]
+	end
+
+	print(dependencies, combiner, equalityOrOptions)
+
+	local options = if type(equalityOrOptions) == "function"
+		then { equalityCheck = equalityOrOptions }
+		else equalityOrOptions
+
+	local equalityCheck = options and options.equalityCheck
+	local paramEqualityCheck = options and options.paramEqualityCheck
+
 	local dependencyCount = #dependencies
 	local inputs = table.create(dependencyCount)
-	local memoizedCombiner = memoize(combiner)
+	local memoizedCombiner = memoize(combiner, nil, paramEqualityCheck)
 
 	return memoize(function(...)
 		for index = 1, dependencyCount do
@@ -60,7 +178,9 @@ local function createSelector(dependencies: { (...any) -> any }, combiner: (...a
 		end
 
 		return memoizedCombiner(table.unpack(inputs, 1, dependencyCount))
-	end)
+	end, equalityCheck, paramEqualityCheck)
 end
 
-return (createSelector :: any) :: CreateSelectorFunction
+local createSelector: CreateSelectorFunction = createSelectorImpl :: any
+
+return createSelector

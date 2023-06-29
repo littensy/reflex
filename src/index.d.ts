@@ -104,11 +104,25 @@ export declare function applyMiddleware(...middlewares: ProducerMiddleware[]): <
  * @param dependencies A list of dependencies that the selector depends on.
  * @param combiner A function that takes the dependencies as arguments and
  * returns the result of the selector.
+ * @param options Options for memoizing the selector.
  * @return A memoized selector function.
  */
 export declare function createSelector<Selectors extends SelectorArray, Result>(
 	dependencies: Selectors,
 	combiner: (...args: InferSelectorArrayResults<Selectors>) => Result,
+	options?: MemoizeOptions<Result> | EqualityCheck<Result>,
+): MergeSelectors<Selectors, Result>;
+
+export declare function createSelector<Selectors extends SelectorArray, Result>(
+	...args: [...dependencies: Selectors, combiner: (...args: InferSelectorArrayResults<Selectors>) => Result]
+): MergeSelectors<Selectors, Result>;
+
+export declare function createSelector<Selectors extends SelectorArray, Result>(
+	...args: [
+		...dependencies: Selectors,
+		combiner: (...args: InferSelectorArrayResults<Selectors>) => Result,
+		options: Result extends infer R ? MemoizeOptions<R> : never,
+	]
 ): MergeSelectors<Selectors, Result>;
 
 /**
@@ -464,6 +478,28 @@ type IntersectObjectValues<T> = {
 	? R
 	: never;
 
+export interface MemoizeOptions<Result> {
+	/**
+	 * An equality check function that is used to compare the previous and
+	 * current results of the combiner. If the function returns `true`, the
+	 * previous result will be returned instead of the new result.
+	 * @param current The new value.
+	 * @param previous The previous value.
+	 * @return `true` if the values are equal.
+	 */
+	readonly equalityCheck?: EqualityCheck<Result>;
+
+	/**
+	 * An equality check function that is used to compare the previous and
+	 * current arguments to the selector and combiner. If the function returns
+	 * `true`, the argument will be considered equal to the previous argument.
+	 * @param current The new argument.
+	 * @param previous The previous argument.
+	 * @return `true` if the arguments are equal.
+	 */
+	readonly paramEqualityCheck?: EqualityCheck;
+}
+
 /**
  * A selector function that can be used to select a subset of the state.
  * @param state The state.
@@ -473,6 +509,8 @@ type IntersectObjectValues<T> = {
 export type Selector<State = any, Result = unknown, Params extends never | any[] = any[]> = [Params] extends [never]
 	? (state: State) => Result
 	: (state: State, ...params: Params) => Result;
+
+export type EqualityCheck<T = unknown> = (a: T, b: T) => boolean;
 
 type SelectorArray = readonly Selector[];
 
