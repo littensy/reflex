@@ -127,7 +127,7 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 		each item. Useful when tracking immutable objects.
 		@param observer The observer to call when an item is added. Returns a
 		function that is called when the item is removed.
-		@returns An observer that calls the given observer for each added item and
+		@return An observer that calls the given observer for each added item and
 		unsubscribes when the item is removed.
 	]=]
 	observe: (<K, V>(
@@ -139,6 +139,27 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 		self: Producer<State, Dispatchers>,
 		selector: (state: State) -> { [K]: V },
 		observer: (item: V, index: K) -> (() -> ())?
+	) -> () -> ()),
+
+	--[=[
+		Similar to `observe`, but it creates one observer while a selector or
+		predicate is truthy, and destroys the observer when it's no longer truthy.
+		@param selector The selector to track.
+		@param predicate An optional predicate function that must return `true`
+		for the observer to be created.
+		@param observer The observer to call when the selector is truthy. Returns
+		a function that is called when the selector is falsy.
+		@return A cleanup function that removes all observers.
+	]=]
+	observeWhile: (<T>(
+		self: Producer<State, Dispatchers>,
+		selector: (state: State) -> T,
+		predicate: (state: T, prevState: T) -> boolean,
+		observer: (state: T) -> (() -> ())?
+	) -> () -> ()) & (<T>(
+		self: Producer<State, Dispatchers>,
+		selector: (state: State) -> T?,
+		observer: (state: T) -> (() -> ())?
 	) -> () -> ()),
 
 	--[=[
@@ -229,7 +250,7 @@ export type BroadcastReceiverOptions = {
 		A function that should request the server's state through its broadcaster.
 		This will be called when the middleware is applied to access the server's
 		state.
-		@returns A Promise that resolves with the server's state.
+		@return A Promise that resolves with the server's state.
 	]=]
 	requestState: () -> any,
 }

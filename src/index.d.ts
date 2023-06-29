@@ -330,8 +330,7 @@ interface ProducerImpl<State, Actions> {
 	 * each item. Useful when tracking immutable objects.
 	 * @param observer The observer to call when an item is added. Returns a
 	 * function that is called when the item is removed.
-	 * @returns An observer that calls the given observer for each added item and
-	 * unsubscribes when the item is removed.
+	 * @returns A cleanup function that removes all observers.
 	 */
 	observe<T>(
 		selector: (state: State) => T,
@@ -342,6 +341,27 @@ interface ProducerImpl<State, Actions> {
 		selector: (state: State) => T,
 		discriminator: ((item: Values<T>, index: Keys<T>) => defined) | undefined,
 		observer: (item: Values<T>, index: Keys<T>) => (() => void) | void,
+	): () => void;
+
+	/**
+	 * Similar to `observe`, but it creates one observer while a selector or
+	 * predicate is truthy, and destroys the observer when it's no longer truthy.
+	 * @param selector The selector to track.
+	 * @param predicate An optional predicate function that must return `true`
+	 * for the observer to be created.
+	 * @param observer The observer to call when the selector is truthy. Returns
+	 * a function that is called when the selector is falsy.
+	 * @returns A cleanup function that removes all observers.
+	 */
+	observeWhile<T>(
+		selector: (state: State) => T | false | undefined,
+		observer: (state: T, prevState: T) => (() => void) | void,
+	): () => void;
+
+	observeWhile<T>(
+		selector: (state: State) => T,
+		predicate: ((state: T, prevState: T) => boolean) | undefined,
+		observer: (state: T) => (() => void) | void,
 	): () => void;
 
 	/**

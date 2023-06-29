@@ -188,17 +188,17 @@ local function createProducer<State>(
 			selector, observer = ...
 		end
 
-		local tracked = {}
+		local idToCleanup = {}
 		local selectDiffs = createSelectArrayDiffs(selector, discriminator)
 
 		local function checkDiffs(diffs)
 			for _, item in diffs.deletions do
 				local index = diffs.keys[item]
 				local id = if discriminator then discriminator(item, index) else item
-				local cleanup = tracked[id]
+				local cleanup = idToCleanup[id]
 
 				if cleanup then
-					tracked[id] = nil
+					idToCleanup[id] = nil
 					cleanup()
 				end
 			end
@@ -207,8 +207,8 @@ local function createProducer<State>(
 				local index = diffs.keys[item]
 				local id = if discriminator then discriminator(item, index) else item
 
-				if not tracked[id] then
-					tracked[id] = observer(item, index)
+				if not idToCleanup[id] then
+					idToCleanup[id] = observer(item, index)
 				end
 			end
 		end
@@ -220,11 +220,48 @@ local function createProducer<State>(
 		return function()
 			unsubscribe()
 
-			for _, cleanup in tracked do
+			for _, cleanup in idToCleanup do
 				cleanup()
 			end
 
-			table.clear(tracked)
+			table.clear(idToCleanup)
+		end
+	end
+
+	function producer:observeWhile(...)
+		local arguments = select("#", ...)
+		local selector, predicate, observer
+
+		if arguments >= 3 then
+			selector, predicate, observer = ...
+		else
+			selector, observer = ...
+		end
+
+		local initialSelection = self:getState(selector)
+		local cleanup
+
+		local function updateObserver(selection, lastSelection)
+			local shouldObserve = if predicate then predicate(selection, lastSelection) else selection
+
+			if shouldObserve and not cleanup then
+				cleanup = observer(selection)
+			elseif not shouldObserve and cleanup then
+				task.spawn(cleanup)
+				cleanup = nil
+			end
+		end
+
+		local unsubscribe = self:subscribe(selector, updateObserver)
+
+		updateObserver(initialSelection, initialSelection)
+
+		return function()
+			unsubscribe()
+
+			if cleanup then
+				cleanup()
+			end
 		end
 	end
 
