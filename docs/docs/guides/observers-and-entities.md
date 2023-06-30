@@ -14,6 +14,7 @@ Often, you'll want to run code over the lifetime of an entity. You can use [`obs
 -   📚 What entities and observers are
 -   🔍 How to track an entity manually
 -   🔗 How to use `observe` to track entities
+-   1️⃣ How to use `observeWhile` to track one value
 
 :::
 
@@ -247,23 +248,23 @@ While this works, it's a lot of code to write for something that should be simpl
 
 ---
 
-## Create Observers with `observe`
+## Observers in Reflex
 
 The [`observe`](../reference/reflex/producer#observeselector-discriminator-observer) method is a shorthand for creating Observers. It takes a _selector_, a _discriminator_, and an _Observer_ function.
 
 1. The **selector** is used to select a record of entities to track, and it can return an array or a dictionary. We will use the [`selectPlayersById`](#selecting-entities) selector from earlier.
-2. The **discriminator** is a function that takes the current state and returns a value that uniquely identifies the entity. We will use the `id` property of the entity.
+2. The **discriminator** is a function that takes an entity and its index, and returns a value that uniquely identifies the entity. Here, we will use the `id` property of the entity.
 3. The **Observer** function runs when an entity is added, and returns an optional cleanup function that runs when the entity is removed.
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
-const getPlayerId = (player: PlayerEntity) => {
+const getPlayerId = (player: PlayerEntity, index: string) => {
 	return player.id;
 };
 
-producer.observe(selectPlayersById, getPlayerId, (player) => {
+producer.observe(selectPlayersById, getPlayerId, (player, index) => {
 	// Player was added
 
 	return () => {
@@ -276,11 +277,11 @@ producer.observe(selectPlayersById, getPlayerId, (player) => {
 <TabItem value="Luau">
 
 ```lua
-local function getPlayerId(player: players.PlayerEntity)
+local function getPlayerId(player: players.PlayerEntity, index: string)
     return player.id
 end
 
-producer:observe(selectPlayersById, getPlayerId, function(player)
+producer:observe(selectPlayersById, getPlayerId, function(player, index)
     -- Player was added
 
     return function()
@@ -294,17 +295,19 @@ end)
 
 **This is essentially the same as our custom Observers, but with _much_ less code!** The `observe` method will automatically track when the entity is added and removed, and run the Observer function accordingly.
 
-:::info
-
--   **If the record is already populated with entities,** the Observer function will be initialized for each entity in the record when you call `observe`.
+:::tip
 
 -   **The discriminator function is optional.** If you don't provide one, the entity itself will be used as the discriminator. This is only recommended if the entity is a primitive value, like a string or number.
 
+-   **If your entity doesn't store a unique ID,** you can identify it by the `index` argument passed to the discriminator. This is only recommended if the entities are instead mapped to an ID, and the index is stable.
+
 :::
 
-### Observing individual players
+### Observing entities
 
-On [Subscribing to State](subscribing-to-state), we left off at playing a sound when one player gets damaged. We made a [selector factory](using-selectors#passing-arguments-to-selectors) to select the health of a player by ID, wrote a `didDecrease` predicate to check if the health decreased, and subscribed to decreases in health:
+On [Subscribing to State](subscribing-to-state), we left off at playing a sound when one player gets damaged. We made a [selector factory](using-selectors#passing-arguments-to-selectors) to select the health of a player by ID, and subscribed to a specific player's health.
+
+But now that we can observe the lifetime players, we can use `observe` to play a sound when _any_ player gets damaged:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -320,13 +323,17 @@ const didDecrease = (current: number, previous: number) => {
 	return current < previous;
 };
 
-const selectHealth = selectPlayerHealthById("Player1");
+producer.observe(selectPlayersById, getPlayerId, (player, index) => {
+	const selectHealth = selectPlayerHealthById(player.id);
 
-// highlight-start
-producer.subscribe(selectHealth, didDecrease, () => {
-	// Play sound
+	// highlight-start
+	const unsubscribe = producer.subscribe(selectHealth, didDecrease, () => {
+		// Play sound
+	});
+	// highlight-end
+
+	return unsubscribe;
 });
-// highlight-end
 ```
 
 </TabItem>
@@ -343,32 +350,46 @@ local function didDecrease(current: number, previous: number)
     return current < previous
 end
 
-local selectHealth = selectPlayerHealthById("Player1")
+producer:observe(selectPlayersById, getPlayerId, function(player, index)
+    local selectHealth = selectPlayerHealthById(player.id)
 
-// highlight-start
-producer:subscribe(selectHealth, didDecrease, function()
-    -- Play sound
+    // highlight-start
+    local unsubscribe = producer:subscribe(selectHealth, didDecrease, function()
+        -- Play sound
+    end)
+    // highlight-end
+
+    return unsubscribe
 end)
-// highlight-end
 ```
 
 </TabItem>
 </Tabs>
 
-But now that we can observe the lifetime players, we can use `observe` to play a sound when any player gets damaged:
+### Observing a condition
+
+Alternatively, you might only want to create an Observer while a certain condition is met, and destroy it when the condition becomes falsy. With [`observeWhile`](../reference/reflex/producer#observewhileselector-predicate-observer), you can create an Observer that only runs while a selector or predicate returns a truthy value.
+
+For example, your state might have a `round` record that contains a `status` property. To create an Observer while the round is in-progress, and destroy it when the round ends, you can use `observeWhile` like so:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
-producer.observe(selectPlayersById, getPlayerId, (player) => {
-	const selectHealth = selectPlayerHealthById(player.id);
+const selectRoundStatus = (state: RootState) => {
+	return state.round.status;
+};
 
-	// highlight-start
-	return producer.subscribe(selectHealth, didDecrease, () => {
-		// Play sound
-	});
-	// highlight-end
+const isRoundInProgress = (status: RoundStatus) => {
+	return status === "in-progress";
+};
+
+producer.observeWhile(selectRoundStatus, isRoundInProgress, (status) => {
+	// Round is in-progress
+
+	return () => {
+		// Round is not in-progress
+	};
 });
 ```
 
@@ -376,14 +397,20 @@ producer.observe(selectPlayersById, getPlayerId, (player) => {
 <TabItem value="Luau">
 
 ```lua
-producer:observe(selectPlayersById, getPlayerId, function(player)
-    local selectHealth = selectPlayerHealthById(player.id)
+local function selectRoundStatus(state: RootState)
+    return state.round.status
+end
 
-    // highlight-start
-    return producer:subscribe(selectHealth, didDecrease, function()
-        -- Play sound
-    end)
-    // highlight-end
+local function isRoundInProgress(status: RoundStatus)
+    return status == "in-progress"
+end
+
+producer:observeWhile(selectRoundStatus, isRoundInProgress, function(status)
+    -- Round is in-progress
+
+    return function()
+        -- Round is not in-progress
+    end
 end)
 ```
 
@@ -392,7 +419,44 @@ end)
 
 :::tip
 
-The [`subscribe`](../reference/reflex/producer#subscribeselector-predicate-handler) method returns a cleanup function that disconnects the listener. We can return this function as our Observer's cleanup function.
+If your Observer doesn't need the value of your selector, you can omit the `predicate` argument and just return whether the status is `"in-progress"` in the selector:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const selectRoundInProgress = (state: RootState) => {
+	return state.round.status === "in-progress";
+};
+
+producer.observeWhile(selectRoundInProgress, () => {
+	// Round is in-progress
+
+	return () => {
+		// Round is not in-progress
+	};
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local function selectRoundInProgress(state: RootState)
+    return state.round.status == "in-progress"
+end
+
+producer:observeWhile(selectRoundInProgress, function()
+    -- Round is in-progress
+
+    return function()
+        -- Round is not in-progress
+    end
+end)
+```
+
+</TabItem>
+</Tabs>
 
 :::
 
@@ -405,5 +469,6 @@ The [`subscribe`](../reference/reflex/producer#subscribeselector-predicate-handl
 Let's recap what we've learned about Observers:
 
 -   **Entities** are unique objects that can be added and removed from the state.
--   **Observers** are functions that run over the lifetime of an entity.
--   To create an observer, call [`observe`](../reference/reflex/producer#observeselector-discriminator-observer) with a selector, a discriminator, and an Observer function.
+-   **Observers** are functions that run over the lifetime of some value.
+-   Use [`observe`](../reference/reflex/producer#observeselector-discriminator-observer) to create Observers for unique entities.
+-   Use [`observeWhile`](../reference/reflex/producer#observewhileselector-predicate-observer) to create an Observer while a condition is met.

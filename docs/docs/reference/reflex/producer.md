@@ -393,11 +393,11 @@ end)
 
 ### `observe(selector, discriminator?, observer)`
 
-`observe` lets you track the addition and removal of a **unique item** in the producer's state. The selector may return an array or a record of items. When an item is added, the Observer is called with the item, and cleaned up when the item is removed.
+`observe` lets you track the addition and removal of a **unique item** in the producer's state. The selector may return an array or a record of items. When an item is added, the Observer is called with the item and the index, and cleaned up when the item is removed.
 
-The **discriminator** is used to differentiate between items. If the discriminator is not provided, the item is tracked by its reference in the record. If the discriminator is provided, the item is tracked by the result of the discriminator.
+The **discriminator** is used to differentiate between items. If the discriminator is not provided, the item is tracked by its reference in the record. If the discriminator is provided, the discriminator is called with the item and index and should return a value unique to that item. The item is tracked by this value instead.
 
-To unsubscribe from an Observer, call the function returned by `observe`.
+To unsubscribe all Observers, call the function returned by `observe`.
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -405,9 +405,9 @@ To unsubscribe from an Observer, call the function returned by `observe`.
 ```ts
 const selectTodos = (state: State) => state.todos;
 
-const identifyTodo = (todo: Todo) => todo.id;
+const identifyTodo = (todo: Todo, index: number) => todo.id;
 
-producer.observe(selectTodos, identifyTodo, (todo) => {
+producer.observe(selectTodos, identifyTodo, (todo, index) => {
 	print(todo, "was added");
 
 	return () => {
@@ -424,11 +424,11 @@ local function selectTodos(state)
     return state.todos
 end
 
-local function identifyTodo(todo)
+local function identifyTodo(todo, index)
     return todo.id
 end
 
-producer:observe(selectTodos, identifyTodo, function(todo)
+producer:observe(selectTodos, identifyTodo, function(todo, index)
     print(todo, "was added")
 
     return function()
@@ -463,6 +463,77 @@ end)
 -   **The Observer is called immediately for each item in the initial state.** This means that if the state is already populated with items, the Observer will be called for each item.
 
 -   **The first argument of the Observer is the item that was added.** It acts as an initial state and **does not update** when the item is updated.
+
+:::
+
+---
+
+### `observeWhile(selector, predicate?, observer)`
+
+`observeWhile` is similar to [`observe`](#observeselector-discriminator-observer), but it creates only one Observer over the time the selector returns a truthy value, and cleans it up when it becomes falsy. This is useful for tracking a specific value or condition in the state.
+
+The `predicate` can be used if you want to specify a certain condition instead of evaluating the truthiness of the selected state. It is called with the current and previous selected state, and should return a boolean indicating whether the Observer should be created.
+
+To unsubscribe the Observer, call the function returned by `observeWhile`.
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const selectStatus = (state: State) => state.status;
+
+const isLoading = (status: string) => status === "loading";
+
+producer.observeWhile(selectStatus, isLoading, (status) => {
+	print("loading started");
+
+	return () => {
+		print("loading ended");
+	};
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local function selectStatus(state)
+    return state.status
+end
+
+local function isLoading(status)
+    return status == "loading"
+end
+
+producer:observeWhile(selectStatus, isLoading, function(status)
+    print("loading started")
+
+    return function()
+        print("loading ended")
+    end
+end)
+```
+
+</TabItem>
+</Tabs>
+
+[See more examples below.](#using-the-observer-pattern)
+
+#### Parameters
+
+-   `selector` - A function that selects a part of the state.
+
+-   **optional** `predicate` - A function that determines whether the Observer should be created. If not provided, the Observer is created when the selected state is truthy.
+
+-   `observer` - Called when the selector or predicate returns a truthy value. It returns an optional cleanup function that is called when the value is no longer truthy.
+
+#### Returns
+
+`observeWhile` returns a function that can be called to unsubscribe from the state and clean up the Observer.
+
+:::info Caveats
+
+-   Only one Observer can exist at one time, and it will not be called again until the selector or predicate returns a falsy value and then a truthy value again.
 
 :::
 
