@@ -334,13 +334,13 @@ interface ProducerImpl<State, Actions> {
 	 */
 	observe<T>(
 		selector: (state: State) => T,
-		observer: (item: Values<T>, index: Keys<T>) => (() => void) | void,
+		observer: (item: NonNullable<Values<T>>, index: Keys<T>) => (() => void) | void,
 	): () => void;
 
 	observe<T>(
 		selector: (state: State) => T,
-		discriminator: ((item: Values<T>, index: Keys<T>) => defined) | undefined,
-		observer: (item: Values<T>, index: Keys<T>) => (() => void) | void,
+		discriminator: ((item: NonNullable<Values<T>>, index: Keys<T>) => defined) | undefined,
+		observer: (item: NonNullable<Values<T>>, index: Keys<T>) => (() => void) | void,
 	): () => void;
 
 	/**
