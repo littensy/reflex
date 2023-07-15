@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local packages = script:FindFirstAncestor("rbxts_include")
+	or script:FindFirstAncestor("include")
 	or ReplicatedStorage:FindFirstChild("rbxts_include")
 	or script.Parent.Parent
 
