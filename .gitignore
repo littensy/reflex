@@ -8,3 +8,4 @@
 *.tsbuildinfo
 .DS_Store
 sourcemap.json
+scripts/roblox.d.lua

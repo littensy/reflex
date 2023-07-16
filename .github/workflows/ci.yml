@@ -2,30 +2,45 @@ name: CI
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches:
+      - main
 
-permissions:
-  contents: write
-  packages: write
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2
         with:
           version: 8.6.4
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: pnpm
+
+      - name: Install Aftman
+        uses: ok-nick/setup-aftman@v0
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          wally install
+          pnpm install
 
-      - name: Run ESLint
-        run: pnpm eslint src
+      - name: Generate sourcemap.json
+        run: rojo sourcemap default.project.json -o sourcemap.json
 
+      - name: Download global Roblox types
+        run: curl -o scripts/roblox.d.lua https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.lua  
+
+      - name: Analyze
+        run: luau-lsp analyze --defs=scripts/testez.d.lua --defs=scripts/roblox.d.lua --sourcemap=sourcemap.json --ignore="**/_Index/**" --no-strict-dm-types src
+
+      - name: Check code quality
+        run: |
+          selene src
+          stylua --check src
+          pnpm eslint src
+          pnpm eslint test/src
+
+      - name: Build model
+        run: rojo build -o reflex.rbxm

@@ -114,9 +114,7 @@ local function memoize(
 		if not resultEqualityCheck then
 			lastResult = result
 			return result
-		end
-
-		if firstRun or (lastResult ~= result and not resultEqualityCheck(result, lastResult)) then
+		elseif firstRun or (lastResult ~= result and not resultEqualityCheck(result, lastResult)) then
 			firstRun = false
 			lastResult = result
 		end
