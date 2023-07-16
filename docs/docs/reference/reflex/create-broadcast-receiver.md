@@ -32,6 +32,7 @@ Call `createBroadcastReceiver` to create a receiver that can be used to connect 
 import { createBroadcastReceiver } from "@rbxts/reflex";
 
 const receiver = createBroadcastReceiver({
+	requestInterval: 5,
 	requestState: async () => {
 		const remote = await remotes.Client.WaitFor("requestState");
 		return remote.CallServerAsync();
@@ -46,6 +47,7 @@ const receiver = createBroadcastReceiver({
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local receiver = Reflex.createBroadcastReceiver({
+    requestInterval = 5,
     requestState = function()
         return remotes.Client:WaitFor("requestState"):andThen(function(remote)
             return remote:CallServerAsync()
@@ -96,6 +98,7 @@ On the server, call [`createBroadcaster`](create-broadcaster) to share state and
 
 -   `options` - An object with options for the broadcast receiver.
     -   `requestState` - A function that returns a Promise that resolves to the server's shared state.
+    -   `requestInterval` - The interval in seconds to sync the store with the server's state. Defaults to `5`. Set to `0` to disable requests.
 
 #### Returns
 

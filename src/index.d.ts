@@ -596,6 +596,14 @@ export interface BroadcastReceiverOptions<ProducerMap extends { [name: string]: 
 	 * @returns A Promise that resolves with the server's state.
 	 */
 	readonly requestState: () => Promise<CombineStates<ProducerMap>>;
+
+	/**
+	 * The interval in seconds at which the client should request the server's
+	 * state. Every `requestInterval` seconds, the client will hydrate its state
+	 * with the server's state. Set to `0` to disable this feature.
+	 * @default 5
+	 */
+	readonly requestInterval?: number;
 }
 
 /**
@@ -613,7 +621,6 @@ export interface Broadcaster<ProducerMap extends { [name: string]: Producer }> {
 	 * constructor. This should only be called through a remote event.
 	 * @param player The player that requested the state.
 	 * @returns The combined state of the producers.
-	 * @throws If the player has already requested the state.
 	 */
 	playerRequestedState(player: Player): CombineStates<ProducerMap>;
 }

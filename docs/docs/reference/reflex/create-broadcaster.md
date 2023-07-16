@@ -179,12 +179,6 @@ Players will only be added to the `players` argument of [`options.broadcast`](#c
 
 `playerRequestedState` returns the state of the root producer. Non-shared state is automatically filtered out.
 
-:::info caveats
-
--   `playerRequestedState` throws an error if a player requests state more than once before leaving the game.
-
-:::
-
 ---
 
 ## Usage

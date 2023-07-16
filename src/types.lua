@@ -253,6 +253,13 @@ export type BroadcastReceiverOptions = {
 		@return A Promise that resolves with the server's state.
 	]=]
 	requestState: () -> any,
+
+	--[=[
+		The interval at which the client should request the server's state. This
+		is to help keep the state in sync if any remotes are missed. Defaults to
+		`5` seconds.
+	]=]
+	requestInterval: number?,
 }
 
 --[=[
@@ -266,10 +273,9 @@ export type Broadcaster = {
 
 	--[=[
 		Gets the combined states of the producers in the provided map. This
-		should only be called once per player and be initiated by the player.
+		should be initiated by a player.
 		@param player The player requesting the state.
 		@return The combined state of the producers.
-		@error Throws if this is called for a player that has already requested the state.
 	]=]
 	playerRequestedState: (self: Broadcaster, player: Player) -> any,
 }

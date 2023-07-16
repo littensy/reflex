@@ -51,10 +51,11 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 	end
 
 	function broadcaster:playerRequestedState(player: Player)
-		assert(not table.find(players, player), `Player {player} has already requested state.`)
 		assert(rootProducer, "Cannot call playerRequestedState before middleware is applied.")
 
-		table.insert(players, player)
+		if not table.find(players, player) then
+			table.insert(players, player)
+		end
 
 		local state = {}
 		local rootState = rootProducer.getState()

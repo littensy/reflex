@@ -233,13 +233,14 @@ This sets up a broadcaster that sends shared actions to the clients when they're
 [`createBroadcaster`](../reference/reflex/create-broadcaster) receives two options:
 
 1.  `producers`: Your _shared slices_. This is used to determine which state and actions should be sent to the client.
+
 2.  `broadcast`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and an array of players to send them to.
 
 It returns a broadcaster object, which has two properties:
 
 1.  `middleware`: A Reflex middleware that helps do some of the heavy lifting for you. You should apply this middleware to your root producer. If you have any middlewares that change dispatched arguments, you should apply them after this middleware to ensure that the arguments are preserved.
 
-2.  `playerRequestedState`: A method that receives the player that requested state, and returns the shared part of the root producer's state. It should only be called within a remote.
+2.  `playerRequestedState`: A method that receives the player that requested state, and returns the shared part of the root producer's state.
 
 :::caution pitfall
 
@@ -261,6 +262,7 @@ const broadcast = remotes.Client.Get("broadcast");
 const requestState = remotes.Client.Get("requestState");
 
 const receiver = createBroadcastReceiver({
+	requestInterval: 5,
 	requestState: async () => {
 		return requestState.CallServerAsync();
 	},
@@ -283,6 +285,7 @@ local broadcast = remotes.Server:Get("broadcast")
 local requestState = remotes.Server:Get("requestState")
 
 local receiver = Reflex.createBroadcastReceiver({
+    requestInterval = 5,
     requestState = function()
         return requestState:CallServerAsync()
     end,
@@ -298,11 +301,9 @@ producer:applyMiddleware(receiver.middleware)
 </TabItem>
 </Tabs>
 
-This code will call `requestState` when the middleware is applied, and merge the server's shared state with the client's state. You should also connect the receiver's `dispatch` method to the remote, so that the state continues to be kept in sync.
+This code will call `requestState` when the middleware is applied, and merge the server's shared state with the client's state. Every `requestInterval` seconds, the client will request the current state of the server, so that the state continues to be kept in sync.
 
-**It's thread-safe,** as you can set up `createBroadcastReceiver` in a script separate from your producer and it will work as long as you apply the middleware to the producer and connect the receiver's `dispatch` method to the remote.
-
-It's safe to apply the middleware at any time, and you can even use your producer before the server's state is received.
+**It's thread-safe,** so it's safe to apply the middleware at any time, and you can even use your producer before the server's state is received.
 
 ---
 
