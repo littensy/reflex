@@ -5,8 +5,10 @@ import { producer } from "./";
 
 const broadcaster = createBroadcaster({
 	producers: sharedProducers,
-	broadcast: (players, actions) => {
-		server.Get("onServerDispatch").SendToPlayers(players, actions);
+	broadcast: (actionsByPlayer) => {
+		for (const [player, actions] of actionsByPlayer) {
+			server.Get("onServerDispatch").SendToPlayer(player, actions);
+		}
 	},
 });
 

@@ -3,6 +3,7 @@ return function()
 	local combineProducers = require(script.Parent.Parent.combineProducers)
 	local createBroadcaster = require(script.Parent.createBroadcaster)
 
+	local mockPlayer: Player = {} :: any
 	local producers, producer
 
 	beforeEach(function()
@@ -51,61 +52,59 @@ return function()
 	end)
 
 	it("should call broadcast when dispatching", function()
-		local players, pendingActions
+		local actionsPerPlayer
 
 		local broadcaster = createBroadcaster({
 			producers = producers,
-			broadcast = function(_players, _pendingActions)
-				players = _players
-				pendingActions = _pendingActions
+			broadcast = function(_actionsPerPlayer)
+				actionsPerPlayer = _actionsPerPlayer
 			end,
 		})
 
 		producer:applyMiddleware(broadcaster.middleware)
+		broadcaster:playerRequestedState(mockPlayer)
 		producer.incrementFoo(1)
 		producer.incrementBar(2)
 		broadcaster:flush()
 
-		expect(players).to.be.a("table")
-		expect(#players).to.equal(0)
+		expect(actionsPerPlayer).to.be.a("table")
+		expect(actionsPerPlayer[mockPlayer]).to.be.a("table")
+		expect(#actionsPerPlayer[mockPlayer]).to.equal(2)
 
-		expect(pendingActions).to.be.a("table")
-		expect(#pendingActions).to.equal(2)
+		expect(actionsPerPlayer[mockPlayer][1]).to.be.a("table")
+		expect(actionsPerPlayer[mockPlayer][1].name).to.equal("incrementFoo")
+		expect(actionsPerPlayer[mockPlayer][1].arguments).to.be.a("table")
+		expect(actionsPerPlayer[mockPlayer][1].arguments[1]).to.equal(1)
 
-		expect(pendingActions[1]).to.be.a("table")
-		expect(pendingActions[1].name).to.equal("incrementFoo")
-		expect(pendingActions[1].arguments).to.be.a("table")
-		expect(pendingActions[1].arguments[1]).to.equal(1)
-
-		expect(pendingActions[2]).to.be.a("table")
-		expect(pendingActions[2].name).to.equal("incrementBar")
-		expect(pendingActions[2].arguments).to.be.a("table")
-		expect(pendingActions[2].arguments[1]).to.equal(2)
+		expect(actionsPerPlayer[mockPlayer][2]).to.be.a("table")
+		expect(actionsPerPlayer[mockPlayer][2].name).to.equal("incrementBar")
+		expect(actionsPerPlayer[mockPlayer][2].arguments).to.be.a("table")
+		expect(actionsPerPlayer[mockPlayer][2].arguments[1]).to.equal(2)
 	end)
 
 	it("should exclude state and actions that are not provided", function()
-		local pendingActions
+		local actionsPerPlayer
 
 		local broadcaster = createBroadcaster({
 			producers = {
 				foo = producers.foo,
 			},
-			broadcast = function(_players, _pendingActions)
-				pendingActions = _pendingActions
+			broadcast = function(_actionsPerPlayer)
+				actionsPerPlayer = _actionsPerPlayer
 			end,
 		})
 
 		producer:applyMiddleware(broadcaster.middleware)
+		broadcaster:playerRequestedState(mockPlayer)
 		producer.incrementFoo(1)
 		producer.incrementBar(2)
 		broadcaster:flush()
 
 		-- pending actions should only contain incrementFoo
-		expect(pendingActions).to.be.a("table")
-		expect(#pendingActions).to.equal(1)
+		expect(#actionsPerPlayer[mockPlayer]).to.equal(1)
 
 		-- state should only contain foo
-		local state = broadcaster:playerRequestedState({})
+		local state = broadcaster:playerRequestedState(mockPlayer)
 		expect(state).to.be.a("table")
 		expect(state.foo).to.be.a("table")
 		expect(state.foo.count).to.equal(1)

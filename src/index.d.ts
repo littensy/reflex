@@ -580,7 +580,7 @@ export interface BroadcasterOptions<ProducerMap extends { [name: string]: Produc
 	 * @param players The players to broadcast to.
 	 * @param actions The actions to broadcast.
 	 */
-	readonly broadcast: (players: Player[], actions: BroadcastAction[]) => void;
+	readonly broadcast: (actionsPerPlayer: Map<Player, BroadcastAction[]>) => void;
 }
 
 /**

@@ -15,6 +15,12 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 	local receiver = {} :: types.BroadcastReceiver
 	local rootProducer: types.Producer?
 
+	-- If the request for state takes too long, actions may be dispatched
+	-- before the state is hydrated. In this case, we queue the actions
+	-- and dispatch them once the server's state has been received.
+	local queue: { () -> () } = {}
+	local shouldQueue = true
+
 	local function merge(state)
 		assert(rootProducer, "Failed to apply receiver middleware")
 
@@ -25,6 +31,16 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 		end
 
 		rootProducer:setState(nextState)
+
+		if shouldQueue then
+			shouldQueue = false
+
+			for _, dispatch in queue do
+				task.spawn(dispatch)
+			end
+
+			table.clear(queue)
+		end
 	end
 
 	local function requestMerge()
@@ -43,9 +59,21 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 		local dispatchers = rootProducer:getDispatchers()
 
 		for _, action in actions do
-			if dispatchers[action.name] then
-				dispatchers[action.name](table.unpack(action.arguments))
+			local dispatcher = dispatchers[action.name]
+
+			if not dispatcher then
+				continue
 			end
+
+			if shouldQueue then
+				table.insert(queue, function()
+					dispatcher(table.unpack(action.arguments))
+				end)
+			end
+
+			-- Dispatch regardless of whether it should queue to avoid potential
+			-- lag if the server is slow to respond.
+			dispatcher(table.unpack(action.arguments))
 		end
 	end
 

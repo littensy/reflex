@@ -16,8 +16,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 
 	local broadcaster = {} :: types.Broadcaster
 
-	local players: { Player } = {}
-	local pendingActions: { types.BroadcastAction } = {}
+	local pendingActionsByPlayer: { [Player]: { types.BroadcastAction } } = {}
 	local actionFilter: { [string]: boolean } = {}
 
 	local rootProducer: types.Producer?
@@ -46,16 +45,22 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 			pendingBroadcast = nil
 		end
 
-		broadcast(players, pendingActions)
-		pendingActions = {}
+		local newPendingActionsByPlayer = {}
+
+		for player, pendingActions in pendingActionsByPlayer do
+			newPendingActionsByPlayer[player] = {}
+		end
+
+		broadcast(pendingActionsByPlayer)
+		pendingActionsByPlayer = newPendingActionsByPlayer
 	end
 
 	function broadcaster:playerRequestedState(player: Player)
 		assert(rootProducer, "Cannot call playerRequestedState before middleware is applied.")
 
-		if not table.find(players, player) then
-			table.insert(players, player)
-		end
+		-- Reset the pending actions to prevent the client from receiving
+		-- actions that have already dispatched, but have not been broadcasted.
+		pendingActionsByPlayer[player] = {}
 
 		local state = {}
 		local rootState = rootProducer.getState()
@@ -76,10 +81,12 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 			end
 
 			return function(...)
-				table.insert(pendingActions, {
-					name = name,
-					arguments = { ... },
-				})
+				for _, pendingActions in pendingActionsByPlayer do
+					table.insert(pendingActions, {
+						name = name,
+						arguments = { ... },
+					})
+				end
 
 				scheduleBroadcast()
 
@@ -89,7 +96,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 	end
 
 	Players.PlayerRemoving:Connect(function(player)
-		table.remove(players, table.find(players, player) or -1)
+		pendingActionsByPlayer[player] = nil
 	end)
 
 	return broadcaster

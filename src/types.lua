@@ -239,7 +239,7 @@ export type BroadcasterOptions = {
 	--[=[
 		The function that will send the broadcasted actions to the given players.
 	]=]
-	broadcast: (players: { Player }, actions: { BroadcastAction }) -> (),
+	broadcast: (actionsPerPlayer: { [Player]: { BroadcastAction } }) -> (),
 }
 
 --[=[

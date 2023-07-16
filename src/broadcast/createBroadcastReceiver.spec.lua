@@ -5,6 +5,7 @@ return function()
 	local createBroadcaster = require(script.Parent.createBroadcaster)
 	local createBroadcastReceiver = require(script.Parent.createBroadcastReceiver)
 
+	local mockPlayer: Player = {} :: any
 	local producers, producer
 
 	beforeEach(function()
@@ -30,7 +31,7 @@ return function()
 
 	it("should return a broadcast receiver", function()
 		local receiver = createBroadcastReceiver({
-			producers = producers,
+			requestInterval = 0,
 			requestState = function()
 				return Promise.resolve({})
 			end,
@@ -43,7 +44,7 @@ return function()
 
 	it("should apply a safe middleware", function()
 		local receiver = createBroadcastReceiver({
-			producers = producers,
+			requestInterval = 0,
 			requestState = function()
 				return Promise.resolve({})
 			end,
@@ -58,7 +59,7 @@ return function()
 
 	it("should hydrate the producer with the server state", function()
 		local receiver = createBroadcastReceiver({
-			producers = producers,
+			requestInterval = 0,
 			requestState = function()
 				return Promise.resolve({ foo = { count = 1 } })
 			end,
@@ -77,7 +78,7 @@ return function()
 
 	it("should dispatch actions from the server", function()
 		local receiver = createBroadcastReceiver({
-			producers = producers,
+			requestInterval = 0,
 			requestState = function()
 				return Promise.resolve({})
 			end,
@@ -97,19 +98,19 @@ return function()
 	end)
 
 	it("should receive updates from a broadcaster", function()
-		local pendingActions
-
 		local clientProducer = producer
 		local serverProducer = combineProducers(producers)
+		local actionsPerPlayer
 
 		local broadcaster = createBroadcaster({
 			producers = producers,
-			broadcast = function(_players, _pendingActions)
-				pendingActions = _pendingActions
+			broadcast = function(_actionsPerPlayer)
+				actionsPerPlayer = _actionsPerPlayer
 			end,
 		})
 
 		local receiver = createBroadcastReceiver({
+			requestInterval = 0,
 			requestState = function()
 				return Promise.resolve(serverProducer:getState())
 			end,
@@ -123,16 +124,17 @@ return function()
 
 		clientProducer:applyMiddleware(receiver.middleware)
 		serverProducer:applyMiddleware(broadcaster.middleware)
+		broadcaster:playerRequestedState(mockPlayer)
 
 		serverProducer.incrementFoo(1)
 		serverProducer.incrementBar(2)
 
 		broadcaster:flush()
 
-		expect(pendingActions).to.be.a("table")
-		expect(#pendingActions).to.equal(2)
+		expect(actionsPerPlayer).to.be.a("table")
+		expect(#actionsPerPlayer[mockPlayer]).to.equal(2)
 
-		local actionA, actionB = table.unpack(pendingActions)
+		local actionA, actionB = table.unpack(actionsPerPlayer[mockPlayer])
 
 		expect(actionA.name).to.equal("incrementFoo")
 		expect(actionA.arguments[1]).to.equal(1)
@@ -143,7 +145,7 @@ return function()
 		expect(stateBeforeDispatch.foo.count).to.equal(0)
 		expect(stateBeforeDispatch.bar.count).to.equal(0)
 
-		receiver:dispatch(pendingActions)
+		receiver:dispatch(actionsPerPlayer[mockPlayer])
 
 		local stateAfterDispatch = clientProducer:getState()
 		expect(stateAfterDispatch.foo.count).to.equal(1)
@@ -154,7 +156,7 @@ return function()
 		local requestStateCount = 0
 
 		local receiver = createBroadcastReceiver({
-			producers = producers,
+			requestInterval = 0,
 			requestState = function()
 				requestStateCount = requestStateCount + 1
 				return Promise.resolve({})
@@ -168,7 +170,7 @@ return function()
 
 	it("should allow a non-Promise value from requestState", function()
 		local receiver = createBroadcastReceiver({
-			producers = producers,
+			requestInterval = 0,
 			requestState = function()
 				return { foo = { count = 1 } }
 			end,
