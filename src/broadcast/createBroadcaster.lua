@@ -1,7 +1,8 @@
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local types = require(script.Parent.Parent.types)
+local setInterval = require(script.Parent.Parent.utils.setInterval)
+local hydrate = require(script.Parent.hydrate)
 
 --[=[
 	Creates a broadcaster that can be used to share actions with the client.
@@ -11,64 +12,69 @@ local types = require(script.Parent.Parent.types)
 	@return The broadcaster.
 ]=]
 local function createBroadcaster(options: types.BroadcasterOptions): types.Broadcaster
-	local producers = options.producers
-	local broadcast = options.broadcast
-
 	local broadcaster = {} :: types.Broadcaster
 
-	local players: { Player } = {}
-	local pendingActions: { types.BroadcastAction } = {}
+	local pendingActionsByPlayer: { [Player]: { types.BroadcastAction } } = {}
 	local actionFilter: { [string]: boolean } = {}
 
-	local rootProducer: types.Producer?
-	local pendingBroadcast: RBXScriptConnection?
+	local producer: types.Producer?
+	local pendingDispatch: thread?
 
-	for _, producer in producers do
-		for name in producer:getDispatchers() do
+	for _, slice in options.producers do
+		for name in slice:getDispatchers() do
 			actionFilter[name] = true
 		end
 	end
 
-	local function scheduleBroadcast()
-		if pendingBroadcast then
+	local function scheduleDispatch()
+		if pendingDispatch then
 			return
 		end
 
-		pendingBroadcast = RunService.Heartbeat:Once(function()
-			pendingBroadcast = nil
+		pendingDispatch = task.defer(function()
+			pendingDispatch = nil
 			broadcaster:flush()
 		end)
 	end
 
+	local function getSharedState()
+		assert(producer, "Cannot use broadcaster before the middleware is applied.")
+
+		local sharedState = {}
+		local serverState = producer.getState()
+
+		for name in options.producers do
+			sharedState[name] = serverState[name]
+		end
+
+		return sharedState
+	end
+
+	local function hydratePlayer(player: Player)
+		options.dispatch(player, { hydrate.createHydrateAction(getSharedState()) })
+	end
+
 	function broadcaster:flush()
-		if pendingBroadcast then
-			pendingBroadcast:Disconnect()
-			pendingBroadcast = nil
+		if pendingDispatch then
+			task.cancel(pendingDispatch)
+			pendingDispatch = nil
 		end
 
-		broadcast(players, pendingActions)
-		pendingActions = {}
+		for player, pendingActions in pendingActionsByPlayer do
+			options.dispatch(player, pendingActions)
+			pendingActionsByPlayer[player] = {}
+		end
 	end
 
-	function broadcaster:playerRequestedState(player: Player)
-		assert(rootProducer, "Cannot call playerRequestedState before middleware is applied.")
-
-		if not table.find(players, player) then
-			table.insert(players, player)
+	function broadcaster:start(player)
+		if not pendingActionsByPlayer[player] then
+			pendingActionsByPlayer[player] = {}
+			hydratePlayer(player)
 		end
-
-		local state = {}
-		local rootState = rootProducer.getState()
-
-		for name in producers do
-			state[name] = rootState[name]
-		end
-
-		return state
 	end
 
-	function broadcaster.middleware(producer)
-		rootProducer = producer
+	broadcaster.middleware = function(currentProducer)
+		producer = currentProducer
 
 		return function(dispatch, name)
 			if not actionFilter[name] then
@@ -76,12 +82,13 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 			end
 
 			return function(...)
-				table.insert(pendingActions, {
-					name = name,
-					arguments = { ... },
-				})
+				local action = { name = name, arguments = { ... } }
 
-				scheduleBroadcast()
+				for _, pendingActions in pendingActionsByPlayer do
+					table.insert(pendingActions, action)
+				end
+
+				scheduleDispatch()
 
 				return dispatch(...)
 			end
@@ -89,8 +96,14 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 	end
 
 	Players.PlayerRemoving:Connect(function(player)
-		table.remove(players, table.find(players, player) or -1)
+		pendingActionsByPlayer[player] = nil
 	end)
+
+	setInterval(function()
+		for player in pendingActionsByPlayer do
+			hydratePlayer(player)
+		end
+	end, options.hydrateRate or 5)
 
 	return broadcaster
 end

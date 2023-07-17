@@ -12,7 +12,7 @@ import TOCInline from "@theme/TOCInline";
 `createBroadcaster` lets you sync the server's shared state with clients, who receive them using [`createBroadcastReceiver`](create-broadcast-receiver).
 
 ```ts
-const broadcaster = createBroadcaster({ producer, options });
+const broadcaster = createBroadcaster(options);
 ```
 
 <TOCInline toc={toc} />
@@ -32,10 +32,10 @@ Call `createBroadcaster` to create a broadcaster object that syncs shared state 
 import { createBroadcaster } from "@rbxts/reflex";
 
 const broadcaster = createBroadcaster({
-	producers: sharedProducers,
-	broadcast: (players, actions) => {
-		// using @rbxts/net
-		remotes.Server.Get("broadcast").SendToPlayers(players, actions);
+	producers: slices,
+	dispatch: (player, actions) => {
+		// using @rbxts/remo
+		remotes.dispatch.fire(player, actions);
 	},
 });
 ```
@@ -48,9 +48,9 @@ local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local broadcaster = Reflex.createBroadcaster({
     producers = producers,
-    broadcast = function(players, actions)
-        -- using RbxNet
-        remotes.Server:Get("broadcast"):SendToPlayers(players, actions)
+    dispatch = function(player, actions)
+        -- using Remo
+        remotes.dispatch:fire(player, actions)
     end,
 })
 ```
@@ -58,14 +58,14 @@ local broadcaster = Reflex.createBroadcaster({
 </TabItem>
 </Tabs>
 
-After you've created the broadcaster, you will need to **apply the middleware** and **call [`playerRequestedState`](#broadcasterplayerrequestedstateplayer)** when a player requests state from the server:
+After you've created the broadcaster, you will need to **apply the middleware** and **call [`start`](#broadcasterstartplayer)** when a player indicates that it is ready to receive state:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
-remotes.Server.OnFunction("requestState", (player) => {
-	return broadcaster.playerRequestedState(player);
+remotes.start.connect((player) => {
+	broadcaster.start(player);
 });
 
 producer.applyMiddleware(broadcaster.middleware);
@@ -75,8 +75,8 @@ producer.applyMiddleware(broadcaster.middleware);
 <TabItem value="Luau">
 
 ```lua
-remotes.Server:OnFunction("requestState", function(player)
-    return broadcaster:playerRequestedState(player)
+remotes.start:connect(function(player)
+    broadcaster:start(player)
 end)
 
 producer:applyMiddleware(broadcaster.middleware)
@@ -85,7 +85,7 @@ producer:applyMiddleware(broadcaster.middleware)
 </TabItem>
 </Tabs>
 
-`createBroadcaster` will automatically filter out server-only state & actions using the `producers` map, and will call the `broadcast` callback when actions are ready to be sent to clients. This allows for a smooth and easy way to share state between the server and clients.
+`createBroadcaster` will automatically filter out server-only state & actions using the `producers` map, and will call the `dispatch` callback when actions are ready to be sent to clients. This allows for a smooth and easy way to share state between the server and clients.
 
 On the client, call [`createBroadcastReceiver`](create-broadcast-receiver) to receive state and actions from the server.
 
@@ -95,17 +95,18 @@ On the client, call [`createBroadcastReceiver`](create-broadcast-receiver) to re
 
 -   `options` - An object with options for the broadcaster.
     -   `producers` - A map of shared producers used to filter private actions and state from the root producer.
-    -   `broadcast` - A function called when actions are ready to be sent to clients.
+    -   `dispatch` - A function called when actions are ready to be sent to clients.
+    -   `hydrateRate` - The rate at which the entire shared state is sent to clients for hydration. Defaults to `5`.
 
 #### Returns
 
-`createBroadcaster` returns a broadcaster with a [`middleware`](#broadcastermiddleware) function and [`playerRequestedState`](#broadcasterplayerrequestedstateplayer) method.
+`createBroadcaster` returns a broadcaster with a [`middleware`](#broadcastermiddleware) function and [`start`](#broadcasterstartplayer) method.
 
 :::info caveats
 
 -   [**Data that is not remote-friendly will be lost.**](#the-client-receives-invalid-state) Because data is sent through remote events, you will lose metatables, functions, and numeric keys.
 
--   **You need to set up two remotes:** one to send actions to clients, and another to invoke [`playerRequestedState`](#broadcasterplayerrequestedstateplayer) for a client. This can be done with a remote library of your choice.
+-   **You need to set up two remotes:** one to send actions to clients, and another to call [`start`](#broadcasterstartplayer) for a client. This can be done with a remote library of your choice.
 
 -   `createBroadcaster` is not supported on the client. See [`createBroadcastReceiver`](create-broadcast-receiver) for receiving broadcasted actions on the client.
 
@@ -144,16 +145,16 @@ producer:applyMiddleware(broadcaster.middleware)
 
 ---
 
-### `broadcaster.playerRequestedState(player)`
+### `broadcaster.start(player)`
 
-Process a player's request for state with `playerRequestedState`.
+Marks a player as ready to receive state and actions, and sends the current shared state to the client for hydration.
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
-remotes.Server.OnFunction("requestState", (player) => {
-	return broadcaster.playerRequestedState(player);
+remotes.start.connect((player) => {
+	broadcaster.start(player);
 });
 ```
 
@@ -161,23 +162,23 @@ remotes.Server.OnFunction("requestState", (player) => {
 <TabItem value="Luau">
 
 ```lua
-remotes.Server:OnFunction("requestState", function(player)
-    return broadcaster:playerRequestedState(player)
+remotes.start:connect(function(player)
+    broadcaster:start(player)
 end)
 ```
 
 </TabItem>
 </Tabs>
 
-Players will only be added to the `players` argument of [`options.broadcast`](#createbroadcasteroptions) if they have requested state through `playerRequestedState`. This is to prevent sending actions to players who are not ready to receive them.
+Players will only be passed to [`options.dispatch`](#createbroadcasteroptions) if they have notified the server with `start`. This is to prevent sending actions to players who are not ready to receive them.
 
 #### Parameters
 
--   `player` - The player who requested state. Should be received from a remote function call.
+-   `player` - The player who requested state. Should be received from a remote event call.
 
 #### Returns
 
-`playerRequestedState` returns the state of the root producer. Non-shared state is automatically filtered out.
+`start` does not return anything.
 
 ---
 
@@ -209,9 +210,9 @@ import { CombineStates } from "@rbxts/reflex";
 import { playersSlice } from "./players";
 import { worldSlice } from "./world";
 
-export type SharedState = CombineStates<typeof sharedProducers>;
+export type SharedState = CombineStates<typeof slices>;
 
-export const sharedProducers = {
+export const slices = {
 	players: playersSlice,
 	world: worldSlice,
 };
@@ -222,7 +223,7 @@ export const sharedProducers = {
 Exporting `SharedState` as a type makes it easier to create typed selectors without importing across the client/server boundary.
 
 ```ts
-import { SharedState } from "shared/producers";
+import { SharedState } from "shared/slices";
 
 export const selectPlayers = (state: SharedState) => state.players;
 ```
@@ -265,14 +266,14 @@ The main benefit of using a _shared producer map_ like this is how simple it is 
 
 ```ts title="Root producer"
 import { combineProducers } from "@rbxts/reflex";
-import { sharedProducers } from "shared/producers";
+import { slices } from "shared/slices";
 import { fooSlice } from "./foo";
 import { barSlice } from "./bar";
 
 export type RootState = InferState<typeof producers>;
 
 export const producer = combineProducers({
-	...sharedProducers,
+	...slices,
 	foo: fooSlice,
 	bar: barSlice,
 });
@@ -283,15 +284,15 @@ export const producer = combineProducers({
 
 ```lua title="Root producer"
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
-local producers = require(ReplicatedStorage.shared.producers)
+local slices = require(ReplicatedStorage.shared.slices)
 local foo = require(script.foo)
 local bar = require(script.bar)
 
-export type RootState = producers.SharedState &
+export type RootState = slices.SharedState &
     foo.FooState &
     bar.BarState
 
-export type RootActions = producers.SharedActions &
+export type RootActions = slices.SharedActions &
     foo.FooActions &
     bar.BarActions
 
@@ -300,7 +301,7 @@ local map = {
     bar = bar.barSlice,
 }
 
-for key, value in producers do
+for key, value in slices do
     map[key] = value
 end
 
@@ -322,10 +323,13 @@ You should call [`createBroadcaster`](#createbroadcasteroptions) on the server w
 
 :::tip prerequisites
 
-You need a networking solution to use [`createBroadcaster`](#createbroadcasteroptions). We recommend [RbxNet](http://rbxnet.australis.dev), which is used in the examples on this page. You need to specify two remotes:
+You need to define your own remotes to use [`createBroadcaster`](#createbroadcaster). We recommend [RbxNet](http://rbxnet.australis.dev), or [Remo](https://github.com/littensy/remo), which is used in the examples on this page.
 
--   A server event that sends actions to a clients. The type of this event would be `(actions: BroadcastAction[]) => void`.
--   A server function that returns the state of the root producer. The type of this function would be `(player: Player) => SharedState`.
+You will need two remote events:
+
+-   `dispatch(player: Player, actions: BroadcastAction[])` - This is the remote event that will be fired when the server dispatches actions to clients.
+
+-   `start(player: Player)` - This is the remote event that the clients will fire once they are ready to receive state from the server.
 
 :::
 
@@ -334,19 +338,19 @@ You need a networking solution to use [`createBroadcaster`](#createbroadcasterop
 
 ```ts title="Server"
 import { createBroadcaster } from "@rbxts/reflex";
-import { sharedProducers } from "shared/producers";
+import { slices } from "shared/slices";
 import { remotes } from "shared/remotes";
 import { producer } from "./producer";
 
 const broadcaster = createBroadcaster({
-	producers: sharedProducers,
-	broadcast: (players, actions) => {
-		remotes.Server.Get("broadcast").SendToPlayers(players, actions);
+	producers: slices,
+	dispatch: (player, actions) => {
+		remotes.dispatch.fire(player, actions);
 	},
 });
 
-remotes.Server.OnFunction("requestState", (player) => {
-	return broadcaster.playerRequestedState(player);
+remotes.start.connect((player) => {
+	broadcaster.start(player);
 });
 
 producer.applyMiddleware(broadcaster.middleware);
@@ -357,19 +361,19 @@ producer.applyMiddleware(broadcaster.middleware);
 
 ```lua title="Server"
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
-local producers = require(ReplicatedStorage.shared.producers)
 local remotes = require(ReplicatedStorage.shared.remotes)
+local slices = require(ReplicatedStorage.shared.slices)
 local producer = require(script.Parent.producer)
 
 local broadcaster = Reflex.createBroadcaster({
-    producers = producers,
-    broadcast = function(players, actions)
-        remotes.Server:Get("broadcast"):SendToPlayers(players, actions)
+    producers = slices,
+    dispatch = function(player, actions)
+        remotes.dispatch:fire(player, actions)
     end,
 })
 
-remotes.Server:OnFunction("requestState", function(player)
-    return broadcaster:playerRequestedState(player)
+remotes.start:connect(function(player)
+    broadcaster:start(player)
 end)
 
 producer:applyMiddleware(broadcaster.middleware)
@@ -378,18 +382,19 @@ producer:applyMiddleware(broadcaster.middleware)
 </TabItem>
 </Tabs>
 
-This sets up a broadcaster that sends shared actions to the clients when they're dispatched. It also connects a `requestState` remote that returns the state with `playerRequestedState`, which automatically filters out any state that the client doesn't have access to.
+This sets up a broadcaster that sends shared actions to the clients when they're dispatched. It also connects a `start` remote, which notifies the server that we are ready to receive actions and state.
 
-[`createBroadcaster`](#createbroadcasteroptions) receives two options:
+[`createBroadcaster`](#createbroadcasteroptions) receives three options:
 
 1.  `producers`: Your _shared producer map_. This is used to determine which state and actions should be sent to the client.
-2.  `broadcast`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and an array of players to send them to.
+2.  `dispatch`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and an array of players to send them to.
+3.  `hydrateRate`: The rate at which the server should send state to the clients for hydration. This is optional, and defaults to `5`.
 
 It returns a broadcaster object, which has two properties:
 
 1.  `middleware`: A Reflex middleware that helps do some of the heavy lifting for you. You should apply this middleware to your root producer. If you have any middlewares that change dispatched arguments, you should apply them after this middleware to ensure that the arguments are preserved.
 
-2.  `playerRequestedState`: A method that receives the player that requested state, and returns the shared part of the root producer's state. It should only be called within a remote.
+2.  `start`: A method that you should call when a client is ready to receive actions and state. This is usually fired when a client applies their own `broadcastReceiver` middleware.
 
 :::caution pitfall
 

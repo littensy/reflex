@@ -237,9 +237,16 @@ export type BroadcasterOptions = {
 	producers: ProducerMap,
 
 	--[=[
-		The function that will send the broadcasted actions to the given players.
+		The rate in seconds at which the server should hydrate the
+		clients with the latest state.
+		@default 5
 	]=]
-	broadcast: (players: { Player }, actions: { BroadcastAction }) -> (),
+	hydrateRate: number?,
+
+	--[=[
+		The function that will send the actions to the client.
+	]=]
+	dispatch: (player: Player, actions: { BroadcastAction }) -> (),
 }
 
 --[=[
@@ -247,19 +254,10 @@ export type BroadcasterOptions = {
 ]=]
 export type BroadcastReceiverOptions = {
 	--[=[
-		A function that should request the server's state through its broadcaster.
-		This will be called when the middleware is applied to access the server's
-		state.
-		@return A Promise that resolves with the server's state.
+		A function that, when called, should fire a remote that calls
+		`start(player)` on the server broadcaster.
 	]=]
-	requestState: () -> any,
-
-	--[=[
-		The interval at which the client should request the server's state. This
-		is to help keep the state in sync if any remotes are missed. Defaults to
-		`5` seconds.
-	]=]
-	requestInterval: number?,
+	start: () -> any,
 }
 
 --[=[
@@ -272,12 +270,9 @@ export type Broadcaster = {
 	middleware: Middleware,
 
 	--[=[
-		Gets the combined states of the producers in the provided map. This
-		should be initiated by a player.
-		@param player The player requesting the state.
-		@return The combined state of the producers.
+		Starts broadcasting state and actions to the given player.
 	]=]
-	playerRequestedState: (self: Broadcaster, player: Player) -> any,
+	start: (self: Broadcaster, player: Player) -> (),
 }
 
 --[=[
@@ -292,7 +287,6 @@ export type BroadcastReceiver = {
 
 	--[=[
 		Dispatches actions broadcasted by the server.
-		@param actions A list of action containers to dispatch.
 	]=]
 	dispatch: (self: BroadcastReceiver, actions: { BroadcastAction }) -> (),
 }

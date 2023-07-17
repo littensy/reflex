@@ -46,9 +46,9 @@ import { CombineStates } from "@rbxts/reflex";
 import { calendarSlice } from "./calendar";
 import { todosSlice } from "./todos";
 
-export type SharedState = CombineStates<typeof sharedSlices>;
+export type SharedState = CombineStates<typeof slices>;
 
-export const sharedSlices = {
+export const slices = {
 	calendar: calendarSlice,
 	todos: todosSlice,
 };
@@ -105,14 +105,14 @@ Using a map of shared slices makes it easy to add them to your root producer. In
 
 ```ts title="Root producer" showLineNumbers
 import { InferState, combineProducers } from "@rbxts/reflex";
-import { sharedSlices } from "shared/slices";
+import { slices } from "shared/slices";
 import { fooSlice } from "./foo";
 import { barSlice } from "./bar";
 
 export type RootState = InferState<typeof producers>;
 
 export const producer = combineProducers({
-	...sharedSlices,
+	...slices,
 	foo: fooSlice,
 	bar: barSlice,
 });
@@ -123,30 +123,30 @@ export const producer = combineProducers({
 
 ```lua title="Root producer" showLineNumbers
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
-local sharedSlices = require(ReplicatedStorage.shared.slices)
+local slices = require(ReplicatedStorage.shared.slices)
 local foo = require(script.foo)
 local bar = require(script.bar)
 
 export type RootProducer = Reflex.Producer<RootState, RootActions>
 
-export type RootState = producers.SharedState &
+export type RootState = slices.SharedState &
     foo.FooState &
     bar.BarState
 
-export type RootActions = producers.SharedActions &
+export type RootActions = slices.SharedActions &
     foo.FooActions &
     bar.BarActions
 
-local slices = {
+local rootSlices = {
     foo = foo.fooSlice,
     bar = bar.barSlice,
 }
 
-for name, slice in sharedSlices do
-    slices[name] = slice
+for name, slice in slices do
+    rootSlices[name] = slice
 end
 
-return Reflex.combineProducers(slices) :: RootProducer
+return Reflex.combineProducers(rootSlices) :: RootProducer
 ```
 
 :::note
@@ -166,10 +166,13 @@ You should call [`createBroadcaster`](../reference/reflex/create-broadcaster#cre
 
 :::tip prerequisites
 
-You need remotes to use [`createBroadcaster`](../reference/reflex/create-broadcaster). We recommend [RbxNet](http://rbxnet.australis.dev), which is used in the examples on this page. You need to specify two remotes:
+You need to define your own remotes to use [`createBroadcaster`](../reference/reflex/create-broadcaster). We recommend [RbxNet](http://rbxnet.australis.dev), or [Remo](https://github.com/littensy/remo), which is used in the examples on this page.
 
--   A server event that sends actions to a clients. The type of this event would be `(actions: BroadcastAction[]) => void`.
--   A server function that returns the state of the root producer. The type of this function would be `(player: Player) => SharedState`.
+You will need two remote events:
+
+-   `dispatch(player: Player, actions: BroadcastAction[])` - This is the remote event that will be fired when the server dispatches actions to clients.
+
+-   `start(player: Player)` - This is the remote event that the clients will fire once they are ready to receive state from the server.
 
 :::
 
@@ -179,21 +182,18 @@ You need remotes to use [`createBroadcaster`](../reference/reflex/create-broadca
 ```ts title="Server" showLineNumbers
 import { createBroadcaster } from "@rbxts/reflex";
 import { remotes } from "shared/remotes";
-import { sharedSlices } from "shared/slices";
+import { slices } from "shared/slices";
 import { producer } from "./producer";
 
-const broadcast = remotes.Server.Get("broadcast");
-const requestState = remotes.Server.Get("requestState");
-
 const broadcaster = createBroadcaster({
-	producers: sharedSlices,
-	broadcast: (players, actions) => {
-		broadcast.SendToPlayers(players, actions);
+	producers: slices,
+	dispatch: (player, actions) => {
+		remotes.dispatch.fire(player, actions);
 	},
 });
 
-requestState.SetCallback((player) => {
-	return broadcaster.playerRequestedState(player);
+remotes.start.connect((player) => {
+	broadcaster.start(player);
 });
 
 producer.applyMiddleware(broadcaster.middleware);
@@ -208,18 +208,15 @@ local remotes = require(ReplicatedStorage.shared.remotes)
 local slices = require(ReplicatedStorage.shared.slices)
 local producer = require(script.Parent.producer)
 
-local broadcast = remotes.Server:Get("broadcast")
-local requestState = remotes.Server:Get("requestState")
-
 local broadcaster = Reflex.createBroadcaster({
     producers = slices,
-    broadcast = function(players, actions)
-        broadcast:SendToPlayers(players, actions)
+    dispatch = function(player, actions)
+        remotes.dispatch:fire(player, actions)
     end,
 })
 
-requestState:SetCallback(function(player)
-    return broadcaster:playerRequestedState(player)
+remotes.start:connect(function(player)
+    broadcaster:start(player)
 end)
 
 producer:applyMiddleware(broadcaster.middleware)
@@ -228,19 +225,21 @@ producer:applyMiddleware(broadcaster.middleware)
 </TabItem>
 </Tabs>
 
-This sets up a broadcaster that sends shared actions to the clients when they're dispatched. It also connects a `requestState` remote that returns the state with `playerRequestedState`, which automatically filters out any state that the client doesn't have access to.
+This sets up a broadcaster that sends shared actions to the clients when they're dispatched. Once the middleware is applied, Reflex will begin syncing dispatched actions to the clients.
 
-[`createBroadcaster`](../reference/reflex/create-broadcaster) receives two options:
+[`createBroadcaster`](../reference/reflex/create-broadcaster) receives three options:
 
 1.  `producers`: Your _shared slices_. This is used to determine which state and actions should be sent to the client.
 
-2.  `broadcast`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and an array of players to send them to.
+2.  `dispatch`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and a player to send them to.
+
+3.  `hydrateRate`: The rate in seconds at which the server should send the latest state to the clients. The default is `5`, which means that every five seconds, every client passed to `start` will re-hydrate their store with the latest state.
 
 It returns a broadcaster object, which has two properties:
 
 1.  `middleware`: A Reflex middleware that helps do some of the heavy lifting for you. You should apply this middleware to your root producer. If you have any middlewares that change dispatched arguments, you should apply them after this middleware to ensure that the arguments are preserved.
 
-2.  `playerRequestedState`: A method that receives the player that requested state, and returns the shared part of the root producer's state.
+2.  `start`: A method that marks the player as ready to begin receiving shared state and actions. This should be called by the client in a `broadcastReceiver`.
 
 :::caution pitfall
 
@@ -258,17 +257,13 @@ Once you have your broadcaster set up, you can use [`createBroadcastReceiver`](.
 ```ts title="Client" showLineNumbers
 import { createBroadcastReceiver } from "@rbxts/reflex";
 
-const broadcast = remotes.Client.Get("broadcast");
-const requestState = remotes.Client.Get("requestState");
-
 const receiver = createBroadcastReceiver({
-	requestInterval: 5,
-	requestState: async () => {
-		return requestState.CallServerAsync();
+	start: () => {
+		remotes.start.fire();
 	},
 });
 
-broadcast.Connect((actions) => {
+remotes.dispatch.connect((actions) => {
 	receiver.dispatch(actions);
 });
 
@@ -281,17 +276,13 @@ producer.applyMiddleware(receiver.middleware);
 ```lua title="Client" showLineNumbers
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
-local broadcast = remotes.Server:Get("broadcast")
-local requestState = remotes.Server:Get("requestState")
-
 local receiver = Reflex.createBroadcastReceiver({
-    requestInterval = 5,
-    requestState = function()
-        return requestState:CallServerAsync()
+    start = function()
+        remotes.start.fire()
     end,
 })
 
-broadcast:Connect(function(actions)
+remotes.dispatch:connect(function(actions)
     receiver:dispatch(actions)
 end)
 
@@ -301,205 +292,9 @@ producer:applyMiddleware(receiver.middleware)
 </TabItem>
 </Tabs>
 
-This code will call `requestState` when the middleware is applied, and merge the server's shared state with the client's state. Every `requestInterval` seconds, the client will request the current state of the server, so that the state continues to be kept in sync.
+This code will call `start` when the middleware is applied, and hydrate the client's state with the server's shared state. Calling `dispatch` will send the actions from the broadcaster to the client's store and enable automatic hydration.
 
 **It's thread-safe,** so it's safe to apply the middleware at any time, and you can even use your producer before the server's state is received.
-
----
-
-## Recipes
-
-### Filtering state before sending it to a client
-
-In your broadcaster, you have control over what the client receives when they request state. You can write a function that filters out any state that the client doesn't have access to.
-
-Here, let's filter a `playerData` slice to only include the data of the player that requested state:
-
-<Tabs groupId="languages">
-<TabItem value="TypeScript" default>
-
-```ts title="Server"
-function filterPlayerData(player: Player, state: SharedState) {
-	return {
-		...state,
-		playerData: {
-			[player.Name]: state.playerData[player.Name],
-		},
-	};
-}
-
-// ...
-
-requestState.SetCallback((player) => {
-	const state = broadcaster.playerRequestedState(player);
-	return filterPlayerData(player, state);
-});
-```
-
-</TabItem>
-<TabItem value="Luau">
-
-```lua title="Server"
-local function filterPlayerData(player, state)
-    local filteredState = table.clone(state)
-    filteredState.playerData = {
-        [player.Name] = state.playerData[player.Name],
-    }
-    return filteredState
-end
-
--- ...
-
-requestState:SetCallback(function(player)
-    local state = broadcaster:playerRequestedState(player)
-    return filterPlayerData(player, state)
-end)
-```
-
-</TabItem>
-</Tabs>
-
-### Filtering actions before sending them to a player
-
-You can also filter actions before sending them to a player, which is useful for things like private player data. This is done by modifying the `actions` array in the `broadcast` callback.
-
-We'll write a function that only broadcasts player data actions if the first `name` argument of an action is the same as the player that is receiving the action:
-
-<Tabs groupId="languages">
-<TabItem value="TypeScript" default>
-
-```ts title="Action filter"
-function findPlayerName(args: unknown[]) {
-	// Search for a valid username in the arguments
-	for (const value of args) {
-		if (typeIs(value, "string") && Players.FindFirstChild(value)) {
-			return value;
-		}
-	}
-}
-
-function createPlayerNameFilter(...actions: { readonly [name: string]: Callback }[]) {
-	const names = new Set<string>();
-
-	// Create a set of all the action names that we want to filter
-	for (const actionMap of actions) {
-		for (const name of Object.keys(actionMap)) {
-			names.add(name);
-		}
-	}
-
-	return (player: Player, actions: BroadcastAction[]) => {
-		// Filter out actions if they are a player data action and this
-		// player isn't the target
-		return actions.filter((action) => {
-			// If the action name isn't in the set, keep it
-			if (!names.has(action.name)) {
-				return true;
-			}
-
-			// Search for a valid username in the arguments
-			const name = findPlayerName(action.arguments);
-
-			// If the action doesn't have a valid username, keep it
-			// Otherwise, only keep the action if the username matches
-			return name === undefined || name === player.Name;
-		});
-	};
-}
-
-const playerDataFilter = createPlayerNameFilter(playerDataSlice.getActions());
-```
-
-```ts title="Server"
-const broadcast = remotes.Server.Get("broadcast");
-
-const broadcaster = createBroadcaster({
-	producers: sharedSlices,
-	broadcast: (players, actions) => {
-		for (const player of players) {
-			// highlight-next-line
-			const filteredActions = playerDataFilter(player, actions);
-			broadcast.SendToPlayer(player, filteredActions);
-		}
-	},
-});
-```
-
-</TabItem>
-<TabItem value="Luau">
-
-```lua title="Action filter"
-local function findPlayerName(args: { any })
-    -- Search for a valid username in the arguments
-    for _, value in args do
-        if type(value) == "string" and Players:FindFirstChild(value) then
-            return value
-        end
-    end
-end
-
-local function createPlayerNameFilter(...: { [string]: (...any) -> any })
-    local names: { [string]: boolean } = {}
-
-    -- Create a set of all the action names that we want to filter
-    for _, actionMap in { ... } do
-        for name in actionMap do
-            names[name] = true
-        end
-    end
-
-    return function(player, actions)
-        local filteredActions = {}
-
-        -- Filter out actions if they are a player data action and this
-        -- player isn't the target
-        for _, action in actions do
-            -- If the action name isn't in the set, keep it
-            if not names[action.name] then
-                table.insert(filteredActions, action)
-                continue
-            end
-
-            -- Search for a valid username in the arguments
-            local name = findPlayerName(action.arguments)
-
-            -- If the action doesn't have a valid username, keep it
-            -- Otherwise, only keep the action if the username matches
-            if name == nil or name == player.Name then
-                table.insert(filteredActions, action)
-            end
-        end
-
-        return filteredActions
-    end
-end
-
-local playerDataFilter = createPlayerNameFilter(playerDataSlice:getActions())
-
-```
-
-```lua title="Server"
-local broadcast = remotes.Server:Get("broadcast")
-
-local broadcaster = Reflex.createBroadcaster({
-    producers = sharedSlices,
-    broadcast = function(players, actions)
-        for _, player in players do
-            local filteredActions = playerDataFilter(player, actions)
-            broadcast:SendToPlayer(player, filteredActions)
-        end
-    end,
-})
-```
-
-</TabItem>
-</Tabs>
-
-:::tip
-
-You can rewrite the `findPlayerName` function to be more specific to your use case. For example, if you want to filter by user ID instead of username, you can use `Players.GetPlayerByUserId` instead of `Players.FindFirstChild`.
-
-:::
 
 ---
 

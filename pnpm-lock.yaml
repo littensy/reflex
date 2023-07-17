@@ -8,9 +8,9 @@ devDependencies:
   '@rbxts/compiler-types':
     specifier: 2.1.0-types.1
     version: 2.1.0-types.1
-  '@rbxts/net':
-    specifier: ^3.0.7
-    version: 3.0.7
+  '@rbxts/remo':
+    specifier: ^1.2.1
+    version: 1.2.1
   '@rbxts/rodux':
     specifier: 3.0.0-ts.3
     version: 3.0.0-ts.3
@@ -143,8 +143,8 @@ packages:
     resolution: {integrity: sha512-+ztwutzuNivWsgsERiC7n5il4C5gfJUuGJUmXYRq8FwY4ye3aupRi9RocmyAHq6255sO7z+RM61AVbqx3llsLQ==}
     dev: true
 
-  /@rbxts/net@3.0.7:
-    resolution: {integrity: sha512-IJ1XQFkNF81xCP2YxWtDJbORyiWBnNEneQ26DbHFpx4cIXYPdOgCO3VVCQDNjeEp1rjbkK6YtHoqiXxwEVacZQ==}
+  /@rbxts/remo@1.2.1:
+    resolution: {integrity: sha512-S/eh9zr7fysgsR5Ft5nnO2LgueegMduXOoCVv6l1Flg2Vdbhs1sgTzuSJsJAbxMpvfTWLml9063DzHqP1N0T6g==}
     dev: true
 
   /@rbxts/rodux@3.0.0-ts.3:
