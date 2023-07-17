@@ -133,14 +133,14 @@ export declare function createSelector<Selectors extends SelectorArray, Result>(
  * @example
  * ```ts
  * const broadcaster = createBroadcaster({
- * 	producers: sharedProducers,
- * 	broadcast: (players, actions) => {
- * 		remotes.Server.Get("dispatch").SendToPlayers(players, actions);
+ * 	producers: slices,
+ * 	dispatch: (player, actions) => {
+ * 		remotes.dispatch.fire(player, actions);
  * 	},
  * });
  *
- * remotes.Server.OnFunction("requestState", (player) => {
- * 	return broadcaster.playerRequestedState(player);
+ * remotes.start.connect((player) => {
+ * 	broadcaster.start(player)
  * });
  *
  * rootProducer.applyMiddleware(broadcaster.middleware);
@@ -162,13 +162,12 @@ export declare function createBroadcaster<Producers extends ProducerMap>(
  * @example
  * ```ts
  * const receiver = createBroadcastReceiver({
- * 	producers: sharedProducers,
- * 	requestState: async () => {
- * 		return await remotes.Server.Get("requestState").CallServerAsync();
+ * 	start: () => {
+ * 		remotes.start.fire();
  * 	},
  * });
  *
- * remotes.Server.OnEvent("dispatch", (actions) => {
+ * remotes.dispatch.connect((actions) => {
  * 	receiver.dispatch(actions);
  * });
  *

@@ -12,7 +12,7 @@ import TOCInline from "@theme/TOCInline";
 `createBroadcastReceiver` lets you keep the client's state in sync with the server's shared state, whose updates are sent by [`createBroadcaster`](create-broadcaster).
 
 ```ts
-const receiver = createBroadcastReceiver({ requestState });
+const receiver = createBroadcastReceiver(options);
 ```
 
 <TOCInline toc={toc} />
@@ -32,10 +32,8 @@ Call `createBroadcastReceiver` to create a receiver that can be used to connect 
 import { createBroadcastReceiver } from "@rbxts/reflex";
 
 const receiver = createBroadcastReceiver({
-	requestInterval: 5,
-	requestState: async () => {
-		const remote = await remotes.Client.WaitFor("requestState");
-		return remote.CallServerAsync();
+	start: () => {
+		remotes.start.fire();
 	},
 });
 ```
@@ -47,11 +45,8 @@ const receiver = createBroadcastReceiver({
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local receiver = Reflex.createBroadcastReceiver({
-    requestInterval = 5,
-    requestState = function()
-        return remotes.Client:WaitFor("requestState"):andThen(function(remote)
-            return remote:CallServerAsync()
-        end)
+    start = function()
+        remotes.start:fire()
     end,
 })
 ```
@@ -65,7 +60,7 @@ Once you have the receiver, you need to apply the middleware to your producer an
 <TabItem value="TypeScript" default>
 
 ```ts
-remotes.Client.OnEvent("broadcast", (actions) => {
+remotes.dispatch.connect((actions) => {
 	receiver.dispatch(actions);
 });
 
@@ -76,7 +71,7 @@ producer.applyMiddleware(receiver.middleware);
 <TabItem value="Luau">
 
 ```lua
-remotes.Client:OnEvent("broadcast", function(actions)
+remotes.dispatch:connect(function(actions)
     receiver:dispatch(actions)
 end)
 
@@ -86,7 +81,7 @@ producer:applyMiddleware(receiver.middleware)
 </TabItem>
 </Tabs>
 
-`createBroadcastReceiver` will request the server's shared state when the middleware is applied, and _merge_ it with the client's state. This means that the client's state will not be overwritten, but instead updated with the server's state. It is safe to use your producer before the server's state is received.
+`createBroadcastReceiver` will request the server's shared state when the middleware is applied, and _merge_ it with the client's state. This means that the client's state will not be overwritten, but instead hydrated with the server's state. It is safe to use your producer before the server's state is received.
 
 [Broadcasters](create-broadcaster) send shared actions dispatched on the server to the client through a remote, so you need to connect the receiver's [`dispatch`](#receiverdispatchactions) method to run the actions passed to the remote.
 
@@ -97,8 +92,7 @@ On the server, call [`createBroadcaster`](create-broadcaster) to share state and
 #### Parameters
 
 -   `options` - An object with options for the broadcast receiver.
-    -   `requestState` - A function that returns a Promise that resolves to the server's shared state.
-    -   `requestInterval` - The interval in seconds to sync the store with the server's state. Defaults to `5`. Set to `0` to disable requests.
+    -   `start` - A function that should call `broadcaster.start` on the server for the local player. Called when the middleware is applied.
 
 #### Returns
 
@@ -114,7 +108,7 @@ On the server, call [`createBroadcaster`](create-broadcaster) to share state and
 
 ### `receiver.middleware`
 
-Apply the broadcast receiver [middleware](middleware) to call `requestState` and initialize the client's root producer with the server's shared state. It's safe to use the producer before this middleware is applied, and order does not matter.
+Apply the broadcast receiver [middleware](middleware) to call `start` and initialize the client's root producer with the server's shared state. It's safe to use the producer before this middleware is applied, and order does not matter.
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -139,11 +133,13 @@ producer:applyMiddleware(receiver.middleware)
 
 Connect the receiver's `dispatch` method to a remote to dispatch the actions passed to the remote.
 
+It's important to use this method instead of your own custom dispatch function, as this method also handles hydration and merging of the server's shared state.
+
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
 
 ```ts
-remotes.Client.OnEvent("broadcast", (actions) => {
+remotes.dispatch.connect((actions) => {
 	receiver.dispatch(actions);
 });
 ```
@@ -152,7 +148,7 @@ remotes.Client.OnEvent("broadcast", (actions) => {
 <TabItem value="Luau">
 
 ```lua
-remotes.Client:OnEvent("broadcast", function(actions)
+remotes.dispatch:connect(function(actions)
     receiver:dispatch(actions)
 end)
 ```
@@ -185,13 +181,12 @@ Once you have your broadcaster set up, you can use [`createBroadcastReceiver`](#
 import { createBroadcastReceiver } from "@rbxts/reflex";
 
 const receiver = createBroadcastReceiver({
-	requestState: async () => {
-		const remote = await remotes.Client.WaitFor("requestState");
-		return remote.CallServerAsync();
+	start: () => {
+		remotes.start.fire();
 	},
 });
 
-remotes.Client.OnEvent("broadcast", (actions) => {
+remotes.dispatch.connect((actions) => {
 	receiver.dispatch(actions);
 });
 
@@ -205,14 +200,12 @@ producer.applyMiddleware(receiver.middleware);
 local Reflex = require(ReplicatedStorage.Packages.Reflex)
 
 local receiver = Reflex.createBroadcastReceiver({
-    requestState = function()
-        return remotes.Client:WaitFor("requestState"):andThen(function(remote)
-            return remote:CallServerAsync()
-        end)
+    start = function()
+        remotes.start:fire()
     end,
 })
 
-remotes.Client:OnEvent("broadcast", function(actions)
+remotes.dispatch:connect(function(actions)
     receiver:dispatch(actions)
 end)
 
@@ -222,11 +215,9 @@ producer:applyMiddleware(receiver.middleware)
 </TabItem>
 </Tabs>
 
-This code will call `requestState` when the middleware is applied, and merge the server's shared state with the client's state. You should also connect the receiver's `dispatch` method to the remote, so that the state continues to be kept in sync.
+This code will call `start` when the middleware is applied, and merge the server's shared state with the client's state. You should also connect the receiver's `dispatch` method to the remote, so that the state continues to be kept in sync.
 
-**It's user-friendly,** as you can set up `createBroadcastReceiver` in a file separate from your producer and it will work as long as you apply the middleware to the producer and connect the receiver's `dispatch` method to the remote.
-
-It's safe to apply the middleware at any time, and you can even use your producer before the server's state is received.
+**It's thread-safe,** so it's safe to apply the middleware at any time, and you can even use your producer before the server's state is received.
 
 ---
 

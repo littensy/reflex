@@ -100,18 +100,17 @@ Explore how to use broadcasters and receivers to sync state:
 
 ```ts title="Server snippet"
 const broadcaster = createBroadcaster({
-	producers: sharedProducers,
-	broadcast: (players, actions) => {
-		remotes.Server.Get("broadcast").SendToPlayers(players, actions);
+	producers: slices,
+	dispatch: (player, actions) => {
+		remotes.dispatch.fire(player, actions);
 	},
 });
 ```
 
 ```ts title="Client snippet"
 const receiver = createBroadcastReceiver({
-	requestState: async () => {
-		const remote = await remotes.Client.WaitFor("requestState");
-		return remote.CallServerAsync();
+	start: () => {
+		remotes.start.fire(0);
 	},
 });
 ```
