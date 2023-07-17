@@ -1,5 +1,4 @@
 return function()
-	local Promise = require(script.Parent.Parent.Promise)
 	local createProducer = require(script.Parent.Parent.createProducer)
 	local combineProducers = require(script.Parent.Parent.combineProducers)
 	local createBroadcaster = require(script.Parent.createBroadcaster)
