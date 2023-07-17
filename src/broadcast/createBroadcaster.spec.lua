@@ -30,18 +30,18 @@ return function()
 	it("should return a broadcaster", function()
 		local broadcaster = createBroadcaster({
 			producers = producers,
-			broadcast = function() end,
+			dispatch = function() end,
 		})
 
 		expect(broadcaster).to.be.a("table")
-		expect(broadcaster.playerRequestedState).to.be.a("function")
+		expect(broadcaster.start).to.be.a("function")
 		expect(broadcaster.middleware).to.be.a("function")
 	end)
 
 	it("should apply a safe middleware", function()
 		local broadcaster = createBroadcaster({
 			producers = producers,
-			broadcast = function() end,
+			dispatch = function() end,
 		})
 
 		producer:applyMiddleware(broadcaster.middleware)
@@ -51,63 +51,91 @@ return function()
 		expect(producer:getState().bar.count).to.equal(0)
 	end)
 
-	it("should call broadcast when dispatching", function()
-		local actionsPerPlayer
+	it("should hydrate the player on start", function()
+		local player, actions
 
 		local broadcaster = createBroadcaster({
 			producers = producers,
-			broadcast = function(_actionsPerPlayer)
-				actionsPerPlayer = _actionsPerPlayer
+			dispatch = function(...)
+				player, actions = ...
 			end,
 		})
 
 		producer:applyMiddleware(broadcaster.middleware)
-		broadcaster:playerRequestedState(mockPlayer)
+		broadcaster:start(mockPlayer)
+
+		expect(player).to.equal(mockPlayer)
+		expect(actions).to.be.a("table")
+		expect(#actions).to.equal(1)
+
+		expect(actions[1].name).to.equal("__hydrate__")
+		expect(actions[1].arguments[1]).to.be.a("table")
+		expect(actions[1].arguments[1].foo).to.be.a("table")
+		expect(actions[1].arguments[1].foo.count).to.equal(0)
+		expect(actions[1].arguments[1].bar).to.be.a("table")
+		expect(actions[1].arguments[1].bar.count).to.equal(0)
+	end)
+
+	it("should call dispatch function", function()
+		local player, actions
+
+		local broadcaster = createBroadcaster({
+			producers = producers,
+			dispatch = function(...)
+				player, actions = ...
+			end,
+		})
+
+		producer:applyMiddleware(broadcaster.middleware)
+		broadcaster:start(mockPlayer)
 		producer.incrementFoo(1)
 		producer.incrementBar(2)
 		broadcaster:flush()
 
-		expect(actionsPerPlayer).to.be.a("table")
-		expect(actionsPerPlayer[mockPlayer]).to.be.a("table")
-		expect(#actionsPerPlayer[mockPlayer]).to.equal(2)
+		expect(player).to.equal(mockPlayer)
+		expect(actions).to.be.a("table")
+		expect(#actions).to.equal(2)
 
-		expect(actionsPerPlayer[mockPlayer][1]).to.be.a("table")
-		expect(actionsPerPlayer[mockPlayer][1].name).to.equal("incrementFoo")
-		expect(actionsPerPlayer[mockPlayer][1].arguments).to.be.a("table")
-		expect(actionsPerPlayer[mockPlayer][1].arguments[1]).to.equal(1)
+		expect(actions[1].name).to.equal("incrementFoo")
+		expect(actions[1].arguments[1]).to.equal(1)
 
-		expect(actionsPerPlayer[mockPlayer][2]).to.be.a("table")
-		expect(actionsPerPlayer[mockPlayer][2].name).to.equal("incrementBar")
-		expect(actionsPerPlayer[mockPlayer][2].arguments).to.be.a("table")
-		expect(actionsPerPlayer[mockPlayer][2].arguments[1]).to.equal(2)
+		expect(actions[2].name).to.equal("incrementBar")
+		expect(actions[2].arguments[1]).to.equal(2)
 	end)
 
 	it("should exclude state and actions that are not provided", function()
-		local actionsPerPlayer
+		local actions
+		local hydrateAction
 
 		local broadcaster = createBroadcaster({
 			producers = {
 				foo = producers.foo,
 			},
-			broadcast = function(_actionsPerPlayer)
-				actionsPerPlayer = _actionsPerPlayer
+			dispatch = function(...)
+				actions = select(2, ...)
+
+				if actions[1] and actions[1].name == "__hydrate__" then
+					hydrateAction = actions[1]
+				end
 			end,
 		})
 
 		producer:applyMiddleware(broadcaster.middleware)
-		broadcaster:playerRequestedState(mockPlayer)
+		broadcaster:start(mockPlayer)
 		producer.incrementFoo(1)
 		producer.incrementBar(2)
 		broadcaster:flush()
 
-		-- pending actions should only contain incrementFoo
-		expect(#actionsPerPlayer[mockPlayer]).to.equal(1)
-
-		-- state should only contain foo
-		local state = broadcaster:playerRequestedState(mockPlayer)
+		-- initial state should only contain foo
+		local state = hydrateAction.arguments[1]
 		expect(state).to.be.a("table")
 		expect(state.foo).to.be.a("table")
-		expect(state.foo.count).to.equal(1)
+		expect(state.foo.count).to.equal(0)
 		expect(state.bar).to.equal(nil)
+
+		-- pending actions should only contain incrementFoo
+		expect(#actions).to.equal(1)
+		expect(actions[1].name).to.equal("incrementFoo")
+		expect(actions[1].arguments[1]).to.equal(1)
 	end)
 end

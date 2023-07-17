@@ -8,7 +8,7 @@ const initialState: SharedCounterState = {
 	count: 0,
 };
 
-export const sharedCounterProducer = createProducer(initialState, {
+export const sharedCounterSlice = createProducer(initialState, {
 	incrementShared: (state) => ({
 		...state,
 		count: state.count + 1,
