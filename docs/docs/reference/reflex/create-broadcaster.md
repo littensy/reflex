@@ -323,7 +323,7 @@ You should call [`createBroadcaster`](#createbroadcasteroptions) on the server w
 
 :::tip prerequisites
 
-You need to define your own remotes to use [`createBroadcaster`](../reference/reflex/create-broadcaster). We recommend [RbxNet](http://rbxnet.australis.dev), or [Remo](https://github.com/littensy/remo), which is used in the examples on this page.
+You need to define your own remotes to use [`createBroadcaster`](#createbroadcaster). We recommend [RbxNet](http://rbxnet.australis.dev), or [Remo](https://github.com/littensy/remo), which is used in the examples on this page.
 
 You will need two remote events:
 
