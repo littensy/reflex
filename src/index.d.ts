@@ -152,7 +152,7 @@ export declare function createSelector<Selectors extends SelectorArray, Result>(
  */
 export declare function createBroadcaster<Producers extends ProducerMap>(
 	options: BroadcasterOptions<Producers>,
-): Broadcaster<Producers>;
+): Broadcaster;
 
 /**
  * Creates a broadcast receiver that can be used to receive actions from the
@@ -179,9 +179,7 @@ export declare function createBroadcaster<Producers extends ProducerMap>(
  * @param options The options for the broadcast receiver.
  * @return The broadcast receiver.
  */
-export declare function createBroadcastReceiver<Producers extends ProducerMap>(
-	options: BroadcastReceiverOptions<Producers>,
-): BroadcastReceiver;
+export declare function createBroadcastReceiver(options: BroadcastReceiverOptions): BroadcastReceiver;
 
 /**
  * A middleware that logs all dispatched actions to the console.
@@ -576,53 +574,45 @@ export interface BroadcasterOptions<ProducerMap extends { [name: string]: Produc
 	readonly producers: ProducerMap;
 
 	/**
-	 * A function that broadcasts actions to the given players.
-	 * @param players The players to broadcast to.
+	 * The rate at which the server should hydrate the clients
+	 * with the latest state.
+	 * @default 5
+	 */
+	readonly hydrateRate?: number;
+
+	/**
+	 * A function that broadcasts actions to the given player.
+	 * @param player The player to broadcast to.
 	 * @param actions The actions to broadcast.
 	 */
-	readonly broadcast: (actionsPerPlayer: Map<Player, BroadcastAction[]>) => void;
+	readonly dispatch: (player: Player, actions: BroadcastAction[]) => void;
 }
 
 /**
  * Options for creating a broadcast receiver.
  * @client
  */
-export interface BroadcastReceiverOptions<ProducerMap extends { [name: string]: Producer }> {
+export interface BroadcastReceiverOptions {
 	/**
-	 * A function that should request the server's state. The state should be
-	 * retrieved through `Broadcaster.playerRequestedState`. Called when the
-	 * middleware is applied, and is used to merge the server's state with the
-	 * client's state.
-	 * @returns A Promise that resolves with the server's state.
+	 * A function that connects the player to the server broadcaster.
 	 */
-	readonly requestState: () => Promise<CombineStates<ProducerMap>>;
-
-	/**
-	 * The interval in seconds at which the client should request the server's
-	 * state. Every `requestInterval` seconds, the client will hydrate its state
-	 * with the server's state. Set to `0` to disable this feature.
-	 * @default 5
-	 */
-	readonly requestInterval?: number;
+	readonly start: () => void;
 }
 
 /**
  * A broadcaster is used to broadcast actions to a set of players.
  * @server
  */
-export interface Broadcaster<ProducerMap extends { [name: string]: Producer }> {
+export interface Broadcaster {
 	/**
 	 * The middleware that should be applied to the server's root producer.
 	 */
 	readonly middleware: ProducerMiddleware;
 
 	/**
-	 * Gets the combined states of the producers in the map passed to the
-	 * constructor. This should only be called through a remote event.
-	 * @param player The player that requested the state.
-	 * @returns The combined state of the producers.
+	 * Marks the given player as ready to receive broadcasts.
 	 */
-	playerRequestedState(player: Player): CombineStates<ProducerMap>;
+	start(player: Player): void;
 }
 
 /**

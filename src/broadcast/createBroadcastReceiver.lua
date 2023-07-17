@@ -1,6 +1,5 @@
-local Promise = require(script.Parent.Parent.Promise)
 local types = require(script.Parent.Parent.types)
-local setInterval = require(script.Parent.Parent.utils.setInterval)
+local hydrate = require(script.Parent.hydrate)
 
 --[=[
 	Creates a broadcast receiver object that can be used to dispatch actions
@@ -9,82 +8,45 @@ local setInterval = require(script.Parent.Parent.utils.setInterval)
 	@return The broadcast receiver.
 ]=]
 local function createBroadcastReceiver(options: types.BroadcastReceiverOptions): types.BroadcastReceiver
-	local requestState = options.requestState
-	local requestInterval = options.requestInterval or 5
-
 	local receiver = {} :: types.BroadcastReceiver
-	local rootProducer: types.Producer?
+	local producer: types.Producer?
 
-	-- If the request for state takes too long, actions may be dispatched
-	-- before the state is hydrated. In this case, we queue the actions
-	-- and dispatch them once the server's state has been received.
-	local queue: { () -> () } = {}
-	local shouldQueue = true
+	local function hydrateState(state)
+		assert(producer, "Cannot use broadcast receiver before the middleware is applied.")
 
-	local function merge(state)
-		assert(rootProducer, "Failed to apply receiver middleware")
-
-		local nextState = table.clone(rootProducer:getState())
+		local nextState = table.clone(producer:getState())
 
 		for key, value in state do
 			nextState[key] = value
 		end
 
-		rootProducer:setState(nextState)
-
-		if shouldQueue then
-			shouldQueue = false
-
-			for _, dispatch in queue do
-				task.spawn(dispatch)
-			end
-
-			table.clear(queue)
-		end
-	end
-
-	local function requestMerge()
-		local value = requestState()
-
-		if Promise.is(value) then
-			value:andThen(merge)
-		else
-			merge(value)
-		end
+		producer:setState(nextState)
 	end
 
 	function receiver:dispatch(actions: { types.BroadcastAction })
-		assert(rootProducer, "Cannot dispatch actions before the middleware is applied")
+		assert(producer, "Cannot dispatch actions before the middleware is applied")
 
-		local dispatchers = rootProducer:getDispatchers()
+		local dispatchers = producer:getDispatchers()
+		local state = hydrate.consumeHydrateAction(actions)
+
+		if state then
+			hydrateState(state)
+			return
+		end
 
 		for _, action in actions do
 			local dispatcher = dispatchers[action.name]
 
-			if not dispatcher then
-				continue
+			if dispatcher then
+				dispatcher(table.unpack(action.arguments))
 			end
-
-			if shouldQueue then
-				table.insert(queue, function()
-					dispatcher(table.unpack(action.arguments))
-				end)
-			end
-
-			-- Dispatch regardless of whether it should queue to avoid potential
-			-- lag if the server is slow to respond.
-			dispatcher(table.unpack(action.arguments))
 		end
 	end
 
-	function receiver.middleware(producer)
-		rootProducer = producer
+	function receiver.middleware(currentProducer)
+		producer = currentProducer
 
-		if requestInterval > 0 then
-			setInterval(requestMerge, requestInterval)
-		end
-
-		requestMerge()
+		options.start()
 
 		return function(dispatch)
 			return dispatch

@@ -1,7 +1,8 @@
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local types = require(script.Parent.Parent.types)
+local setInterval = require(script.Parent.Parent.utils.setInterval)
+local hydrate = require(script.Parent.hydrate)
 
 --[=[
 	Creates a broadcaster that can be used to share actions with the client.
@@ -11,69 +12,69 @@ local types = require(script.Parent.Parent.types)
 	@return The broadcaster.
 ]=]
 local function createBroadcaster(options: types.BroadcasterOptions): types.Broadcaster
-	local producers = options.producers
-	local broadcast = options.broadcast
-
 	local broadcaster = {} :: types.Broadcaster
 
 	local pendingActionsByPlayer: { [Player]: { types.BroadcastAction } } = {}
 	local actionFilter: { [string]: boolean } = {}
 
-	local rootProducer: types.Producer?
-	local pendingBroadcast: RBXScriptConnection?
+	local producer: types.Producer?
+	local pendingDispatch: thread?
 
-	for _, producer in producers do
-		for name in producer:getDispatchers() do
+	for _, slice in options.producers do
+		for name in slice:getDispatchers() do
 			actionFilter[name] = true
 		end
 	end
 
-	local function scheduleBroadcast()
-		if pendingBroadcast then
+	local function scheduleDispatch()
+		if pendingDispatch then
 			return
 		end
 
-		pendingBroadcast = RunService.Heartbeat:Once(function()
-			pendingBroadcast = nil
+		pendingDispatch = task.defer(function()
+			pendingDispatch = nil
 			broadcaster:flush()
 		end)
 	end
 
-	function broadcaster:flush()
-		if pendingBroadcast then
-			pendingBroadcast:Disconnect()
-			pendingBroadcast = nil
+	local function getSharedState()
+		assert(producer, "Cannot use broadcaster before the middleware is applied.")
+
+		local sharedState = {}
+		local serverState = producer.getState()
+
+		for name in options.producers do
+			sharedState[name] = serverState[name]
 		end
 
-		local newPendingActionsByPlayer = {}
+		return sharedState
+	end
+
+	local function hydratePlayer(player: Player)
+		options.dispatch(player, { hydrate.createHydrateAction(getSharedState()) })
+	end
+
+	function broadcaster:flush()
+		if pendingDispatch then
+			task.cancel(pendingDispatch)
+			pendingDispatch = nil
+		end
 
 		for player, pendingActions in pendingActionsByPlayer do
-			newPendingActionsByPlayer[player] = {}
+			options.dispatch(player, pendingActions)
+			pendingActionsByPlayer[player] = {}
 		end
-
-		broadcast(pendingActionsByPlayer)
-		pendingActionsByPlayer = newPendingActionsByPlayer
 	end
 
-	function broadcaster:playerRequestedState(player: Player)
-		assert(rootProducer, "Cannot call playerRequestedState before middleware is applied.")
-
-		-- Reset the pending actions to prevent the client from receiving
-		-- actions that have already dispatched, but have not been broadcasted.
-		pendingActionsByPlayer[player] = {}
-
-		local state = {}
-		local rootState = rootProducer.getState()
-
-		for name in producers do
-			state[name] = rootState[name]
+	function broadcaster:start(player)
+		if not pendingActionsByPlayer[player] then
+			pendingActionsByPlayer[player] = {}
+			hydratePlayer(player)
 		end
-
-		return state
 	end
 
-	function broadcaster.middleware(producer)
-		rootProducer = producer
+	broadcaster.middleware = function(currentProducer)
+		producer = currentProducer
 
 		return function(dispatch, name)
 			if not actionFilter[name] then
@@ -81,14 +82,13 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 			end
 
 			return function(...)
+				local action = { name = name, arguments = { ... } }
+
 				for _, pendingActions in pendingActionsByPlayer do
-					table.insert(pendingActions, {
-						name = name,
-						arguments = { ... },
-					})
+					table.insert(pendingActions, action)
 				end
 
-				scheduleBroadcast()
+				scheduleDispatch()
 
 				return dispatch(...)
 			end
@@ -98,6 +98,12 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 	Players.PlayerRemoving:Connect(function(player)
 		pendingActionsByPlayer[player] = nil
 	end)
+
+	setInterval(function()
+		for player in pendingActionsByPlayer do
+			hydratePlayer(player)
+		end
+	end, options.hydrateRate or 5)
 
 	return broadcaster
 end
