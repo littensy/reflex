@@ -38,9 +38,9 @@ pnpm add @rbxts/reflex
 </TabItem>
 <TabItem value="Wally">
 
-```json title="wally.toml"
+```toml title="wally.toml"
 [dependencies]
-Reflex = "littensy/reflex@3.5.0"
+Reflex = "littensy/reflex@4.0.0"
 ```
 
 </TabItem>
