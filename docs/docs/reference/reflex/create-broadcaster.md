@@ -96,7 +96,7 @@ On the client, call [`createBroadcastReceiver`](create-broadcast-receiver) to re
 -   `options` - An object with options for the broadcaster.
     -   `producers` - A map of shared producers used to filter private actions and state from the root producer.
     -   `dispatch` - A function called when actions are ready to be sent to clients.
-    -   `hydrateRate` - The rate at which the entire shared state is sent to clients for hydration. Defaults to `60`.
+    -   `hydrateRate` - The rate at which the entire shared state is sent to clients for hydration. Defaults to `60`. Set to `-1` to disable periodic hydration.
 
 #### Returns
 
