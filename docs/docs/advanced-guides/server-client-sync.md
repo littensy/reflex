@@ -233,7 +233,7 @@ This sets up a broadcaster that sends shared actions to the clients when they're
 
 2.  `dispatch`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and a player to send them to.
 
-3.  `hydrateRate`: The rate in seconds at which the server should send the latest state to the clients. The default is `5`, which means that every five seconds, every client passed to `start` will re-hydrate their store with the latest state.
+3.  `hydrateRate`: The rate in seconds at which the server should send the latest state to the clients. The default is `60`, which means that every minute, every client passed to `start` will re-hydrate their store with the latest state.
 
 It returns a broadcaster object, which has two properties:
 

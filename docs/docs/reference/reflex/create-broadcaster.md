@@ -96,7 +96,7 @@ On the client, call [`createBroadcastReceiver`](create-broadcast-receiver) to re
 -   `options` - An object with options for the broadcaster.
     -   `producers` - A map of shared producers used to filter private actions and state from the root producer.
     -   `dispatch` - A function called when actions are ready to be sent to clients.
-    -   `hydrateRate` - The rate at which the entire shared state is sent to clients for hydration. Defaults to `5`.
+    -   `hydrateRate` - The rate at which the entire shared state is sent to clients for hydration. Defaults to `60`.
 
 #### Returns
 
@@ -388,7 +388,7 @@ This sets up a broadcaster that sends shared actions to the clients when they're
 
 1.  `producers`: Your _shared producer map_. This is used to determine which state and actions should be sent to the client.
 2.  `dispatch`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and an array of players to send them to.
-3.  `hydrateRate`: The rate at which the server should send state to the clients for hydration. This is optional, and defaults to `5`.
+3.  `hydrateRate`: The rate at which the server should send state to the clients for hydration. This is optional, and defaults to `60`.
 
 It returns a broadcaster object, which has two properties:
 

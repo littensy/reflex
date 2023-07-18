@@ -239,7 +239,7 @@ export type BroadcasterOptions = {
 	--[=[
 		The rate in seconds at which the server should hydrate the
 		clients with the latest state.
-		@default 5
+		@default 60
 	]=]
 	hydrateRate: number?,
 

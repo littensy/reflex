@@ -103,7 +103,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 		for player in pendingActionsByPlayer do
 			hydratePlayer(player)
 		end
-	end, options.hydrateRate or 5)
+	end, options.hydrateRate or 60)
 
 	return broadcaster
 end
