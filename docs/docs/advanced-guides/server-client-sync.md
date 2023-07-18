@@ -305,7 +305,7 @@ This code will call `start` when the middleware is applied, and hydrate the clie
 
 You can use the `beforeDispatch` option to filter or modify actions before they are sent to the client. This is useful if you have sensitive data you don't want to share between clients, or if you want to prevent certain actions from being dispatched to the client.
 
-This example will prevent the `sensitive` action from being dispatched to the client if the player's UserId is not the first argument:
+This example will prevent the `sensitive` action from being dispatched to the client if the player's Name is not the first argument:
 
 <Tabs groupId="languages">
 <TabItem value="TypeScript" default>
@@ -318,7 +318,7 @@ const broadcaster = createBroadcaster({
 	},
 	beforeDispatch: (player, action) => {
 		// highlight-start
-		if (action.name === "sensitive" && action.arguments[0] !== player.UserId) {
+		if (action.name === "sensitive" && action.arguments[0] !== player.Name) {
 			return;
 		}
 		// highlight-end
@@ -338,7 +338,7 @@ local broadcaster = Reflex.createBroadcaster({
     end,
     beforeDispatch = function(player, action)
         // highlight-start
-        if action.name == "sensitive" and action.arguments[1] ~= player.UserId then
+        if action.name == "sensitive" and action.arguments[1] ~= player.Name then
             return
         end
         // highlight-end
@@ -370,7 +370,7 @@ const broadcaster = createBroadcaster({
 			...state,
 			// highlight-start
 			private: {
-				[player.UserId]: state.private[player.UserId],
+				[player.Name]: state.private[player.Name],
 			},
 			// highlight-end
 		};
@@ -392,7 +392,7 @@ local broadcaster = Reflex.createBroadcaster({
 
         // highlight-start
         newState.private = {
-            [player.UserId] = state.private[player.UserId],
+            [player.Name] = state.private[player.Name],
         }
         // highlight-end
 
