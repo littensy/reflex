@@ -9,7 +9,7 @@ local function createHydrateAction(state: any): types.BroadcastAction
 	}
 end
 
-local function consumeHydrateAction(actions: { types.BroadcastAction }): any
+local function consumeHydrateAction(actions: { types.BroadcastAction }): types.BroadcastAction?
 	local action = actions[1]
 
 	if action and action.name == HYDRATE then

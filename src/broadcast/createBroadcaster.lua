@@ -51,7 +51,13 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 	end
 
 	local function hydratePlayer(player: Player)
-		options.dispatch(player, { hydrate.createHydrateAction(getSharedState()) })
+		local state = getSharedState()
+
+		if options.beforeHydrate then
+			state = options.beforeHydrate(player, state)
+		end
+
+		options.dispatch(player, { hydrate.createHydrateAction(state) })
 	end
 
 	function broadcaster:flush()
@@ -82,9 +88,16 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 			end
 
 			return function(...)
-				local action = { name = name, arguments = { ... } }
+				for player, pendingActions in pendingActionsByPlayer do
+					local action: types.BroadcastAction? = {
+						name = name,
+						arguments = { ... },
+					}
 
-				for _, pendingActions in pendingActionsByPlayer do
+					if options.beforeDispatch then
+						action = options.beforeDispatch(player, action :: types.BroadcastAction)
+					end
+
 					table.insert(pendingActions, action)
 				end
 

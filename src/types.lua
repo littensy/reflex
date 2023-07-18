@@ -244,6 +244,25 @@ export type BroadcasterOptions = {
 	hydrateRate: number?,
 
 	--[=[
+		Runs before actions are dispatched to a player. Can be used to
+		filter actions or manipulate them before sending.
+
+		Avoid directly mutating the action. Instead, return a new action
+		if you need to change it. Return `nil` to not share the action
+		with this player.
+	]=]
+	beforeDispatch: ((player: Player, action: BroadcastAction) -> BroadcastAction?)?,
+
+	--[=[
+		Runs before the client is hydrated with the latest state. Can be
+		used to filter the state or hide certain values from the client.
+
+		Do not mutate the state in this function! Treat it as a read-only
+		object, and return a new object if you need to change it.
+	]=]
+	beforeHydrate: ((player: Player, state: { [string]: any }) -> { [string]: any })?,
+
+	--[=[
 		The function that will send the actions to the client.
 	]=]
 	dispatch: (player: Player, actions: { BroadcastAction }) -> (),

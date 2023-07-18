@@ -566,18 +566,35 @@ export interface BroadcastAction {
  * Options for creating a broadcaster.
  * @server
  */
-export interface BroadcasterOptions<ProducerMap extends { [name: string]: Producer }> {
+export interface BroadcasterOptions<Producers extends ProducerMap> {
 	/**
 	 * The map of producers to broadcast.
 	 */
-	readonly producers: ProducerMap;
+	readonly producers: Producers;
 
 	/**
 	 * The rate at which the server should hydrate the clients
 	 * with the latest state.
-	 * @default 5
+	 * @default 60
 	 */
 	readonly hydrateRate?: number;
+
+	/**
+	 * Runs before actions are dispatched to a player. Can be used to
+	 * filter actions or manipulate them before sending.
+	 *
+	 * Return `undefined` to not share the action with this player.
+	 */
+	readonly beforeDispatch?: (player: Player, action: BroadcastAction) => BroadcastAction | undefined;
+
+	/**
+	 * Runs before the client is hydrated with the latest state. Can be
+	 * used to filter the state or hide certain values from the client.
+	 *
+	 * **Note:** Do not mutate the state in this function! Treat it as a
+	 * read-only object, and return a new object if you need to change it.
+	 */
+	readonly beforeHydrate?: (player: Player, state: CombineStates<Producers>) => Partial<CombineStates<Producers>>;
 
 	/**
 	 * A function that broadcasts actions to the given player.
