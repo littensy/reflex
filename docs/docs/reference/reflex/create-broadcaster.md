@@ -96,7 +96,9 @@ On the client, call [`createBroadcastReceiver`](create-broadcast-receiver) to re
 -   `options` - An object with options for the broadcaster.
     -   `producers` - A map of shared producers used to filter private actions and state from the root producer.
     -   `dispatch` - A function called when actions are ready to be sent to clients.
-    -   `hydrateRate` - The rate at which the entire shared state is sent to clients for hydration. Defaults to `5`.
+    -   `hydrateRate?` - The rate at which the entire shared state is sent to clients for re-hydration. Defaults to `60`. To disable this feature, set it to `-1`.
+    -   `beforeDispatch?` - Called before an action is dispatched to a client. Can be used to filter or modify actions before the client receives them.
+    -   `beforeHydrate?` - Called before the shared state is sent to a client for hydration. Can be used to filter or modify state.
 
 #### Returns
 
@@ -384,11 +386,12 @@ producer:applyMiddleware(broadcaster.middleware)
 
 This sets up a broadcaster that sends shared actions to the clients when they're dispatched. It also connects a `start` remote, which notifies the server that we are ready to receive actions and state.
 
-[`createBroadcaster`](#createbroadcasteroptions) receives three options:
+[`createBroadcaster`](#createbroadcasteroptions) receives the following options:
 
 1.  `producers`: Your _shared producer map_. This is used to determine which state and actions should be sent to the client.
 2.  `dispatch`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and an array of players to send them to.
-3.  `hydrateRate`: The rate at which the server should send state to the clients for hydration. This is optional, and defaults to `5`.
+3.  `hydrateRate?`: The rate at which the server should send state to the clients for hydration. This is optional, and defaults to `60`.
+4.  `beforeDispatch?` and `beforeHydrate?` for filtering actions or state before they are sent to the client.
 
 It returns a broadcaster object, which has two properties:
 
@@ -403,6 +406,113 @@ It returns a broadcaster object, which has two properties:
 :::
 
 Now that you have your broadcaster set up, you can use [`createBroadcastReceiver`](create-broadcast-receiver) to dispatch actions from the server.
+
+---
+
+### Filtering actions
+
+You can use the `beforeDispatch` option to filter or modify actions before they are sent to the client. This is useful if you have sensitive data you don't want to share between clients, or if you want to prevent certain actions from being dispatched to the client.
+
+This example will prevent the `sensitive` action from being dispatched to the client if the player's UserId is not the first argument:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const broadcaster = createBroadcaster({
+	producers: slices,
+	dispatch: (player, actions) => {
+		remotes.dispatch.fire(player, actions);
+	},
+	beforeDispatch: (player, action) => {
+		// highlight-start
+		if (action.name === "sensitive" && action.arguments[0] !== player.UserId) {
+			return;
+		}
+		// highlight-end
+		return action;
+	},
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local broadcaster = Reflex.createBroadcaster({
+    producers = slices,
+    dispatch = function(player, actions)
+        remotes.dispatch:fire(player, actions)
+    end,
+    beforeDispatch = function(player, action)
+        // highlight-start
+        if action.name == "sensitive" and action.arguments[1] ~= player.UserId then
+            return
+        end
+        // highlight-end
+        return action
+    end,
+})
+```
+
+</TabItem>
+</Tabs>
+
+---
+
+### Filtering state
+
+You can use the `beforeHydrate` option to filter or modify state before it is sent to the client. This is useful if you store sensitive data you don't want to share with clients.
+
+This example filters out all private data except for the current player's data:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const broadcaster = createBroadcaster({
+	producers: slices,
+	dispatch: (player, actions) => {
+		remotes.dispatch.fire(player, actions);
+	},
+	beforeHydrate: (player, state) => {
+		return {
+			...state,
+			// highlight-start
+			private: {
+				[player.UserId]: state.private[player.UserId],
+			},
+			// highlight-end
+		};
+	},
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local broadcaster = Reflex.createBroadcaster({
+    producers = slices,
+    dispatch = function(player, actions)
+        remotes.dispatch:fire(player, actions)
+    end,
+    beforeHydrate = function(player, state)
+        local newState = table.clone(state)
+
+        // highlight-start
+        newState.private = {
+            [player.UserId] = state.private[player.UserId],
+        }
+        // highlight-end
+
+        return newState
+    end,
+})
+```
+
+</TabItem>
+</Tabs>
 
 ---
 

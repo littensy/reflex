@@ -11,22 +11,21 @@ Reflex provides a quick way to sync the server's shared state with clients using
 
 :::note what you'll learn
 
--   🌎 What shared producer slices are
--   🔗 How to integrate shared slices into your state
--   🛰️ How to create broadcasters
--   📡 How to create receivers
+-   🌎 How to share state between the server and clients
+-   🛰️ How to create broadcasters and receivers
+-   🔒 Recipes for protecting data the client shouldn't have access to
 
 :::
 
 ---
 
-## Sync server state with clients
+## Sync state
 
 Reflex is designed to be used in any environment, on the client and the server. However, in game development, many cases come up where you need to send state from the server to clients. This is where the concept of **shared slices** comes in.
 
 ### Sharing state
 
-Shared slices are producers that are managed by the server and synced with clients. To create shared slices, we'll follow this project structure:
+Shared slices are producers that are managed by the server and synced with clients. To create shared slices, we'll follow this file hierarchy:
 
 ```
 shared
@@ -227,13 +226,15 @@ producer:applyMiddleware(broadcaster.middleware)
 
 This sets up a broadcaster that sends shared actions to the clients when they're dispatched. Once the middleware is applied, Reflex will begin syncing dispatched actions to the clients.
 
-[`createBroadcaster`](../reference/reflex/create-broadcaster) receives three options:
+[`createBroadcaster`](../reference/reflex/create-broadcaster) receives the following options:
 
 1.  `producers`: Your _shared slices_. This is used to determine which state and actions should be sent to the client.
 
 2.  `dispatch`: A user-defined callback that sends shared dispatched actions to the clients. It receives an array of actions and a player to send them to.
 
-3.  `hydrateRate`: The rate in seconds at which the server should send the latest state to the clients. The default is `5`, which means that every five seconds, every client passed to `start` will re-hydrate their store with the latest state.
+3.  `hydrateRate?`: The rate in seconds at which the server should send the latest state to the clients. The default is `60`, which means that every minute, every client passed to `start` will re-hydrate their store with the latest state.
+
+4.  [`beforeDispatch?`](#filtering-actions) and [`beforeHydrate?`](#filtering-state) for filtering state and actions before a client receives them.
 
 It returns a broadcaster object, which has two properties:
 
@@ -298,8 +299,116 @@ This code will call `start` when the middleware is applied, and hydrate the clie
 
 ---
 
+## Privacy
+
+### Filtering actions
+
+You can use the `beforeDispatch` option to filter or modify actions before they are sent to the client. This is useful if you have sensitive data you don't want to share between clients, or if you want to prevent certain actions from being dispatched to the client.
+
+This example will prevent the `sensitive` action from being dispatched to the client if the player's UserId is not the first argument:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const broadcaster = createBroadcaster({
+	producers: slices,
+	dispatch: (player, actions) => {
+		remotes.dispatch.fire(player, actions);
+	},
+	beforeDispatch: (player, action) => {
+		// highlight-start
+		if (action.name === "sensitive" && action.arguments[0] !== player.UserId) {
+			return;
+		}
+		// highlight-end
+		return action;
+	},
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local broadcaster = Reflex.createBroadcaster({
+    producers = slices,
+    dispatch = function(player, actions)
+        remotes.dispatch:fire(player, actions)
+    end,
+    beforeDispatch = function(player, action)
+        // highlight-start
+        if action.name == "sensitive" and action.arguments[1] ~= player.UserId then
+            return
+        end
+        // highlight-end
+        return action
+    end,
+})
+```
+
+</TabItem>
+</Tabs>
+
+### Filtering state
+
+You can use the `beforeHydrate` option to filter or modify state before it is sent to the client. This is useful if you store sensitive data you don't want to share with clients.
+
+This example filters out all private data except for the current player's data:
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const broadcaster = createBroadcaster({
+	producers: slices,
+	dispatch: (player, actions) => {
+		remotes.dispatch.fire(player, actions);
+	},
+	beforeHydrate: (player, state) => {
+		return {
+			...state,
+			// highlight-start
+			private: {
+				[player.UserId]: state.private[player.UserId],
+			},
+			// highlight-end
+		};
+	},
+});
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local broadcaster = Reflex.createBroadcaster({
+    producers = slices,
+    dispatch = function(player, actions)
+        remotes.dispatch:fire(player, actions)
+    end,
+    beforeHydrate = function(player, state)
+        local newState = table.clone(state)
+
+        // highlight-start
+        newState.private = {
+            [player.UserId] = state.private[player.UserId],
+        }
+        // highlight-end
+
+        return newState
+    end,
+})
+```
+
+</TabItem>
+</Tabs>
+
+---
+
 ## Summary
 
 -   Shared state is synced between the server and client using a broadcaster and a receiver.
 -   The **broadcaster** is responsible for sending state and actions to the receiver.
 -   The **receiver** is responsible for dispatching actions from the broadcaster.
+-   You can use the `beforeDispatch` and `beforeHydrate` options to filter actions and state before they are sent to the client.
