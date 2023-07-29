@@ -11,12 +11,12 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 	local receiver = {} :: types.BroadcastReceiver
 	local producer: types.Producer?
 
-	local function hydrateState(state)
+	local function hydrateState(serverState: { [string]: any })
 		assert(producer, "Cannot use broadcast receiver before the middleware is applied.")
 
 		local nextState = table.clone(producer:getState())
 
-		for key, value in state do
+		for key, value in serverState do
 			nextState[key] = value
 		end
 
@@ -27,20 +27,20 @@ local function createBroadcastReceiver(options: types.BroadcastReceiverOptions):
 		assert(producer, "Cannot dispatch actions before the middleware is applied")
 
 		local dispatchers = producer:getDispatchers()
-		local state = hydrate.consumeHydrateAction(actions)
-
-		if state then
-			hydrateState(state)
-			return
-		end
 
 		for _, action in actions do
 			local dispatcher = dispatchers[action.name]
 
 			if dispatcher then
 				dispatcher(table.unpack(action.arguments))
+			elseif hydrate.isHydrate(action) then
+				hydrateState(action.arguments[1])
 			end
 		end
+	end
+
+	function receiver:hydrate(serverState: { [string]: any })
+		hydrateState(serverState)
 	end
 
 	function receiver.middleware(currentProducer)

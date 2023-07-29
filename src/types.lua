@@ -244,6 +244,14 @@ export type BroadcasterOptions = {
 	hydrateRate: number?,
 
 	--[=[
+		The rate in seconds at which the server should dispatch
+		actions to the clients. If set to `0`, actions will be
+		dispatched within the next frame.
+		@default 0
+	]=]
+	dispatchRate: number?,
+
+	--[=[
 		Runs before actions are dispatched to a player. Can be used to
 		filter actions or manipulate them before sending.
 
@@ -261,6 +269,14 @@ export type BroadcasterOptions = {
 		object, and return a new object if you need to change it.
 	]=]
 	beforeHydrate: ((player: Player, state: { [string]: any }) -> { [string]: any })?,
+
+	--[=[
+		An optional custom hydration function. If provided, this function
+		will be called instead of being implicitly handled in 'dispatch'.
+
+		Useful for reducing load on a single remote if your state is large.
+	]=]
+	hydrate: ((player: Player, state: { [string]: any }) -> ())?,
 
 	--[=[
 		The function that will send the actions to the client.
@@ -292,6 +308,11 @@ export type Broadcaster = {
 		Starts broadcasting state and actions to the given player.
 	]=]
 	start: (self: Broadcaster, player: Player) -> (),
+
+	--[=[
+		Disconnects all listeners and cancels all pending dispatches.
+	]=]
+	destroy: (self: Broadcaster) -> (),
 }
 
 --[=[
@@ -308,6 +329,15 @@ export type BroadcastReceiver = {
 		Dispatches actions broadcasted by the server.
 	]=]
 	dispatch: (self: BroadcastReceiver, actions: { BroadcastAction }) -> (),
+
+	--[=[
+		Hydrates the client with the latest state from the server.
+		Normally, hydration is implicitly handled in 'dispatch' unless a
+		custom hydration handler is provided in the broadcaster options.
+
+		Useful for reducing load on a single remote if your state is large.
+	]=]
+	hydrate: (self: BroadcastReceiver, state: { [string]: any }) -> (),
 }
 
 return nil

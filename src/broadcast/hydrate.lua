@@ -9,17 +9,11 @@ local function createHydrateAction(state: any): types.BroadcastAction
 	}
 end
 
-local function consumeHydrateAction(actions: { types.BroadcastAction }): types.BroadcastAction?
-	local action = actions[1]
-
-	if action and action.name == HYDRATE then
-		return action.arguments[1]
-	end
-
-	return nil
+local function isHydrate(action: types.BroadcastAction): boolean
+	return action.name == HYDRATE
 end
 
 return {
 	createHydrateAction = createHydrateAction,
-	consumeHydrateAction = consumeHydrateAction,
+	isHydrate = isHydrate,
 }

@@ -1,8 +1,8 @@
 local RunService = game:GetService("RunService")
 
-local function setInterval(callback: () -> (), interval: number)
+local function setInterval(callback: () -> (), interval: number): () -> ()
 	if interval < 0 then
-		return
+		return function() end
 	end
 
 	local timer = 0
@@ -12,7 +12,7 @@ local function setInterval(callback: () -> (), interval: number)
 		timer += dt
 
 		if timer >= interval then
-			timer = 0
+			timer -= interval
 			callback()
 		end
 	end)

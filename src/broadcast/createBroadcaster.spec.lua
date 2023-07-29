@@ -2,7 +2,6 @@ return function()
 	local createProducer = require(script.Parent.Parent.createProducer)
 	local combineProducers = require(script.Parent.Parent.combineProducers)
 	local createBroadcaster = require(script.Parent.createBroadcaster)
-	local hydrate = require(script.Parent.hydrate)
 
 	local mockPlayer: Player = {} :: any
 	local producers, producer
@@ -113,7 +112,7 @@ return function()
 			},
 			dispatch = function(player, _actions)
 				actions = _actions
-				hydrateState = hydrateState or hydrate.consumeHydrateAction(actions)
+				hydrateState = hydrateState or actions[1].arguments[1]
 			end,
 		})
 
@@ -141,7 +140,7 @@ return function()
 		local broadcaster = createBroadcaster({
 			producers = producers,
 			dispatch = function(player, actions)
-				state = hydrate.consumeHydrateAction(actions)
+				state = actions[1].arguments[1]
 			end,
 			beforeHydrate = function(_player, state)
 				player = _player
@@ -187,5 +186,36 @@ return function()
 		expect(#actions).to.equal(1)
 		expect(actions[1].name).to.equal("incrementFoo")
 		expect(actions[1].arguments[1]).to.equal(1)
+	end)
+
+	it("should accept a hydrate function", function()
+		local actions, state, player
+
+		local broadcaster = createBroadcaster({
+			producers = producers,
+			dispatch = function(...)
+				player, actions = ...
+			end,
+			hydrate = function(...)
+				player, state = ...
+			end,
+		})
+
+		producer:applyMiddleware(broadcaster.middleware)
+		broadcaster:start(mockPlayer)
+
+		expect(player).to.equal(mockPlayer)
+		expect(state).to.be.a("table")
+		expect(state.foo.count).to.equal(0)
+		expect(state.bar.count).to.equal(0)
+		expect(actions).to.never.be.ok()
+
+		producer.incrementFoo(1)
+		producer.incrementBar(2)
+		broadcaster:flush()
+
+		expect(actions).to.be.a("table")
+		expect(actions[1].name).to.equal("incrementFoo")
+		expect(actions[2].name).to.equal("incrementBar")
 	end)
 end

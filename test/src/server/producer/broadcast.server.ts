@@ -5,8 +5,12 @@ import { producer } from "./";
 
 const broadcaster = createBroadcaster({
 	producers: slices,
+	dispatchRate: 1 / 20,
 	dispatch: (player, actions) => {
 		remotes.dispatch.fire(player, actions);
+	},
+	hydrate: (player, state) => {
+		remotes.hydrate.fire(player, state);
 	},
 });
 

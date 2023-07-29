@@ -12,4 +12,8 @@ remotes.dispatch.connect((actions) => {
 	receiver.dispatch(actions);
 });
 
+remotes.hydrate.connect((state) => {
+	receiver.hydrate(state);
+});
+
 producer.applyMiddleware(receiver.middleware);

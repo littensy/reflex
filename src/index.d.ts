@@ -178,7 +178,9 @@ export declare function createBroadcaster<Producers extends ProducerMap>(
  * @param options The options for the broadcast receiver.
  * @return The broadcast receiver.
  */
-export declare function createBroadcastReceiver(options: BroadcastReceiverOptions): BroadcastReceiver;
+export declare function createBroadcastReceiver<Producers extends ProducerMap>(
+	options: BroadcastReceiverOptions,
+): BroadcastReceiver<Producers>;
 
 /**
  * A middleware that logs all dispatched actions to the console.
@@ -574,10 +576,19 @@ export interface BroadcasterOptions<Producers extends ProducerMap> {
 
 	/**
 	 * The rate at which the server should hydrate the clients
-	 * with the latest state.
+	 * with the latest state. If this is set to `-1`, the server
+	 * will not hydrate the clients.
 	 * @default 60
 	 */
 	readonly hydrateRate?: number;
+
+	/**
+	 * The rate at which the server should broadcast actions to
+	 * the clients. If this is set to `0`, actions are broadcast
+	 * with the next server heartbeat.
+	 * @default 0
+	 */
+	readonly dispatchRate?: number;
 
 	/**
 	 * Runs before actions are dispatched to a player. Can be used to
@@ -602,6 +613,19 @@ export interface BroadcasterOptions<Producers extends ProducerMap> {
 	 * @param actions The actions to broadcast.
 	 */
 	readonly dispatch: (player: Player, actions: BroadcastAction[]) => void;
+
+	/**
+	 * An optional custom hydration function. If provided, this function
+	 * will be called instead of being implicitly handled in 'dispatch'.
+	 * Useful for reducing load on a single remote if your state is large.
+	 *
+	 * **Note:** If defined, the client should call `receiver.hydrate` to
+	 * hydrate the state.
+	 *
+	 * @param player The player to hydrate.
+	 * @param state The state to hydrate the player with.
+	 */
+	readonly hydrate?: (player: Player, state: CombineStates<Producers>) => void;
 }
 
 /**
@@ -636,7 +660,7 @@ export interface Broadcaster {
  * them to the client's state.
  * @client
  */
-export interface BroadcastReceiver {
+export interface BroadcastReceiver<Producers extends ProducerMap> {
 	/**
 	 * The middleware that should be applied to the client's root producer.
 	 */
@@ -648,4 +672,12 @@ export interface BroadcastReceiver {
 	 * @param actions The actions to dispatch.
 	 */
 	dispatch(actions: BroadcastAction[]): void;
+
+	/**
+	 * Hydrates the client's state with the given state. This should only be
+	 * called if a custom hydration function is provided in the broadcaster
+	 * options.
+	 * @param state The state to hydrate the client with.
+	 */
+	hydrate(state: CombineStates<Producers>): void;
 }
