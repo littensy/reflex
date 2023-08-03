@@ -4,8 +4,7 @@
 	"description": "A state container for side effects",
 	"main": "src/init.lua",
 	"scripts": {
-		"watch": "rbxtsc -w --type=game -p test -i test/include",
-		"serve": "rojo serve test/default.project.json"
+		"analyze": "sh scripts/analyze.sh"
 	},
 	"keywords": [
 		"rodux",

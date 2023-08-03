@@ -14,33 +14,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - uses: bahmutov/npm-install@v1
+      - uses: ok-nick/setup-aftman@v0
         with:
-          version: 8.6.4
-
-      - name: Install Aftman
-        uses: ok-nick/setup-aftman@v0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: |
-          wally install
-          pnpm install
+        run: wally install
 
       - name: Generate sourcemap.json
         run: rojo sourcemap default.project.json -o sourcemap.json
 
       - name: Download global Roblox types
-        run: curl -o scripts/roblox.d.lua https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.lua  
+        run: curl -o scripts/roblox.d.lua https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.lua
 
       - name: Analyze
-        run: luau-lsp analyze --defs=scripts/testez.d.lua --defs=scripts/roblox.d.lua --sourcemap=sourcemap.json --ignore="**/_Index/**" --no-strict-dm-types src
+        run: luau-lsp analyze --defs=scripts/roblox.d.lua --defs=scripts/testez.d.lua --sourcemap=sourcemap.json --no-strict-dm-types src
 
       - name: Check code quality
         run: |
           selene src
           stylua --check src
-          pnpm eslint src
-          pnpm eslint test/src
+          yarn eslint src
+          yarn eslint test/src
 
       - name: Build model
         run: rojo build -o reflex.rbxm

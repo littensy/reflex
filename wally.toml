@@ -5,7 +5,18 @@ version = "4.2.0"
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
-exclude = ["sourcemap.json", "node_modules", "Packages", "test", "docs"]
+exclude = ["**"]
+include = [
+	"src",
+	"src/**",
+	"default.project.json",
+	"wally.toml",
+	"LICENSE.md",
+	"README.md",
+]
 
 [dependencies]
 Promise = "evaera/promise@4.0.0"
+
+[dev-dependencies]
+TestEZ = "roblox/testez@0.4.1"
