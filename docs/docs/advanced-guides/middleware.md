@@ -35,7 +35,7 @@ Reflex middleware has three layers of control that enable you to customize the b
 <TabItem value="TypeScript" default>
 
 ```ts
-const middleware: ProducerMiddleware = (producer) => {
+const middleware: ReflexMiddleware = (producer) => {
 	return (nextAction, name) => {
 		return (...args) => nextAction(...args);
 	};
@@ -81,7 +81,7 @@ We can create a **middleware** that logs actions as they are dispatched. Let's s
 <TabItem value="TypeScript" default>
 
 ```ts
-const loggerMiddleware: ProducerMiddleware = (producer) => {
+const loggerMiddleware: ReflexMiddleware = (producer) => {
 	// highlight-start
 	producer.subscribe((state) => {
 		print("next state:", state);
@@ -122,7 +122,7 @@ The next **action wrapper** is called once per action when the middleware is app
 <TabItem value="TypeScript" default>
 
 ```ts
-const loggerMiddleware: ProducerMiddleware = (producer) => {
+const loggerMiddleware: ReflexMiddleware = (producer) => {
 	producer.subscribe((state) => {
 		print("next state:", state);
 	});
@@ -216,7 +216,7 @@ Another common use case for middleware is crash reporting. You can use middlewar
 <TabItem value="TypeScript" default>
 
 ```ts
-const crashReporterMiddleware: ProducerMiddleware = (producer) => {
+const crashReporterMiddleware: ReflexMiddleware = (producer) => {
 	return (nextAction, name) => {
 		return (...args) => {
 			try {
@@ -261,7 +261,7 @@ You can also use middleware to cancel actions. If you don't want an action to be
 <TabItem value="TypeScript" default>
 
 ```ts
-const cancelMiddleware: ProducerMiddleware = (producer) => {
+const cancelMiddleware: ReflexMiddleware = (producer) => {
 	return (nextAction, name) => {
 		if (name !== "increment") {
 			return nextAction;
@@ -459,7 +459,7 @@ We can also insert a middleware that modifies the action's arguments! Let's say 
 <TabItem value="TypeScript" default>
 
 ```ts
-const doubleMiddleware: ProducerMiddleware = (producer) => {
+const doubleMiddleware: ReflexMiddleware = (producer) => {
 	return (nextAction, name) => {
 		if (name !== "increment") {
 			return nextAction;

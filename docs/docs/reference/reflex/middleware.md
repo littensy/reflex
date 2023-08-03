@@ -82,7 +82,7 @@ They sound complicated, but can become straightforward when observing how they w
 <TabItem value="TypeScript" default>
 
 ```ts
-const loggerMiddleware: ProducerMiddleware = (producer) => {
+const loggerMiddleware: ReflexMiddleware = (producer) => {
 	// Producer-level, called by applyMiddleware
 
 	producer.subscribe((state) => {
@@ -199,7 +199,7 @@ A throttle middleware would cancel actions if they're called within a certain ti
 <TabItem value="TypeScript" default>
 
 ```ts
-const throttleMiddleware: ProducerMiddleware = (producer) => {
+const throttleMiddleware: ReflexMiddleware = (producer) => {
 	return (dispatch, name) => {
 		let resumptionTime = 0;
 

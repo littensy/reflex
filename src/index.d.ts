@@ -67,9 +67,10 @@ export declare function combineProducers<Producers extends ProducerMap>(
  *
  * @example
  * ```ts
- * const loggerMiddleware: ProducerMiddleware = (dispatch, resolve, producer) => {
- * 	return (...args) => {
- * 		print(`producer.${resolve()} called`, ...args);
+ * const loggerMiddleware: ReflexMiddleware = (producer) => {
+ * 	print("Initial state:", producer.getState());
+ * 	return (dispatch, name) => (...args) => {
+ * 		print(`Dispatching ${name}:`, ...args);
  * 		return dispatch(...args);
  * 	};
  * };
@@ -81,7 +82,7 @@ export declare function combineProducers<Producers extends ProducerMap>(
  * @param middlewares A list of middleware to apply.
  * @return A producer enhancer.
  */
-export declare function applyMiddleware(...middlewares: ProducerMiddleware[]): <T extends Producer>(producer: T) => T;
+export declare function applyMiddleware(...middlewares: ReflexMiddleware[]): <T extends Producer>(producer: T) => T;
 
 /**
  * Creates a memoized selector function. The selector is only called if the
@@ -187,7 +188,7 @@ export declare function createBroadcastReceiver<Producers extends ProducerMap>(
  * @example
  * producer.applyMiddleware(loggerMiddleware);
  */
-export declare const loggerMiddleware: ProducerMiddleware;
+export declare const loggerMiddleware: ReflexMiddleware;
 
 /**
  * Returns whether the two given values are shallowly equal.
@@ -391,7 +392,7 @@ interface ProducerImpl<State, Actions> {
 	 *
 	 * @example
 	 * ```ts
-	 * const loggerMiddleware: ProducerMiddleware = (producer) => {
+	 * const loggerMiddleware: ReflexMiddleware = (producer) => {
 	 * 	print("Initial state:", producer.getState());
 	 * 	return (dispatch, name) => (...args) => {
 	 * 		print(`Dispatching ${name}:`, ...args);
@@ -405,7 +406,7 @@ interface ProducerImpl<State, Actions> {
 	 * @param middlewares A list of middleware to apply.
 	 * @return The producer.
 	 */
-	applyMiddleware(...middlewares: ProducerMiddleware<State, Actions>[]): Producer<State, Actions>;
+	applyMiddleware(...middlewares: ReflexMiddleware<Producer<State, Actions>>[]): Producer<State, Actions>;
 }
 
 /**
@@ -454,14 +455,21 @@ export type ProducerDispatchers<State, Actions> = {
 };
 
 /**
+ * @deprecated Use `ReflexMiddleware` instead
+ */
+export type ProducerMiddleware<State = any, Actions = any> = (
+	producer: Producer<State, Actions>,
+) => (dispatch: (...args: unknown[]) => unknown, name: string) => (...args: unknown[]) => unknown;
+
+/**
  * A middleware is a function that is called before an action is dispatched.
  *
  * Initially, a middleware is called once when it is applied to a producer.
  * Next, the returned function is called on a dispatcher in the producer.
  * The final function is called whenever that dispatcher is called.
  */
-export type ProducerMiddleware<State = any, Actions = any> = (
-	producer: Producer<State, Actions>,
+export type ReflexMiddleware<T extends Producer = Producer> = (
+	producer: T,
 ) => (dispatch: (...args: unknown[]) => unknown, name: string) => (...args: unknown[]) => unknown;
 
 /**
@@ -647,7 +655,7 @@ export interface Broadcaster {
 	/**
 	 * The middleware that should be applied to the server's root producer.
 	 */
-	readonly middleware: ProducerMiddleware;
+	readonly middleware: ReflexMiddleware;
 
 	/**
 	 * Marks the given player as ready to receive broadcasts.
@@ -664,7 +672,7 @@ export interface BroadcastReceiver<Producers extends ProducerMap> {
 	/**
 	 * The middleware that should be applied to the client's root producer.
 	 */
-	readonly middleware: ProducerMiddleware;
+	readonly middleware: ReflexMiddleware;
 
 	/**
 	 * Dispatches actions broadcasted by the server. This should only be called

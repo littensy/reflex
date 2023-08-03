@@ -576,7 +576,7 @@ The `applyMiddleware` method is used to apply middleware to the producer. Middle
 <TabItem value="TypeScript" default>
 
 ```ts
-const loggerMiddleware: ProducerMiddleware = (producer) => {
+const loggerMiddleware: ReflexMiddleware = (producer) => {
 	print("initial state:", producer.getState());
 
 	producer.subscribe((state) => {
