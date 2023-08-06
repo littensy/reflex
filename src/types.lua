@@ -1,6 +1,13 @@
-export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }> = Dispatchers & {
-	getState: (<Selection>(self: Producer<State, Dispatchers>, selector: ((state: State) -> any)?) -> State)
-		& (<Selection>(self: Producer<State, Dispatchers>, selector: (state: State) -> Selection) -> Selection),
+local Promise = require(script.Parent.Promise)
+
+export type Cleanup = () -> ()
+
+type NotCallable<T> = T | (() -> ())
+
+export type Producer<State = any, Dispatchers = {}> = Dispatchers & {
+	getState: (<Result>(self: Producer<State, Dispatchers>) -> State)
+		& (<Result>(self: Producer<State, Dispatchers>, selector: (state: State) -> Result) -> Result)
+		& (<Result>(self: Producer<State, Dispatchers>, selector: ((state: State) -> Result)?) -> Result | State),
 
 	setState: (self: Producer<State, Dispatchers>, state: State) -> (),
 
@@ -14,58 +21,61 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 
 	flush: (self: Producer<State, Dispatchers>) -> (),
 
-	subscribe: (<Selection>(
+	subscribe: (<Result>(
 		self: Producer<State, Dispatchers>,
 		listener: (state: State, prevState: State) -> ()
-	) -> () -> ()) & (<Selection>(
+	) -> Cleanup) & (<Result>(
 		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> ()) & <Selection>(
+		selector: ((state: State) -> Result)?,
+		listener: (state: Result, prevState: Result) -> ()
+	) -> Cleanup) & <Result>(
 		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		predicate: (state: Selection, prevState: Selection) -> boolean,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> (),
+		selector: ((state: State) -> Result)?,
+		predicate: ((state: Result, prevState: Result) -> boolean)?,
+		listener: (state: Result, prevState: Result) -> ()
+	) -> Cleanup,
 
-	once: (<Selection>(
+	once: (<Result>(
 		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> ()) & <Selection>(
+		listener: (state: Result, prevState: Result) -> ()
+	) -> Cleanup) & (<Result>(
 		self: Producer<State, Dispatchers>,
-		selector: (state: State) -> Selection,
-		predicate: ((state: Selection, prevState: Selection) -> boolean)?,
-		listener: (state: Selection, prevState: Selection) -> ()
-	) -> () -> (),
+		selector: ((state: State) -> Result)?,
+		listener: (state: Result, prevState: Result) -> ()
+	) -> Cleanup) & <Result>(
+		self: Producer<State, Dispatchers>,
+		selector: ((state: State) -> Result)?,
+		predicate: ((state: Result, prevState: Result) -> boolean)?,
+		listener: (state: Result, prevState: Result) -> ()
+	) -> Cleanup,
 
-	wait: <Selection>(
+	wait: <Result>(
 		self: Producer<State, Dispatchers>,
-		selector: ((state: State) -> Selection)?,
-		predicate: ((state: Selection, prevState: Selection) -> boolean)?
-	) -> any,
+		selector: (state: State) -> Result,
+		predicate: ((state: Result, prevState: Result) -> boolean)?
+	) -> Promise.Promise<Result>,
 
 	observe: (<K, V>(
 		self: Producer<State, Dispatchers>,
 		selector: (state: State) -> { [K]: V },
 		discriminator: ((item: V, index: K) -> unknown)?,
-		observer: (item: V, index: K) -> (() -> ())?
-	) -> () -> ()) & (<K, V>(
+		observer: (item: V, index: K) -> Cleanup?
+	) -> Cleanup) & (<K, V>(
 		self: Producer<State, Dispatchers>,
 		selector: (state: State) -> { [K]: V },
-		observer: (item: V, index: K) -> (() -> ())?
-	) -> () -> ()),
+		observer: (item: V, index: K) -> Cleanup?
+	) -> Cleanup),
 
 	observeWhile: (<T>(
 		self: Producer<State, Dispatchers>,
 		selector: (state: State) -> T,
 		predicate: (state: T, prevState: T) -> boolean,
-		observer: (state: T) -> (() -> ())?
-	) -> () -> ()) & (<T>(
+		observer: (state: T) -> Cleanup?
+	) -> Cleanup) & (<T>(
 		self: Producer<State, Dispatchers>,
 		selector: (state: State) -> T?,
-		observer: (state: T) -> (() -> ())?
-	) -> () -> ()),
+		observer: (state: T) -> Cleanup?
+	) -> Cleanup),
 
 	destroy: (self: Producer<State, Dispatchers>) -> (),
 
@@ -75,6 +85,12 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 		self: Producer<State, Dispatchers>,
 		...(producer: any) -> (dispatch: (...any) -> any, name: string) -> (...any) -> any
 	) -> Producer<State, Dispatchers>,
+
+	Connect: NotCallable<(self: Producer<State, Dispatchers>, listener: (state: State) -> ()) -> RBXScriptConnection>,
+
+	Once: NotCallable<(self: Producer<State, Dispatchers>, listener: (state: State) -> ()) -> RBXScriptConnection>,
+
+	Wait: NotCallable<(self: Producer<State, Dispatchers>) -> State>,
 }
 
 export type Middleware = (producer: Producer) -> (dispatch: (...any) -> any, name: string) -> (...any) -> any

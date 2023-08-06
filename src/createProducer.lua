@@ -1,11 +1,25 @@
 local Promise = require(script.Parent.Promise)
 local types = require(script.Parent.types)
+local applyMiddleware = require(script.Parent.applyMiddleware)
+local createChangeSelector = require(script.Parent.utils.createChangeSelector)
+local logger = require(script.Parent.utils.logger)
+
+local WARN_BAD_SELECTOR = [[
+Reflex detected a selector function that returns conflicting values for the same input!
+This is likely caused by one of the following:
+
+- The selector function is not memoized and should use 'createSelector'
+- The selector result is inconsistent between calls
+
+Learn more about writing selectors here:
+https://littensy.github.io/reflex/docs/guides/using-selectors
+]]
 
 local function createProducer<State>(
 	initialState: State,
-	actions: { [string]: (state: State, ...any) -> any }
+	actions: { [string]: (state: State, ...any) -> State }
 ): types.Producer<State>
-	local producer: types.Producer<State, { [string]: any }>
+	local producer = {}
 	local dispatchers = {}
 
 	local currentListeners: { (State) -> () }? = {}
@@ -15,63 +29,6 @@ local function createProducer<State>(
 	local state = initialState
 	local stateSinceLastFlush = initialState
 	local pendingFlush: thread?
-
-	local function ensureCanMutateNextListeners()
-		if nextListeners == currentListeners then
-			nextListeners = table.clone(currentListeners :: {})
-		end
-	end
-
-	local function scheduleFlush()
-		if pendingFlush then
-			return
-		end
-
-		task.defer(function()
-			pendingFlush = nil
-			producer:flush()
-		end)
-	end
-
-	local function subscribeInternal(listener: (state: State) -> ())
-		local id = nextListenerId
-		local connected = true
-
-		ensureCanMutateNextListeners()
-		nextListeners[id] = listener
-		nextListenerId += 1
-
-		return function()
-			if connected then
-				connected = false
-				ensureCanMutateNextListeners()
-				nextListeners[id] = nil
-				currentListeners = nil
-			end
-		end
-	end
-
-	local function getState<Selection>(_, selector): State & Selection
-		return if selector then selector(state) else state
-	end
-
-	local function setState(_, newState)
-		state = newState
-		scheduleFlush()
-	end
-
-	local function resetState()
-		state = initialState
-		scheduleFlush()
-	end
-
-	local function getDispatchers()
-		return dispatchers
-	end
-
-	local function getActions()
-		return actions
-	end
 
 	local function flush()
 		if pendingFlush then
@@ -83,56 +40,129 @@ local function createProducer<State>(
 			return
 		end
 
-		local currentState = state
 		stateSinceLastFlush = state
 		currentListeners = nextListeners
 
 		for _, listener in currentListeners :: { (State) -> () } do
-			task.spawn(listener, currentState)
+			task.spawn(listener, stateSinceLastFlush)
 		end
 	end
 
-	local function subscribe<T>(self, ...)
-		local arguments = select("#", ...)
-		local selector, predicate, listener
+	local function scheduleFlush()
+		if pendingFlush then
+			return
+		end
 
-		if arguments >= 3 then
+		task.defer(function()
+			pendingFlush = nil
+			flush()
+		end)
+	end
+
+	-- This allows us to mutate nextListeners while iterating over
+	-- currentListeners. By the end of the iteration, any changes made
+	-- will be applied to a copy of currentListeners.
+	local function ensureCanMutateNextListeners()
+		if currentListeners == nextListeners then
+			nextListeners = table.clone(currentListeners :: {})
+		end
+	end
+
+	local function subscribe(listener: (state: State) -> ())
+		local id = nextListenerId
+		local connected = true
+
+		ensureCanMutateNextListeners()
+		nextListeners[id] = listener
+		nextListenerId += 1
+
+		return function()
+			if not connected then
+				return
+			end
+
+			connected = false
+			ensureCanMutateNextListeners()
+			nextListeners[id] = nil
+
+			-- A reference to this listener may still be held by currentListeners,
+			-- so we should set it to nil to prevent a memory leak. This is okay
+			-- because it is set back to nextListeners before the next iteration.
+			currentListeners = nil
+		end
+	end
+
+	function producer.getState<Result>(self: types.Producer<State>, selector: ((state: State) -> Result)?): State & Result
+		return (if selector then selector(state) else state) :: State & Result
+	end
+
+	function producer.setState(self: types.Producer<State>, newState: State)
+		state = newState
+		scheduleFlush()
+	end
+
+	function producer.resetState(self: types.Producer<State>)
+		state = initialState
+		scheduleFlush()
+	end
+
+	function producer.getDispatchers(self: types.Producer<State>)
+		return dispatchers
+	end
+
+	function producer.getActions(self: types.Producer<State>)
+		return actions
+	end
+
+	function producer.flush(self: types.Producer<State>)
+		flush()
+	end
+
+	function producer.subscribe<Result>(self: types.Producer<State>, ...: any): types.Cleanup
+		local selector: ((state: State) -> Result)?
+		local predicate: ((current: State | Result, previous: State | Result) -> boolean)?
+		local listener: (current: State | Result, previous: State | Result) -> ()
+
+		if select("#", ...) >= 3 then
 			selector, predicate, listener = ...
-		elseif arguments == 2 then
+		elseif select("#", ...) == 2 then
 			selector, listener = ...
 		else
 			listener = ...
 		end
 
-		local selection = self:getState(selector)
+		local currentResult = if selector then selector(state) else state
 
-		if selector then
-			testSelector(selector, selection, state)
+		if selector and selector(state) ~= currentResult then
+			-- Emit a warning if the selector function returns conflicting values
+			-- for the same input. This is likely caused by un-memoized selectors
+			-- or inconsistent selector results.
+			logger.warn(WARN_BAD_SELECTOR .. "\n" .. debug.traceback("Function traceback", 2))
 		end
 
-		return subscribeInternal(function(nextState)
-			local nextSelection = if selector then selector(nextState) else nextState
+		return subscribe(function(nextState)
+			local nextResult = if selector then selector(nextState) else nextState
 
-			if selection == nextSelection then
+			if currentResult == nextResult then
 				return
 			end
 
-			local prevSelection = selection
-			selection = nextSelection
-
-			if not predicate or predicate(nextSelection, prevSelection) then
-				listener(nextSelection, prevSelection)
+			if not predicate or predicate(nextResult, currentResult) then
+				local previousResult = currentResult
+				currentResult = nextResult
+				listener(nextResult, previousResult)
 			end
 		end)
 	end
 
-	local function once<T>(self, ...)
-		local arguments = select("#", ...)
-		local selector, predicate, listener
+	function producer.once<Result>(self: types.Producer<State>, ...: any): types.Cleanup
+		local selector: ((state: State) -> Result)?
+		local predicate: ((current: State | Result, previous: State | Result) -> boolean)?
+		local listener: (current: State | Result, previous: State | Result) -> ()
 
-		if arguments >= 3 then
+		if select("#", ...) >= 3 then
 			selector, predicate, listener = ...
-		elseif arguments == 2 then
+		elseif select("#", ...) == 2 then
 			selector, listener = ...
 		else
 			listener = ...
@@ -140,16 +170,20 @@ local function createProducer<State>(
 
 		local unsubscribe
 
-		unsubscribe = self:subscribe(selector, predicate, function(state, prevState)
+		unsubscribe = self:subscribe(selector, predicate, function(current, previous)
 			unsubscribe()
-			listener(state, prevState)
+			listener(current, previous)
 		end)
 
 		return unsubscribe
 	end
 
-	local function wait<T>(self, selector, predicate)
-		return Promise.new(function(resolve, _, onCancel)
+	function producer.wait<Result>(
+		self: types.Producer<State>,
+		selector: (state: State) -> Result,
+		predicate: ((current: Result, previous: Result) -> boolean)?
+	): Promise.Promise<Result>
+		return Promise.new(function(resolve: (Result) -> (), reject, onCancel)
 			local unsubscribe = self:once(selector, predicate, function(state)
 				resolve(state)
 			end)
@@ -158,83 +192,88 @@ local function createProducer<State>(
 		end)
 	end
 
-	local function observe<T, U>(self, ...)
-		local arguments = select("#", ...)
-		local selector, discriminator, observer
+	function producer.observe<K, V>(self: types.Producer<State>, ...: any): types.Cleanup
+		local selector: (state: State) -> { [K]: V }
+		local discriminator: ((item: V, index: K) -> unknown)?
+		local observer: (item: V, index: K) -> types.Cleanup?
 
-		if arguments >= 3 then
+		if select("#", ...) >= 3 then
 			selector, discriminator, observer = ...
 		else
 			selector, observer = ...
 		end
 
-		local cleanupById = {}
-		local selectDiffs = createDiffSelector(selector, discriminator)
+		local selectChanges = createChangeSelector(selector, discriminator)
+		local cleanupFunctions: { [unknown]: types.Cleanup? } = {}
 
-		local function checkDiffs(diffs)
-			for _, item in diffs.deletions do
-				local index = diffs.keys[item]
-				local id = if discriminator then discriminator(item, index) else item
-				local cleanup = cleanupById[id]
+		local function identify(item: V, index: K): unknown
+			return if discriminator then discriminator(item, index) else item
+		end
+
+		local function onChange(changes)
+			for _, item in changes.deletions do
+				local index = changes.keys[item]
+				local id = identify(item, index)
+				local cleanup = cleanupFunctions[id]
 
 				if cleanup then
-					cleanupById[id] = nil
+					cleanupFunctions[id] = nil
 					cleanup()
 				end
 			end
 
-			for _, item in diffs.additions do
-				local index = diffs.keys[item]
-				local id = if discriminator then discriminator(item, index) else item
+			for _, item in changes.additions do
+				local index = changes.keys[item]
+				local id = identify(item, index)
 
-				if not cleanupById[id] then
-					cleanupById[id] = observer(item, index)
+				if not cleanupFunctions[id] then
+					cleanupFunctions[id] = observer(item, index)
 				end
 			end
 		end
 
-		local unsubscribe = self:subscribe(selectDiffs, checkDiffs)
+		local unsubscribe = self:subscribe(selectChanges, onChange)
 
-		checkDiffs(self:getState(selectDiffs))
+		onChange(selectChanges(state))
 
 		return function()
 			unsubscribe()
 
-			for _, cleanup in cleanupById do
-				cleanup()
+			for _, cleanup in cleanupFunctions do
+				(cleanup :: types.Cleanup)()
 			end
 
-			table.clear(cleanupById)
+			table.clear(cleanupFunctions)
 		end
 	end
 
-	local function observeWhile<T>(self, ...)
-		local arguments = select("#", ...)
-		local selector, predicate, observer
+	function producer.observeWhile<T>(self: types.Producer<State>, ...: any): types.Cleanup
+		local selector: (state: State) -> T
+		local predicate: ((current: T, previous: T) -> boolean)?
+		local observer: (state: T) -> types.Cleanup?
 
-		if arguments >= 3 then
+		if select("#", ...) >= 3 then
 			selector, predicate, observer = ...
 		else
 			selector, observer = ...
 		end
 
-		local initialSelection = self:getState(selector)
-		local cleanup
+		local cleanup: types.Cleanup?
 
-		local function updateObserver(selection, lastSelection)
-			local shouldObserve = if predicate then predicate(selection, lastSelection) else selection
+		local function onChange(current, previous)
+			local shouldObserve = if predicate then predicate(current, previous) else current
 
 			if shouldObserve and not cleanup then
-				cleanup = observer(selection)
+				cleanup = observer(current)
 			elseif not shouldObserve and cleanup then
-				task.spawn(cleanup)
+				cleanup()
 				cleanup = nil
 			end
 		end
 
-		local unsubscribe = self:subscribe(selector, updateObserver)
+		local unsubscribe = self:subscribe(selector, onChange)
 
-		updateObserver(initialSelection, initialSelection)
+		onChange(selector(state), selector(state))
 
 		return function()
 			unsubscribe()
@@ -245,75 +284,53 @@ local function createProducer<State>(
 		end
 	end
 
-	local function enhance<T>(self, enhancer)
+	function producer.enhance<Enhanced>(self: types.Producer<State>, enhancer: (any) -> Enhanced): Enhanced
 		return enhancer(self)
 	end
 
-	local function applyMiddleware(self, ...)
-		return self:enhance(applyMiddlewareEnhancer(...))
+	function producer.applyMiddleware(self: types.Producer<State>, ...: types.Middleware): types.Producer<State>
+		return self:enhance(applyMiddleware(...))
 	end
 
-	local function destroy()
+	function producer.destroy(self: types.Producer<State>)
 		if pendingFlush then
 			task.cancel(pendingFlush)
 			pendingFlush = nil
 		end
 
-		if currentListeners then
-			table.clear(currentListeners)
-		end
-
+		currentListeners = nil
 		table.clear(nextListeners)
 	end
 
-	local function compatConnect(self, listener)
+	function producer.Connect(self: types.Producer<State>, listener: (state: State) -> ()): RBXScriptConnection
 		local unsubscribe = self:subscribe(listener)
+
 		return {
 			Connected = true,
 			Disconnect = function(self)
 				self.Connected = false
 				unsubscribe()
 			end,
-		}
+		} :: any
 	end
 
-	local function compatOnce(self, listener)
+	function producer.Once(self: types.Producer<State>, listener: (state: State) -> ()): RBXScriptConnection
 		local unsubscribe = self:once(listener)
+
 		return {
 			Connected = true,
 			Disconnect = function(self)
 				self.Connected = false
 				unsubscribe()
 			end,
-		}
+		} :: any
 	end
 
-	local function compatWait(self)
+	function producer.Wait(self: types.Producer<State>): State
 		return self:wait(function(state)
 			return state
 		end):expect()
 	end
-
-	producer = {
-		getState = getState,
-		setState = setState,
-		resetState = resetState,
-		getDispatchers = getDispatchers,
-		getActions = getActions,
-		flush = flush,
-		subscribe = subscribe,
-		once = once,
-		wait = wait,
-		observe = observe,
-		observeWhile = observeWhile,
-		enhance = enhance,
-		applyMiddleware = applyMiddleware,
-		destroy = destroy,
-		-- Signal API compatibility
-		Connect = compatConnect,
-		Once = compatOnce,
-		Wait = compatWait,
-	}
 
 	for name, action in actions do
 		local function dispatch(...)
@@ -324,8 +341,8 @@ local function createProducer<State>(
 
 		dispatchers[name] = dispatch
 
-		if not (producer :: {})[name] then
-			(producer :: {})[name] = dispatch
+		if not producer[name] then
+			producer[name] = dispatch
 		else
 			warn(`Producer already has a property named {name}`)
 		end
@@ -333,3 +350,5 @@ local function createProducer<State>(
 
 	return producer
 end
+
+return createProducer
