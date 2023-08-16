@@ -33,7 +33,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 
 	-- Actions are stored in a pending queue for each player. This is because
 	-- it's possible for a player to be hydrated before the broadcaster can
-	-- flush its actions.
+	-- flush its actions, so each player needs to have their own queue.
 	local function pendActionOnDispatch(name: string, ...: unknown)
 		for player, queue in pendingActionsByPlayer do
 			local action: types.BroadcastAction = {
