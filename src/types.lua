@@ -4,7 +4,7 @@ export type Cleanup = () -> ()
 
 type NotCallable<T> = T | (() -> ())
 
-export type Producer<State = any, Dispatchers = {}> = Dispatchers & {
+export type Producer<State = any, Dispatchers = { [any]: any }> = Dispatchers & {
 	getState: (<Result>(self: Producer<State, Dispatchers>) -> State)
 		& (<Result>(self: Producer<State, Dispatchers>, selector: (state: State) -> Result) -> Result)
 		& (<Result>(self: Producer<State, Dispatchers>, selector: ((state: State) -> Result)?) -> Result | State),
@@ -95,7 +95,7 @@ export type Producer<State = any, Dispatchers = {}> = Dispatchers & {
 
 export type Middleware = (producer: Producer) -> (dispatch: (...any) -> any, name: string) -> (...any) -> any
 
-export type ProducerMap = { [string]: Producer }
+export type ProducerSlices = { [string]: Producer }
 
 export type BroadcastAction = {
 	name: string,
@@ -103,7 +103,7 @@ export type BroadcastAction = {
 }
 
 export type BroadcasterOptions = {
-	producers: ProducerMap,
+	producers: ProducerSlices,
 	hydrateRate: number?,
 	dispatchRate: number?,
 	beforeDispatch: ((player: Player, action: BroadcastAction) -> BroadcastAction?)?,
@@ -115,6 +115,7 @@ export type BroadcasterOptions = {
 export type Broadcaster = {
 	middleware: Middleware,
 	start: (self: Broadcaster, player: Player) -> (),
+	flush: (self: Broadcaster) -> (),
 	destroy: (self: Broadcaster) -> (),
 }
 

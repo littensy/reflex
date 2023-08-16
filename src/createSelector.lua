@@ -54,10 +54,6 @@ type CreateSelectorFunction =
 
 type EqualityCheck<T = any> = (current: T, previous: T) -> boolean
 
-type DependencyArray = { (...any) -> any }
-
-type Combiner = (...any) -> any
-
 type MemoizeOptions<Result> = {
 	equalityCheck: EqualityCheck?,
 	resultEqualityCheck: EqualityCheck<Result>?,
@@ -106,19 +102,19 @@ local function memoize(
 	end
 end
 
-local function createSelector(...: any): (...any) -> any
+local function configure(...: any): ({ () -> any }, () -> any, MemoizeOptions<any>)
 	local arguments = select("#", ...)
 
-	local dependencies: DependencyArray
-	local combiner: Combiner
-	local equalityOrOptions: MemoizeOptions<any> | EqualityCheck<any>
+	local dependencies: { () -> any }
+	local combiner: () -> any
+	local configuration: MemoizeOptions<any> | EqualityCheck<any>
 
 	if type(...) == "table" then
-		-- { ... }, combiner, equalityOrOptions
-		dependencies, combiner, equalityOrOptions = ...
+		-- { ... }, combiner, configuration
+		dependencies, combiner, configuration = ...
 	elseif select(-1, ...) == "table" then
 		-- ..., combiner, options
-		dependencies, combiner, equalityOrOptions = table.create(arguments - 2), select(-2, ...), select(-1, ...)
+		dependencies, combiner, configuration = table.create(arguments - 2), select(-2, ...), select(-1, ...)
 		table.move(table.pack(...), 1, arguments - 2, 1, dependencies)
 	else
 		-- ..., combiner
@@ -126,12 +122,18 @@ local function createSelector(...: any): (...any) -> any
 		table.move(table.pack(...), 1, arguments - 1, 1, dependencies)
 	end
 
-	local options: MemoizeOptions<any> = if type(equalityOrOptions) == "function"
-		then { equalityCheck = equalityOrOptions }
-		else equalityOrOptions or {}
+	local options: MemoizeOptions<any> = if type(configuration) == "function"
+		then { equalityCheck = configuration }
+		else configuration or {}
 
+	return dependencies, combiner, options
+end
+
+local function createSelector(...: any): (...any) -> any
+	local dependencies, combiner, options = configure(...)
 	local dependencyCount = #dependencies
 	local inputs = table.create(dependencyCount)
+
 	local memoizedCombiner = memoize(combiner, options.equalityCheck, options.resultEqualityCheck)
 
 	return memoize(function(...)
