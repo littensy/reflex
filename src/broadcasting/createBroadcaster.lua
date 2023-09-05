@@ -42,13 +42,7 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 			}
 
 			if options.beforeDispatch then
-				local newAction = options.beforeDispatch(player, action)
-
-				if newAction then
-					action = newAction
-				else
-					return
-				end
+				action = options.beforeDispatch(player, action) :: types.BroadcastAction
 			end
 
 			table.insert(queue, action)
@@ -72,28 +66,6 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 			options.hydrate(player, globalState)
 		else
 			options.dispatch(player, hydration.createHydratePayload(globalState))
-		end
-	end
-
-	local function init()
-		local hydrateHandle = setInterval(function()
-			for player in pendingActionsByPlayer do
-				hydratePlayer(player)
-			end
-		end, options.hydrateRate or 60)
-
-		local flushHandle = setInterval(function()
-			broadcaster:flush()
-		end, options.dispatchRate or 0)
-
-		local playerRemoving = Players.PlayerRemoving:Connect(function(player)
-			pendingActionsByPlayer[player] = nil
-		end)
-
-		return function()
-			hydrateHandle()
-			flushHandle()
-			playerRemoving:disconnect()
 		end
 	end
 
@@ -136,11 +108,33 @@ local function createBroadcaster(options: types.BroadcasterOptions): types.Broad
 		end
 	end
 
+	local function setup()
+		local stopHydrate = setInterval(function()
+			for player in pendingActionsByPlayer do
+				hydratePlayer(player)
+			end
+		end, options.hydrateRate or 60)
+
+		local stopFlush = setInterval(function()
+			broadcaster:flush()
+		end, options.dispatchRate or 0)
+
+		local playerRemoving = Players.PlayerRemoving:Connect(function(player)
+			pendingActionsByPlayer[player] = nil
+		end)
+
+		return function()
+			stopHydrate()
+			stopFlush()
+			playerRemoving:disconnect()
+		end
+	end
+
 	broadcaster = {
 		flush = flush,
 		start = start,
 		middleware = middleware,
-		destroy = init(),
+		destroy = setup(),
 	}
 
 	return broadcaster
