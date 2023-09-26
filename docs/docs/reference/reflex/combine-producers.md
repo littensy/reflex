@@ -353,7 +353,7 @@ export const selectLeaderboardUserIds = (state: RootState) => {
 	return state.leaderboard.players;
 };
 
-export const selectLeaderboardPlayers = createSelector([selectLeaderboardUserIds], (userIds) => {
+export const selectLeaderboardPlayers = createSelector(selectLeaderboardUserIds, (userIds) => {
 	return userIds.mapFiltered((userId) => Players.GetPlayerByUserId(userId));
 });
 ```

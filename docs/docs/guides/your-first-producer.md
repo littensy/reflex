@@ -23,7 +23,7 @@ _Producers_ are the building blocks of Reflex. They are the state containers tha
 
 A [producer](../reference/reflex/producer) is a state container that you can use to dispatch actions or observe state changes. They're designed to be used as a single source of truth for your state, and provide an all-in-one interface for managing your game's state.
 
-Where [Rodux](https://roblox.github.io/) uses a reducer to return the next state of a store, Reflex has actions that return the next state of the producer. Reflex aims to be quick to set up and easy to use, so creating a producer is simple and straightforward.
+Where [Rodux](https://roblox.github.io/rodux) uses a reducer to return the next state of a store, Reflex has actions that return the next state of the producer. Reflex aims to be quick to set up and easy to use, so creating a producer is simple and straightforward.
 
 ---
 
