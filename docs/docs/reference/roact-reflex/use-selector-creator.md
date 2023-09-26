@@ -64,7 +64,7 @@ The selector returned by the factory will be memoized in `useMemo` with the give
 
 ```ts
 const selectTodo = (id: number) => {
-	return createSelector([selectTodos], (todos) => {
+	return createSelector(selectTodos, (todos) => {
 		return todos.find((todo) => todo.id === id);
 	});
 };

@@ -106,7 +106,7 @@ The `options` argument is an object that can be passed as the last argument to `
 <TabItem value="TypeScript" default>
 
 ```ts
-const selectValues = createSelector([selectArray, selectMap] as const, (array, map) => {
+const selectValues = createSelector(selectArray, selectMap, (array, map) => {
 	return [...array, ...Object.values(map)];
 });
 ```
@@ -128,8 +128,6 @@ end)
 </Tabs>
 
 :::info Caveats
-
--   In TypeScript, you need the `as const` modifier to ensure that the types of the dependencies are preserved.
 
 -   In Luau, using a dependency array may have worse type inference than using variadic arguments.
 
@@ -484,26 +482,5 @@ end)
 -   **Avoid conflicting arguments for memoized selectors.** Let's say you have two subscriptions to the selector that call it with different parameters. If the state changes, both subscriptions will call the selector with their own different parameters, and the selector will re-compute new values _twice_ in every state change!
 
 -   **If you _do_ have conflicting arguments,** and your selector performs some transformation or expensive computation, [selector factories](#selector-factories) will likely work better for you. You can prefer to use currying if your selector is simple and doesn't need `createSelector`, like indexing a property.
-
-:::
-
----
-
-## Troubleshooting
-
-### My types are incorrect when using a dependency array
-
-**If you have more than one dependency,** you may find that your combiner's types are incorrect. You can fix this by using the `as const` assertion on your dependencies:
-
-```ts
-// highlight-next-line
-createSelector([selectCart, selectUser] as const, (cart, user) => {
-	return cart.items.filter((item) => item.owner === user.id);
-});
-```
-
-:::note
-
-This happens because TypeScript 4.9 (the version used by Roblox-TS) doesn't fully support inferring the types of return values from an array of functions. This will be fixed when Roblox-TS adds support for [const type parameters](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html#const-type-parameters).
 
 :::

@@ -258,7 +258,7 @@ const selectTodos = (state: RootState) => {
 
 // highlight-start
 // ✅ This selector is memoized, and won't re-render unless 'todos' changes
-const selectTodosDone = createSelector([selectTodos], (todos) => {
+const selectTodosDone = createSelector(selectTodos, (todos) => {
 	return todos.filter((todo) => todo.done);
 });
 // highlight-end

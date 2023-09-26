@@ -94,7 +94,7 @@ export declare function applyMiddleware(...middlewares: ProducerMiddleware[]): <
  *
  * @example
  * ```ts
- * const selectPlayers = createSelector([selectIds] as const, (ids) => {
+ * const selectPlayers = createSelector(selectIds, (ids) => {
  * 	return ids.mapFiltered((id) => {
  * 		return Players.GetPlayerByUserId(id);
  * 	});
@@ -108,7 +108,7 @@ export declare function applyMiddleware(...middlewares: ProducerMiddleware[]): <
  * @return A memoized selector function.
  */
 export declare function createSelector<Selectors extends SelectorArray, Result>(
-	dependencies: Selectors,
+	dependencies: [...Selectors],
 	combiner: (...args: InferSelectorArrayResults<Selectors>) => Result,
 	options?: MemoizeOptions<Result> | EqualityCheck<Result>,
 ): MergeSelectors<Selectors, Result>;

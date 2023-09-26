@@ -60,7 +60,7 @@ If your state is a complex object, you can use _selectors_ to extract specific p
 ```ts
 const selectItems = (state: State) => state.items;
 
-const selectInStock = createSelector([selectItems], (items) => {
+const selectInStock = createSelector(selectItems, (items) => {
 	return items.filter((item) => item.stock > 0);
 });
 ```
