@@ -190,8 +190,13 @@ local function createProducer<State>(
 
 		local idToCleanup = {}
 		local selectDiffs = createSelectArrayDiffs(selector, discriminator)
+		local connected = true
 
 		local function checkDiffs(diffs)
+			if not connected then
+				return
+			end
+
 			for _, item in diffs.deletions do
 				local index = diffs.keys[item]
 				local id = if discriminator then discriminator(item, index) else item
@@ -218,6 +223,7 @@ local function createProducer<State>(
 		checkDiffs(self:getState(selectDiffs))
 
 		return function()
+			connected = false
 			unsubscribe()
 
 			for _, cleanup in idToCleanup do
@@ -239,9 +245,14 @@ local function createProducer<State>(
 		end
 
 		local initialSelection = self:getState(selector)
+		local connected = true
 		local cleanup
 
 		local function updateObserver(selection, lastSelection)
+			if not connected then
+				return
+			end
+
 			local shouldObserve = if predicate then predicate(selection, lastSelection) else selection
 
 			if shouldObserve and not cleanup then
@@ -257,6 +268,7 @@ local function createProducer<State>(
 		updateObserver(initialSelection, initialSelection)
 
 		return function()
+			connected = false
 			unsubscribe()
 
 			if cleanup then
