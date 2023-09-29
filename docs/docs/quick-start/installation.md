@@ -37,7 +37,7 @@ pnpm add @rbxts/reflex
 
 ```toml title="wally.toml"
 [dependencies]
-Reflex = "littensy/reflex@4.2.1"
+Reflex = "littensy/reflex@2"
 ```
 
 </TabItem>
