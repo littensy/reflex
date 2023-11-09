@@ -108,7 +108,7 @@ import { slices } from "shared/slices";
 import { fooSlice } from "./foo";
 import { barSlice } from "./bar";
 
-export type RootState = InferState<typeof producers>;
+export type RootState = InferState<typeof producer>;
 
 export const producer = combineProducers({
 	...slices,
