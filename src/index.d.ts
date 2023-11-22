@@ -241,6 +241,12 @@ interface ProducerImpl<State, Actions> {
 	getActions(): Actions;
 
 	/**
+	 * Returns a distinct copy of the producer. The copy starts with the same
+	 * state and actions, but functions independently.
+	 */
+	clone(): Producer<State, Actions>;
+
+	/**
 	 * Flushes any pending updates to the state. This is called automatically
 	 * one frame after the last state update, but can be called manually to
 	 * force a synchronous flush.
