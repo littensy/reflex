@@ -9,5 +9,5 @@ dependencies = []
 
 [[package]]
 name = "littensy/reflex"
-version = "4.2.2"
+version = "4.3.0"
 dependencies = [["Promise", "evaera/promise@4.0.0"]]
