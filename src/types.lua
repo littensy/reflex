@@ -42,6 +42,12 @@ export type Producer<State = any, Dispatchers = { [string]: (...any) -> State }>
 	},
 
 	--[=[
+		Returns a distinct copy of the producer. The new copy starts with the
+		same state and actions, but functions independently.
+	]=]
+	clone: (self: Producer<State, Dispatchers>) -> Producer<State, Dispatchers>,
+
+	--[=[
 		Flushes any pending updates by calling listeners immediately.
 	]=]
 	flush: (self: Producer<State, Dispatchers>) -> (),

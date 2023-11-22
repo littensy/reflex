@@ -91,6 +91,10 @@ local function createProducer<State>(
 		return actions
 	end
 
+	function producer:clone()
+		return createProducer(state, actions)
+	end
+
 	function producer:flush()
 		if pendingFlush then
 			pendingFlush:Disconnect()

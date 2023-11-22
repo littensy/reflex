@@ -161,6 +161,66 @@ producer:resetState()
 
 ---
 
+### `clone()`
+
+`clone` returns a new producer with the same state and actions as the original producer. It's useful for creating separate instances of a producer in unit tests.
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const clone = producer.clone();
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local clone = producer:clone()
+```
+
+</TabItem>
+</Tabs>
+
+#### Returns
+
+`clone` returns a new copy of the producer.
+
+:::info Caveats
+
+-   `clone` does not copy middleware or subscriptions. You will need to reapply middleware as needed.
+
+:::
+
+---
+
+### `getActions()`
+
+`getActions` returns the action functions passed to [`createProducer`](create-producer). This can be useful for [filtering actions in a broadcaster](create-broadcaster#filtering-actions).
+
+<Tabs groupId="languages">
+<TabItem value="TypeScript" default>
+
+```ts
+const actions = producer.getActions();
+```
+
+</TabItem>
+<TabItem value="Luau">
+
+```lua
+local actions = producer:getActions()
+```
+
+</TabItem>
+</Tabs>
+
+#### Returns
+
+`getActions` returns the producer's action functions.
+
+---
+
 ### `subscribe(selector?, predicate?, listener)`
 
 The `subscribe` method lets you listen for changes to the producer's state. Generally, you should pass a selector function to `subscribe` to only listen for changes to a subset of the state.
