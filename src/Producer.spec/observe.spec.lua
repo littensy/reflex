@@ -65,6 +65,25 @@ return function()
 		expect(hasId(items, 2)).to.equal(true)
 	end)
 
+	it("should observe additions to a set", function()
+		local items = {}
+
+		producer:observe(selector, function(_, key)
+			return key
+		end, function(_, key)
+			table.insert(items, key)
+		end)
+
+		expect(#items).to.equal(0)
+
+		producer:setState({ a = true, b = true })
+		producer:flush()
+
+		expect(#items).to.equal(2)
+		expect(table.find(items, "a")).to.be.ok()
+		expect(table.find(items, "b")).to.be.ok()
+	end)
+
 	it("should call the cleanup function when an item is deleted", function()
 		local items = {}
 

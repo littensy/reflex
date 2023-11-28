@@ -201,23 +201,18 @@ local function createProducer<State>(
 				return
 			end
 
-			for _, item in diffs.deletions do
-				local index = diffs.keys[item]
-				local id = if discriminator then discriminator(item, index) else item
-				local cleanup = idToCleanup[id]
+			for _, entry in diffs.deletions do
+				local cleanup = idToCleanup[entry.id]
 
 				if cleanup then
-					idToCleanup[id] = nil
+					idToCleanup[entry.id] = nil
 					cleanup()
 				end
 			end
 
-			for _, item in diffs.additions do
-				local index = diffs.keys[item]
-				local id = if discriminator then discriminator(item, index) else item
-
-				if not idToCleanup[id] then
-					idToCleanup[id] = observer(item, index)
+			for _, entry in diffs.additions do
+				if not idToCleanup[entry.id] then
+					idToCleanup[entry.id] = observer(entry.value, entry.key)
 				end
 			end
 		end

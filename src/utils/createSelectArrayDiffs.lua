@@ -2,14 +2,14 @@
 local createSelector = require(script.Parent.Parent.createSelector)
 
 type ArrayDiffs<K, V> = {
-	additions: { V },
-	deletions: { V },
-	keys: { [V]: K },
+	additions: { Entry<K, V> },
+	deletions: { Entry<K, V> },
 }
 
 type Entry<K, V> = {
 	key: K,
 	value: V,
+	id: unknown,
 }
 
 --[=[
@@ -32,30 +32,28 @@ local function createSelectArrayDiffs<State, K, V>(
 ): (state: State) -> ArrayDiffs<K, V>
 	local lastEntries: { [unknown]: Entry<K, V> } = {}
 
-	return createSelector(selector, function(items)
-		local additions: { V } = {}
-		local deletions: { V } = {}
-		local keys: { [V]: K } = {}
+	return createSelector(selector, function(items: { [K]: V })
+		local additions: { Entry<K, V> } = {}
+		local deletions: { Entry<K, V> } = {}
 		local entries: { [unknown]: Entry<K, V> } = {}
 
 		for key, item in items do
 			local id = if discriminator then discriminator(item, key) else item
+			local entry = { key = key, value = item, id = id }
 
 			assert(id ~= nil, "Discriminator returned a nil value")
 
 			if not lastEntries[id] then
-				keys[item] = key
-				table.insert(additions, item)
+				table.insert(additions, entry)
 			end
 
-			entries[id] = { key = key, value = item }
+			entries[id] = entry
 		end
 
 		for id, item in lastEntries do
 			if not entries[id] then
 				local entry = lastEntries[id]
-				keys[entry.value] = entry.key
-				table.insert(deletions, entry.value)
+				table.insert(deletions, entry)
 			end
 		end
 
@@ -64,7 +62,6 @@ local function createSelectArrayDiffs<State, K, V>(
 		return {
 			additions = additions,
 			deletions = deletions,
-			keys = keys,
 		}
 	end)
 end
