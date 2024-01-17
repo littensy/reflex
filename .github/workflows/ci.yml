@@ -19,7 +19,7 @@ jobs:
           version: 8.6.4
 
       - name: Install Aftman
-        uses: ok-nick/setup-aftman@v0.4
+        uses: ok-nick/setup-aftman@v0.4.2
 
       - name: Install dependencies
         run: |
