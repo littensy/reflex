@@ -230,7 +230,7 @@ export type ProducerMap = { [string]: Producer }
 ]=]
 export type BroadcastAction = {
 	name: string,
-	arguments: {},
+	arguments: { any },
 }
 
 --[=[
