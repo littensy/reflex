@@ -4,7 +4,7 @@ description: API Reference for Reflex, a state management library for Roblox.
 
 # Reflex
 
-_Reflex_ allow you to efficiently track and manage the state of your game. This page documents the core Reflex APIs.
+_Reflex_ allows you to efficiently track and manage the state of your game. This page documents the core Reflex APIs.
 
 Reflex provides these top-level exports:
 
