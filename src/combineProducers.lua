@@ -30,15 +30,18 @@ local function combineActions(producers: types.ProducerMap)
 
 	for actionName, actions in actionsByName do
 		combinedActions[actionName] = function(combinedState, ...)
-			local nextState = table.clone(combinedState)
+			local nextState
 
 			for _, action in actions do
 				local producerName = producerNamesByAction[action]
-				local producerState = nextState[producerName]
-				nextState[producerName] = action(producerState, ...)
+				local producerState = combinedState[producerName]
+				local newState = action(producerState, ...)
+				if newState == producerState then continue end
+				if not nextState then nextState = table.clone(combinedState) end
+				nextState[producerName] = newState
 			end
 
-			return nextState
+			return nextState or combinedState
 		end
 	end
 

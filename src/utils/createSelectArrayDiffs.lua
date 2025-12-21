@@ -37,17 +37,19 @@ local function createSelectArrayDiffs<State, K, V>(
 		local deletions: { Entry<K, V> } = {}
 		local entries: { [unknown]: Entry<K, V> } = {}
 
-		for key, item in items do
-			local id = if discriminator then discriminator(item, key) else item
-			local entry = { key = key, value = item, id = id }
+		if items then
+			for key, item in items do
+				local id = if discriminator then discriminator(item, key) else item
+				local entry = { key = key, value = item, id = id }
 
-			assert(id ~= nil, "Discriminator returned a nil value")
+				assert(id ~= nil, "Discriminator returned a nil value")
 
-			if not lastEntries[id] then
-				table.insert(additions, entry)
+				if not lastEntries[id] then
+					table.insert(additions, entry)
+				end
+
+				entries[id] = entry
 			end
-
-			entries[id] = entry
 		end
 
 		for id, item in lastEntries do
